@@ -172,7 +172,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
 
   return (
     <div
-      className="flex h-[calc(100vh-56px)] flex-col md:h-screen"
+      className="flex h-[calc(100dvh-49px)] flex-col md:h-dvh"
       style={accentStyle(agent.accent)}
     >
       {/* Header */}
@@ -276,7 +276,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
           </div>
 
           {/* Footer: saved facts / error / composer */}
-          <div className="mx-auto w-full max-w-3xl shrink-0 pb-4 pt-1">
+          <div className="mx-auto w-full max-w-3xl shrink-0 pt-1 pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-4">
             {savedFacts.length > 0 && (
               <div className="anim-fade-up mb-2 flex items-start gap-2 rounded-[10px] border border-emerald-500/20 bg-emerald-500/[0.07] px-3 py-2 text-[12px] text-emerald-200/90">
                 <Icon name="check" size={14} className="mt-0.5 shrink-0" />

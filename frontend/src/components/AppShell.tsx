@@ -78,8 +78,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main
           className={
             inWorkspace
-              ? "min-w-0 flex-1 pb-20 md:pb-0"
-              : "mx-auto min-w-0 flex-1 px-4 py-7 pb-24 sm:px-8 sm:py-12 md:pb-12 w-full max-w-page"
+              ? "min-w-0 flex-1"
+              : "mx-auto min-w-0 flex-1 px-4 py-7 pb-28 sm:px-8 sm:py-12 md:pb-12 w-full max-w-page"
           }
         >
           {children}
