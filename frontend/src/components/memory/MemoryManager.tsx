@@ -92,7 +92,7 @@ export function MemoryManager() {
   const activeAgent = specialists.find((a) => a.id === agentId);
 
   return (
-    <div className="anim-fade-up">
+    <div className="anim-fade-up max-w-2xl">
       <PageHeader
         eyebrow="Memory"
         title="What my AI team knows about me"
@@ -114,8 +114,8 @@ export function MemoryManager() {
         )}
 
         {sharedGroups.map(([category, rows]) => (
-          <div key={category} className="card mb-3 p-2.5">
-            <p className="px-2 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-content-faint">
+          <div key={category} className="card mb-2.5 p-2">
+            <p className="px-2 pb-1 pt-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-content-faint">
               {categoryLabel(category)}
             </p>
             {rows.map((m) => (

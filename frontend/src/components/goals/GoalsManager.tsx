@@ -49,34 +49,36 @@ export function GoalsManager() {
   }
 
   return (
-    <div className="anim-fade-up">
+    <div className="anim-fade-up max-w-2xl">
       <PageHeader
         eyebrow="Goals"
         title="Goals & priorities"
         lede="Modeer and your team use these to shape advice and your daily briefing. Keep it short — a handful of things that actually matter."
       />
 
-      <form onSubmit={add} className="card mb-9 flex flex-col gap-2.5 p-3 sm:flex-row sm:items-center">
+      <form onSubmit={add} className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center">
         <input
           className="field flex-1"
           placeholder="What do you want to achieve?"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        <select
-          className="field !w-auto"
-          value={priority}
-          onChange={(e) => setPriority(Number(e.target.value))}
-        >
-          {PRIORITIES.map((p) => (
-            <option key={p.value} value={p.value}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-        <button type="submit" disabled={adding} className="btn-primary shrink-0">
-          Add goal
-        </button>
+        <div className="flex gap-2">
+          <select
+            className="field !w-auto flex-1"
+            value={priority}
+            onChange={(e) => setPriority(Number(e.target.value))}
+          >
+            {PRIORITIES.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+          <button type="submit" disabled={adding} className="btn-primary shrink-0">
+            Add goal
+          </button>
+        </div>
       </form>
 
       <SectionLabel>Active</SectionLabel>
@@ -118,14 +120,15 @@ function GoalItem({
 }) {
   const label = PRIORITIES.find((p) => p.value === goal.priority)?.label ?? "—";
   const done = goal.status === "done";
+  const isTop = goal.priority <= 1;
   return (
-    <div className="card group flex items-center gap-3 p-3.5">
+    <div className="card group flex items-center gap-3 px-3.5 py-2.5">
       <button
         onClick={() => onPatch(goal.id, { status: done ? "active" : "done" })}
-        className={`grid h-5 w-5 shrink-0 place-items-center rounded-[7px] border transition ${
+        className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border transition ${
           done
             ? "border-emerald-400/40 bg-emerald-400/20 text-emerald-300"
-            : "border-line-strong text-transparent hover:border-content-dim"
+            : "border-line-strong text-transparent hover:border-content-dim hover:text-content-faint"
         }`}
         aria-label="Toggle complete"
       >
@@ -136,10 +139,19 @@ function GoalItem({
       >
         {goal.title}
       </span>
-      <span className="tag">{label}</span>
+      <span
+        className="tag shrink-0"
+        style={
+          isTop && !done
+            ? { borderColor: "rgba(251,191,36,0.3)", color: "#fcd34d", background: "rgba(251,191,36,0.08)" }
+            : undefined
+        }
+      >
+        {label}
+      </span>
       <button
         onClick={() => onRemove(goal.id)}
-        className="grid h-7 w-7 place-items-center rounded-[8px] text-content-faint opacity-0 transition hover:text-red-300 group-hover:opacity-100"
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-[8px] text-content-faint opacity-40 transition hover:text-red-300 group-hover:opacity-100"
         aria-label="Delete goal"
       >
         <Icon name="trash" size={14} />

@@ -70,16 +70,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Content */}
       <div className="flex min-w-0 flex-1 flex-col md:pl-[var(--nav-w)]">
-        {/* Mobile top bar */}
-        <header className="sticky top-0 z-20 flex items-center border-b border-line bg-bg/85 px-4 py-3 backdrop-blur-md md:hidden">
-          <Brand />
-        </header>
+        {/* Mobile top bar — hidden in the agent workspace (it has its own header) */}
+        {!inWorkspace && (
+          <header className="sticky top-0 z-20 flex items-center border-b border-line bg-bg/85 px-4 py-3 backdrop-blur-md md:hidden">
+            <Brand />
+          </header>
+        )}
 
         <main
           className={
             inWorkspace
               ? "min-w-0 flex-1"
-              : "mx-auto min-w-0 flex-1 px-4 py-7 pb-28 sm:px-8 sm:py-12 md:pb-12 w-full max-w-page"
+              : "mx-auto min-w-0 flex-1 px-5 py-7 pb-28 sm:px-9 sm:py-11 md:pb-16 w-full max-w-[1140px]"
           }
         >
           {children}
@@ -87,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Mobile bottom tab bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-bg/90 backdrop-blur-lg md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg md:hidden">
         {NAV.map((item) => {
           const active = isActive(pathname, item.href);
           return (

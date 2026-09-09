@@ -23,11 +23,20 @@ export function greeting(name?: string): string {
   return name ? `${part}, ${name}` : `${part}`;
 }
 
+const ACRONYMS = new Set([
+  "ml", "ai", "cv", "gpa", "id", "url", "api", "llm", "pr", "os", "ui", "ux",
+]);
+
 /** "education.field_of_study" / "weak_topics.weak_topic" -> "Field of study" */
 export function humanizeKey(key: string): string {
   const last = key.split(".").pop() || key;
-  const s = last.replace(/_/g, " ").trim();
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  const words = last.replace(/_/g, " ").trim().split(/\s+/);
+  return words
+    .map((w, i) => {
+      if (ACRONYMS.has(w.toLowerCase())) return w.toUpperCase();
+      return i === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+    })
+    .join(" ");
 }
 
 export const CATEGORY_LABELS: Record<string, string> = {

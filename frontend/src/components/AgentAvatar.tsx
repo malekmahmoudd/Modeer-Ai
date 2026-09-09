@@ -18,8 +18,8 @@ export function AgentAvatar({
         height: size,
         fontSize: Math.round(size * 0.46),
         lineHeight: 1,
-        background: hexToRgba(accent, 0.12),
-        boxShadow: `inset 0 0 0 1px ${hexToRgba(accent, 0.22)}`,
+        background: `linear-gradient(150deg, ${hexToRgba(accent, 0.22)}, ${hexToRgba(accent, 0.08)})`,
+        boxShadow: `inset 0 0 0 1px ${hexToRgba(accent, 0.3)}`,
       }}
     >
       <span style={{ filter: "saturate(1.05)" }}>{icon}</span>

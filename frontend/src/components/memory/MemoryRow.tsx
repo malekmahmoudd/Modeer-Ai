@@ -70,19 +70,17 @@ export function MemoryRow({
   }
 
   return (
-    <div className="group row-hover flex items-start gap-3 rounded-[10px] px-3 py-2.5">
+    <div className="group row-hover flex items-center gap-3 rounded-[9px] px-2 py-2">
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-content-faint">
-          {humanizeKey(memory.key)}
-          {memory.sensitive && (
-            <span className="ml-2 rounded bg-amber-500/15 px-1 py-0.5 text-[9px] normal-case tracking-normal text-amber-300">
-              sensitive
-            </span>
-          )}
-        </p>
-        <p className="mt-0.5 text-[13.5px] leading-relaxed text-content">{memory.value}</p>
+        <span className="text-[13.5px] leading-snug text-content">{memory.value}</span>
+        <span className="ml-2 text-[11px] text-content-faint">· {humanizeKey(memory.key)}</span>
+        {memory.sensitive && (
+          <span className="ml-2 rounded bg-amber-500/15 px-1 py-0.5 text-[9px] text-amber-300">
+            sensitive
+          </span>
+        )}
       </div>
-      <div className="flex shrink-0 gap-0.5 opacity-0 transition group-hover:opacity-100">
+      <div className="flex shrink-0 gap-0.5 opacity-50 transition group-hover:opacity-100">
         <button
           onClick={() => setEditing(true)}
           className="grid h-7 w-7 place-items-center rounded-[8px] text-content-faint hover:bg-surface-strong hover:text-white"

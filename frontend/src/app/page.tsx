@@ -25,27 +25,24 @@ export default function HomePage() {
 
   return (
     <div className="anim-fade-up">
-      <header className="mb-8">
-        <h1 className="text-[27px] font-semibold leading-tight tracking-[-0.02em] text-white">
+      <header className="mb-6">
+        <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.02em] text-white">
           {greeting(name)}
         </h1>
       </header>
 
       <ModeerHero />
 
-      <section className="mt-11">
+      <section className="mt-9">
         <div className="mb-4 flex items-end justify-between">
-          <div>
-            <h2 className="text-[15px] font-semibold tracking-tight text-white">Your team</h2>
-            <p className="mt-0.5 text-[12.5px] text-content-dim">
-              Nine specialists. Open any of them directly.
-            </p>
-          </div>
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-content-faint">
+            Your team
+          </h2>
           <Link
             href="/team"
-            className="hidden items-center gap-1 text-[12.5px] text-content-dim hover:text-white sm:flex"
+            className="flex items-center gap-1 text-[12px] text-content-faint hover:text-content-dim"
           >
-            All <Icon name="arrow-right" size={13} />
+            All specialists <Icon name="arrow-right" size={12} />
           </Link>
         </div>
         <AgentGrid specialistsOnly />

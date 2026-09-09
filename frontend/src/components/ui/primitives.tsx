@@ -34,17 +34,17 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-9 flex items-end justify-between gap-6">
+    <div className="mb-7 flex items-end justify-between gap-6">
       <div>
         {eyebrow && (
           <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-content-faint">
             {eyebrow}
           </p>
         )}
-        <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.02em] text-white">
+        <h1 className="text-[25px] font-semibold leading-tight tracking-[-0.02em] text-white">
           {title}
         </h1>
-        {lede && <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-content-dim">{lede}</p>}
+        {lede && <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-content-dim">{lede}</p>}
       </div>
       {action}
     </div>

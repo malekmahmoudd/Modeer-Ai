@@ -15,7 +15,12 @@ export function AgentCard({ agent }: { agent: Agent }) {
       <span
         aria-hidden
         className="absolute inset-y-0 left-0 w-[3px]"
-        style={{ background: agent.accent, opacity: 0.55 }}
+        style={{ background: agent.accent }}
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -left-6 top-1/2 h-16 w-16 -translate-y-1/2 rounded-full opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-60"
+        style={{ background: hexToRgba(agent.accent, 0.5) }}
       />
       <AgentAvatar icon={agent.icon} accent={agent.accent} size={40} />
       <span className="min-w-0 flex-1">
@@ -24,17 +29,11 @@ export function AgentCard({ agent }: { agent: Agent }) {
         </span>
         <span className="block truncate text-[12.5px] text-content-dim">{agent.tagline}</span>
       </span>
-      <span
-        className="shrink-0 text-content-faint transition group-hover:translate-x-0.5"
-        style={{ color: undefined }}
-      >
-        <Icon
-          name="arrow-right"
-          size={16}
-          className="transition-colors group-hover:text-[var(--h)]"
-          style={{ ["--h" as string]: hexToRgba(agent.accent, 0.9) }}
-        />
-      </span>
+      <Icon
+        name="arrow-right"
+        size={16}
+        className="shrink-0 text-content-faint transition group-hover:translate-x-0.5 group-hover:text-content-dim"
+      />
     </Link>
   );
 }

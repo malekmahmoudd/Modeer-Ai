@@ -21,7 +21,7 @@ _AGENT_HINTS: list[tuple[str, str, str]] = [
     ("study", "📚",
      r"exam|study|studying|learn|revision|revise|course|gpa|semester|thesis|dissertation"),
     ("career", "💼",
-     r"cv|resume|interview|job|internship|career|promotion|portfolio|linkedin|offer"),
+     r"cv|resume|interview|job|internship|career|promotion|linkedin|job offer|recruiter"),
     ("fitness", "🏋️",
      r"workout|gym|train|training|run|running|fitness|exercise|weight|marathon"),
     ("finance", "💰",
