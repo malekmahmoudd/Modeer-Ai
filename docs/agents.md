@@ -11,7 +11,7 @@ settings.
 
 | File | Purpose |
 |---|---|
-| `config.py` | `CONFIG: AgentConfig` — id, name, role, description, icon, accent, `expertise`, `shared_context_fields`, `memory_namespace`, `reasoning_framework`, `response_behavior`, `safety_boundaries`, `model`, `prompt_version` |
+| `config.py` | `CONFIG: AgentConfig` — id, name, role, description, icon, accent, `expertise`, `shared_context_fields`, `memory_namespace`, `reasoning_framework`, `response_behavior`, `safety_boundaries`, `model`, `prompt_version`, plus presentation: `tagline`, `composer_placeholder`, `empty_prompt`, `starters` (served by the API so the UI stays config-driven) |
 | `prompt.md` | The natural-language system instructions (versioned, reviewable, not buried in code) |
 | `evals.json` | Evaluation fixtures (see below) |
 

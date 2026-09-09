@@ -98,11 +98,12 @@ The frontend proxies `/api/*` to the backend (`BACKEND_URL`, default
 | `DATABASE_URL` | `sqlite+pysqlite:///./modeer.db` | Use `postgresql+psycopg://modeer:modeer@localhost:5432/modeer` for the real stack |
 | `ENVIRONMENT` | `development` | |
 | `FRONTEND_URL` | `http://localhost:3000` | CORS allow-list (comma-separated) |
-| `LLM_PROVIDER` | `mock` | `mock` or `anthropic` |
-| `LLM_API_KEY` | _(empty)_ | Required only for `anthropic` |
-| `LLM_MODEL` | `claude-sonnet-5` | |
-| `LLM_BASE_URL` | _(empty)_ | Override the provider base URL |
+| `LLM_PROVIDER` | `mock` | `mock`, `anthropic`, `groq`, or `openai` |
+| `LLM_API_KEY` | _(empty)_ | Required for any real provider |
+| `LLM_MODEL` | `claude-sonnet-5` | e.g. `openai/gpt-oss-120b` for Groq |
+| `LLM_BASE_URL` | _(empty)_ | Override the provider base URL (groq/openai) |
 | `LLM_MAX_TOKENS` / `LLM_TEMPERATURE` | `1024` / `0.6` | Per-agent settings can override |
+| `MEMORY_EXTRACTION` | `auto` | `auto` (LLM when a real provider is set), `llm`, `rules` |
 | `MEMORY_STORE_SENSITIVE` | `false` | Keep sensitive candidates out of storage |
 | `MEMORY_MIN_CONFIDENCE` | `0.55` | Extraction threshold |
 

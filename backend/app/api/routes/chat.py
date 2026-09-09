@@ -88,16 +88,21 @@ async def chat_sync(
 
         runtime = AgentRuntime()
         collected = {"content": "", "context": {}, "memory_candidates": [],
-                     "conversation_id": convo.id, "context_used": False}
+                     "conversation_id": convo.id, "context_used": False,
+                     "newly_onboarded": False}
         async for event in runtime.run_stream(db, user, agent, convo, body.message):
             if event.type == "start":
                 collected["context"] = event.data.get("context", {})
             elif event.type == "end":
                 collected.update(
                     content=event.data["content"],
-                    memory_candidates=event.data["memory_candidates"],
                     context_used=event.data["context_used"],
                     message_id=event.data["message_id"],
+                )
+            elif event.type == "memory":
+                collected.update(
+                    memory_candidates=event.data["memory_candidates"],
+                    newly_onboarded=event.data.get("newly_onboarded", False),
                 )
             elif event.type == "error":
                 raise HTTPException(status_code=502, detail=event.data["error"])

@@ -5,17 +5,19 @@ import { useCallback, useRef, useState } from "react";
 import { API_BASE } from "@/lib/api";
 import type { ChatStreamEvent, ContextDiagnostics, MemoryCandidate } from "@/types";
 
-export interface StreamedTurn {
-  conversationId: string | null;
-  context: ContextDiagnostics | null;
-  contextUsed: boolean;
-  memoryCandidates: MemoryCandidate[];
-}
-
 interface Options {
   onStart?: (conversationId: string, context: ContextDiagnostics) => void;
   onDelta?: (fullText: string) => void;
-  onEnd?: (turn: StreamedTurn & { content: string }) => void;
+  onEnd?: (turn: {
+    conversationId: string;
+    context: ContextDiagnostics | null;
+    contextUsed: boolean;
+    content: string;
+  }) => void;
+  onMemory?: (info: {
+    candidates: MemoryCandidate[];
+    newlyOnboarded: boolean;
+  }) => void;
   onError?: (message: string) => void;
 }
 
@@ -34,12 +36,8 @@ export function useChatStream(agentId: string, opts: Options = {}) {
       abortRef.current = controller;
 
       let acc = "";
-      const turn: StreamedTurn = {
-        conversationId,
-        context: null,
-        contextUsed: false,
-        memoryCandidates: [],
-      };
+      let context: ContextDiagnostics | null = null;
+      let convId = conversationId;
 
       try {
         const res = await fetch(`${API_BASE}/agents/${agentId}/chat/stream`, {
@@ -48,9 +46,7 @@ export function useChatStream(agentId: string, opts: Options = {}) {
           body: JSON.stringify({ message, conversation_id: conversationId }),
           signal: controller.signal,
         });
-        if (!res.ok || !res.body) {
-          throw new Error(`Stream failed (${res.status})`);
-        }
+        if (!res.ok || !res.body) throw new Error(`Stream failed (${res.status})`);
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -72,23 +68,32 @@ export function useChatStream(agentId: string, opts: Options = {}) {
               continue;
             }
             if (evt.type === "start") {
-              turn.conversationId = evt.conversation_id;
-              turn.context = evt.context;
+              convId = evt.conversation_id;
+              context = evt.context;
               opts.onStart?.(evt.conversation_id, evt.context);
             } else if (evt.type === "delta") {
               acc += evt.text;
               setText(acc);
               opts.onDelta?.(acc);
             } else if (evt.type === "end") {
-              turn.conversationId = evt.conversation_id;
-              turn.contextUsed = evt.context_used;
-              turn.memoryCandidates = evt.memory_candidates;
-              opts.onEnd?.({ ...turn, content: evt.content || acc });
+              convId = evt.conversation_id;
+              opts.onEnd?.({
+                conversationId: evt.conversation_id,
+                context,
+                contextUsed: evt.context_used,
+                content: evt.content || acc,
+              });
+            } else if (evt.type === "memory") {
+              opts.onMemory?.({
+                candidates: evt.memory_candidates,
+                newlyOnboarded: evt.newly_onboarded,
+              });
             } else if (evt.type === "error") {
               opts.onError?.(evt.error);
             }
           }
         }
+        void convId;
       } catch (err) {
         if ((err as Error).name !== "AbortError") {
           opts.onError?.(err instanceof Error ? err.message : "Stream error");

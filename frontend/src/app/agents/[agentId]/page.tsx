@@ -1,8 +1,9 @@
 "use client";
 
-import { use } from "react";
+import { Suspense, use } from "react";
 
 import { ChatWorkspace } from "@/components/chat/ChatWorkspace";
+import { Spinner } from "@/components/ui/primitives";
 
 export default function AgentWorkspacePage({
   params,
@@ -11,8 +12,14 @@ export default function AgentWorkspacePage({
 }) {
   const { agentId } = use(params);
   return (
-    <div className="animate-fade-up">
+    <Suspense
+      fallback={
+        <div className="grid h-[70vh] place-items-center text-content-faint">
+          <Spinner />
+        </div>
+      }
+    >
       <ChatWorkspace agentId={agentId} />
-    </div>
+    </Suspense>
   );
 }

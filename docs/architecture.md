@@ -73,8 +73,11 @@ implementation from `LLM_PROVIDER`:
 - `mock` (default) — deterministic, context-aware placeholder; no key; used in
   all automated tests.
 - `anthropic` — Claude Messages API, streamed over httpx.
+- `groq` / `openai` — one OpenAI-compatible chat-completions provider
+  (`openai_compat_provider.py`), streamed, with 429 rate-limit back-off.
+  `LLM_BASE_URL` overrides the endpoint.
 
-No model routing, no multi-provider fan-out.
+One provider at a time. No model routing, no multi-provider fan-out.
 
 ## Persistence
 

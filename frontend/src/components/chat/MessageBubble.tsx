@@ -1,24 +1,9 @@
-import { AgentAvatar } from "@/components/AgentAvatar";
-import type { Agent, Message } from "@/types";
+import Link from "next/link";
 
-function renderContent(text: string) {
-  // Lightweight: paragraphs + bullet lines. No markdown dependency for the MVP.
-  const blocks = text.split(/\n{2,}/);
-  return blocks.map((block, i) => {
-    const lines = block.split("\n");
-    const isList = lines.every((l) => /^\s*([-*•]|\d+\.)\s+/.test(l));
-    if (isList) {
-      return (
-        <ul key={i}>
-          {lines.map((l, j) => (
-            <li key={j}>{l.replace(/^\s*([-*•]|\d+\.)\s+/, "")}</li>
-          ))}
-        </ul>
-      );
-    }
-    return <p key={i}>{block}</p>;
-  });
-}
+import { AgentAvatar } from "@/components/AgentAvatar";
+import { ThinkingDots } from "@/components/ui/primitives";
+import { renderMarkdown } from "@/lib/markdown";
+import type { Agent, Message } from "@/types";
 
 export function MessageBubble({
   message,
@@ -29,40 +14,50 @@ export function MessageBubble({
   agent: Agent;
   streaming?: boolean;
 }) {
-  const isUser = message.role === "user";
-  const contextCount =
-    (message.meta?.context?.personal_context_count ?? 0) +
-    (message.meta?.context?.agent_memory_used?.length ?? 0);
-
-  if (isUser) {
+  if (message.role === "user") {
     return (
-      <div className="flex justify-end animate-fade-up">
-        <div className="max-w-[80%] rounded-2xl rounded-br-md bg-white px-4 py-2.5 text-sm leading-relaxed text-ink-950">
+      <div className="flex justify-end">
+        <div className="max-w-[82%] whitespace-pre-wrap rounded-[14px] rounded-br-[5px] bg-surface-strong px-3.5 py-2.5 text-[14px] leading-relaxed text-white">
           {message.content}
         </div>
       </div>
     );
   }
 
+  const ctx = message.meta?.context;
+  const contextUsed =
+    Boolean(message.meta?.context_used) ||
+    (ctx?.personal_context_count ?? 0) > 0 ||
+    (ctx?.agent_memory_used?.length ?? 0) > 0;
+  const empty = !message.content;
+
   return (
-    <div className="flex gap-3 animate-fade-up">
-      <AgentAvatar icon={agent.icon} accent={agent.accent} size={32} />
+    <div className="flex gap-3">
+      <div className="pt-0.5">
+        <AgentAvatar icon={agent.icon} accent={agent.accent} size={28} />
+      </div>
       <div className="min-w-0 flex-1">
-        <div className="prose-chat max-w-[85%] rounded-2xl rounded-tl-md border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm leading-relaxed text-white/85">
-          {message.content ? renderContent(message.content) : null}
-          {streaming && (
-            <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-white/60" />
+        <div className="prose-chat max-w-[46rem]">
+          {empty && streaming ? (
+            <ThinkingDots />
+          ) : (
+            <>
+              {renderMarkdown(message.content)}
+              {streaming && <span className="caret" />}
+            </>
           )}
         </div>
-        {!streaming && contextCount > 0 && (
-          <div className="mt-1.5 flex items-center gap-1.5 pl-1 text-[11px] text-white/35">
+        {!streaming && contextUsed && (
+          <Link
+            href="/memory"
+            className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] text-content-faint transition hover:text-content-dim"
+          >
             <span
               className="h-1.5 w-1.5 rounded-full"
               style={{ background: agent.accent }}
             />
-            {agent.name} used {contextCount} thing{contextCount === 1 ? "" : "s"} your
-            team knows about you
-          </div>
+            Personalized from your saved context
+          </Link>
         )}
       </div>
     </div>

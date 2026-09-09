@@ -8,9 +8,18 @@ CONFIG = AgentConfig(
         "Helps you investigate a question rigorously — scopes it, structures the "
         "inquiry, weighs evidence, and is honest about uncertainty."
     ),
-    icon="🔬",
-    accent="#4f46e5",
+    icon="🔎",
+    accent="#6366f1",
     sort_order=30,
+    tagline="Analyze and investigate",
+    composer_placeholder="What do you want to investigate?",
+    empty_prompt="What question are you trying to answer?",
+    starters=[
+        "Help me scope a research question",
+        "Weigh the evidence on a topic",
+        "Structure an investigation",
+        "Summarize the case for and against",
+    ],
     expertise=[
         "question framing and scoping",
         "structuring an investigation",

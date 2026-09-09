@@ -8,7 +8,9 @@ from pydantic import BaseModel, ConfigDict
 class BriefingItem(BaseModel):
     icon: str
     text: str
+    detail: str = ""
     source: str  # "goal" | "memory" | "prompt"
+    agent: str | None = None  # specialist slug this relates to, if any
 
 
 class BriefingRead(BaseModel):

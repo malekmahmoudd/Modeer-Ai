@@ -139,12 +139,16 @@ def _score(case: dict, output: str) -> tuple[bool, list[str]]:
     return ok, checks
 
 
-async def run_agent(slug: str, provider: LLMProvider) -> AgentEvalReport:
+async def run_agent(
+    slug: str, provider: LLMProvider, *, delay: float = 0.0
+) -> AgentEvalReport:
     agent = require_agent(slug)
     cases = load_cases(slug)
     report = AgentEvalReport(agent_id=slug, total=len(cases), passed=0)
 
-    for case in cases:
+    for i, case in enumerate(cases):
+        if i and delay:
+            await asyncio.sleep(delay)
         packet = build_context(
             agent=agent,
             user=_fake_user(case.get("profile")),
@@ -154,42 +158,55 @@ async def run_agent(slug: str, provider: LLMProvider) -> AgentEvalReport:
             history=[],
             user_message=case["input"],
         )
-        result = await provider.complete(
-            system=packet.system,
-            messages=packet.messages,
-            model=resolve_model(agent.model.model),
-            temperature=agent.model.temperature,
-            max_tokens=agent.model.max_tokens,
-        )
-        passed, checks = _score(case, result.text)
+        try:
+            result = await provider.complete(
+                system=packet.system,
+                messages=packet.messages,
+                model=resolve_model(agent.model.model),
+                temperature=agent.model.temperature,
+                max_tokens=agent.model.max_tokens,
+            )
+            text = result.text
+        except Exception as exc:  # noqa: BLE001 - record and keep going
+            text = f"[provider error: {type(exc).__name__}: {exc}]"
+        passed, checks = _score(case, text)
         report.results.append(
             CaseResult(
                 id=case["id"],
                 category=case["category"],
                 passed=passed,
                 checks=checks,
-                output_preview=result.text[:160].replace("\n", " "),
+                output_preview=text[:200].replace("\n", " "),
             )
         )
         report.passed += int(passed)
     return report
 
 
-async def run_all(slugs: list[str], provider: LLMProvider) -> list[AgentEvalReport]:
-    return [await run_agent(s, provider) for s in slugs]
+async def run_all(
+    slugs: list[str], provider: LLMProvider, *, delay: float = 0.0
+) -> list[AgentEvalReport]:
+    return [await run_agent(s, provider, delay=delay) for s in slugs]
 
 
 def _cli() -> int:
     parser = argparse.ArgumentParser(description="Run agent evals")
     parser.add_argument("agents", nargs="*", help="agent slugs (default: all)")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
+    parser.add_argument(
+        "--delay", type=float, default=0.0,
+        help="seconds between cases (throttle rate-limited providers)",
+    )
+    parser.add_argument(
+        "--show", action="store_true", help="print each response preview",
+    )
     args = parser.parse_args()
 
     from app.llm.provider import get_llm_provider
 
     provider = get_llm_provider()
     slugs = args.agents or [a.id for a in all_agents()]
-    reports = asyncio.run(run_all(slugs, provider))
+    reports = asyncio.run(run_all(slugs, provider, delay=args.delay))
 
     if args.json:
         payload = [
@@ -219,6 +236,8 @@ def _cli() -> int:
                 if not c.passed:
                     for chk in c.checks:
                         print(f"         {chk}")
+                if args.show:
+                    print(f"         > {c.output_preview}")
         print(f"\nTOTAL  {total_p}/{total_c}  ({total_p / total_c:.0%})"
               if total_c else "\nNo cases.")
     return 0

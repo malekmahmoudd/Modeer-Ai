@@ -3,75 +3,107 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { Brand } from "@/components/Brand";
+import { Icon } from "@/components/ui/Icon";
+import { useApi } from "@/lib/api";
+import { firstName } from "@/lib/format";
+import type { UserProfile } from "@/types";
+
 const NAV = [
-  { href: "/", label: "Home", icon: "◎" },
-  { href: "/team", label: "AI Team", icon: "❖" },
-  { href: "/memory", label: "Memory", icon: "❒" },
-  { href: "/goals", label: "Goals", icon: "✦" },
+  { href: "/", label: "Home", icon: "home" as const },
+  { href: "/team", label: "Team", icon: "team" as const },
+  { href: "/memory", label: "Memory", icon: "memory" as const },
+  { href: "/goals", label: "Goals", icon: "goals" as const },
 ];
+
+function isActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { data: user } = useApi<UserProfile>("/users/me");
+  const name = firstName(user?.display_name);
+
+  // The agent workspace manages its own full-height layout.
+  const inWorkspace = pathname.startsWith("/agents/");
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[1400px]">
-      <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 flex-col gap-1 border-r border-white/[0.06] px-4 py-6 md:flex">
-        <Link href="/" className="mb-6 flex items-center gap-2.5 px-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 text-lg shadow-lg shadow-violet-900/40">
-            🧭
-          </span>
-          <span>
-            <span className="block text-sm font-semibold tracking-tight text-white">Modeer</span>
-            <span className="block text-[11px] text-white/40">Personal AI Team</span>
-          </span>
-        </Link>
+    <div className="flex min-h-screen w-full">
+      {/* Desktop rail */}
+      <aside
+        className="fixed inset-y-0 left-0 z-30 hidden flex-col justify-between border-r border-line px-4 py-6 md:flex"
+        style={{ width: "var(--nav-w)" }}
+      >
+        <div>
+          <div className="px-1.5">
+            <Brand />
+          </div>
+          <nav className="mt-8 flex flex-col gap-0.5">
+            {NAV.map((item) => {
+              const active = isActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13.5px] transition ${
+                    active
+                      ? "bg-surface-strong font-medium text-white"
+                      : "text-content-dim hover:bg-surface hover:text-white"
+                  }`}
+                >
+                  <Icon name={item.icon} size={17} className={active ? "text-accent" : ""} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
-        <nav className="flex flex-col gap-0.5">
-          {NAV.map((item) => {
-            const active =
-              item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
-                  active
-                    ? "bg-white/[0.08] text-white"
-                    : "text-white/55 hover:bg-white/[0.04] hover:text-white/90"
-                }`}
-              >
-                <span className="text-white/40">{item.icon}</span>
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="mt-auto rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[11px] leading-relaxed text-white/40">
-          Modeer keeps the context your whole team shares. Talk to any specialist
-          directly — you never have to go through Modeer.
+        <div className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-content-dim">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-surface-strong text-[12px] font-semibold text-white">
+            {(name || "Y").charAt(0).toUpperCase()}
+          </span>
+          <span className="text-[12.5px]">{name || "Your space"}</span>
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-white/[0.06] bg-ink-950/70 px-4 py-3 backdrop-blur-xl md:hidden">
-          <span className="text-base">🧭</span>
-          <span className="text-sm font-semibold">Modeer</span>
-          <nav className="ml-auto flex gap-1">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-lg px-2.5 py-1.5 text-xs text-white/60 hover:bg-white/10"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+      {/* Content */}
+      <div className="flex min-w-0 flex-1 flex-col md:pl-[var(--nav-w)]">
+        {/* Mobile top bar */}
+        <header className="sticky top-0 z-20 flex items-center border-b border-line bg-bg/85 px-4 py-3 backdrop-blur-md md:hidden">
+          <Brand />
         </header>
 
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-10">{children}</main>
+        <main
+          className={
+            inWorkspace
+              ? "min-w-0 flex-1 pb-20 md:pb-0"
+              : "mx-auto min-w-0 flex-1 px-4 py-7 pb-24 sm:px-8 sm:py-12 md:pb-12 w-full max-w-page"
+          }
+        >
+          {children}
+        </main>
       </div>
+
+      {/* Mobile bottom tab bar */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-bg/90 backdrop-blur-lg md:hidden">
+        {NAV.map((item) => {
+          const active = isActive(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center gap-1 py-2.5 text-[10.5px] ${
+                active ? "text-white" : "text-content-faint"
+              }`}
+            >
+              <Icon name={item.icon} size={20} className={active ? "text-accent" : ""} />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }

@@ -39,6 +39,18 @@ class Settings(BaseSettings):
     # When false, sensitive-looking candidates are dropped instead of stored.
     memory_store_sensitive: bool = Field(default=False)
     memory_min_confidence: float = Field(default=0.55)
+    # "auto" -> LLM extraction when a real provider is configured, else rules.
+    # Force with "llm" or "rules".
+    memory_extraction: str = Field(default="auto")
+
+    @property
+    def use_llm_extraction(self) -> bool:
+        mode = self.memory_extraction.lower().strip()
+        if mode == "llm":
+            return True
+        if mode == "rules":
+            return False
+        return self.llm_provider.lower().strip() not in ("", "mock", "none")
 
     @property
     def cors_origins(self) -> list[str]:

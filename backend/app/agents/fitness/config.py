@@ -9,8 +9,17 @@ CONFIG = AgentConfig(
         "experience, and real schedule, and keeps it sustainable."
     ),
     icon="🏋️",
-    accent="#dc2626",
+    accent="#ef4444",
     sort_order=80,
+    tagline="Train with a real plan",
+    composer_placeholder="What's your training goal?",
+    empty_prompt="What are you training for?",
+    starters=[
+        "Build me a weekly training plan",
+        "Adjust my routine for a busy week",
+        "How do I keep a habit going?",
+        "Train around a limitation",
+    ],
     expertise=[
         "goal-appropriate program structure",
         "progressive overload and periodisation basics",

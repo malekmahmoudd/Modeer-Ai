@@ -8,6 +8,10 @@ export interface Agent {
   is_assistant: boolean;
   sort_order: number;
   expertise: string[];
+  tagline: string;
+  composer_placeholder: string;
+  empty_prompt: string;
+  starters: string[];
 }
 
 export interface AgentDetail extends Agent {
@@ -107,7 +111,9 @@ export interface Goal {
 export interface BriefingItem {
   icon: string;
   text: string;
-  source: string;
+  detail?: string;
+  source: "goal" | "memory" | "prompt";
+  agent: string | null;
 }
 
 export interface Briefing {
@@ -135,7 +141,12 @@ export type ChatStreamEvent =
       conversation_id: string;
       message_id: string;
       content: string;
-      memory_candidates: MemoryCandidate[];
       context_used: boolean;
+    }
+  | {
+      type: "memory";
+      conversation_id: string;
+      memory_candidates: MemoryCandidate[];
+      newly_onboarded: boolean;
     }
   | { type: "error"; error: string };

@@ -9,8 +9,17 @@ CONFIG = AgentConfig(
         "the gap, and adapts to how you think."
     ),
     icon="📚",
-    accent="#2563eb",
+    accent="#3b82f6",
     sort_order=10,
+    tagline="Learn, prepare, understand",
+    composer_placeholder="What are you learning?",
+    empty_prompt="What do you want to learn or work through?",
+    starters=[
+        "Explain a topic I'm stuck on",
+        "Build me a study plan",
+        "Quiz me on a subject",
+        "Help me prepare for an exam",
+    ],
     expertise=[
         "explaining hard concepts",
         "study planning and spaced practice",

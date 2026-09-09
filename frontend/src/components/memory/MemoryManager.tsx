@@ -1,226 +1,240 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { MemoryRow } from "@/components/memory/MemoryRow";
-import { EmptyState, SectionHeading, Spinner } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/Icon";
+import { EmptyState, PageHeader, Spinner } from "@/components/ui/primitives";
+import { useAgents } from "@/features/agents/useAgents";
 import { apiFetch, useApi } from "@/lib/api";
-import type { Agent, AgentMemory, SharedMemory } from "@/types";
+import { accentStyle, categoryLabel } from "@/lib/format";
+import type { AgentMemory, SharedMemory } from "@/types";
 
-interface AddForm {
-  category: string;
-  key: string;
-  value: string;
+const EMPTY = { key: "", value: "" };
+
+function groupByCategory<T extends { category: string }>(rows: T[]): [string, T[]][] {
+  const map = new Map<string, T[]>();
+  for (const r of rows) {
+    if (!map.has(r.category)) map.set(r.category, []);
+    map.get(r.category)!.push(r);
+  }
+  return [...map.entries()];
 }
-const EMPTY: AddForm = { category: "general", key: "", value: "" };
+
+function AddForm({ onAdd }: { onAdd: (v: { key: string; value: string }) => Promise<void> }) {
+  const [v, setV] = useState(EMPTY);
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="btn-ghost mt-1 h-9 text-[12.5px]"
+      >
+        <Icon name="plus" size={14} /> Add something
+      </button>
+    );
+  }
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!v.key.trim() || !v.value.trim()) return;
+        await onAdd(v);
+        setV(EMPTY);
+        setOpen(false);
+      }}
+      className="mt-2 flex flex-col gap-2 rounded-[12px] border border-dashed border-line-strong p-3 sm:flex-row"
+    >
+      <input
+        className="field sm:w-44"
+        placeholder="label (e.g. Career goal)"
+        value={v.key}
+        onChange={(e) => setV({ ...v, key: e.target.value })}
+      />
+      <input
+        className="field flex-1"
+        placeholder="what should the team know?"
+        value={v.value}
+        onChange={(e) => setV({ ...v, value: e.target.value })}
+      />
+      <button type="submit" className="btn-primary shrink-0">
+        Save
+      </button>
+    </form>
+  );
+}
 
 export function MemoryManager() {
-  const { data: agents } = useApi<Agent[]>("/agents");
-  const specialists = (agents || []).filter((a) => !a.is_assistant);
+  const { agents } = useAgents();
+  const specialists = agents.filter((a) => !a.is_assistant);
 
-  const {
-    data: shared,
-    loading: sharedLoading,
-    refetch: refetchShared,
-  } = useApi<SharedMemory[]>("/memory/shared");
-
-  const [addingShared, setAddingShared] = useState<AddForm>(EMPTY);
-  const [selectedAgent, setSelectedAgent] = useState<string>("");
+  const { data: shared, loading, refetch } = useApi<SharedMemory[]>("/memory/shared");
+  const [agentId, setAgentId] = useState("");
   const [agentMem, setAgentMem] = useState<AgentMemory[]>([]);
-  const [agentMemLoading, setAgentMemLoading] = useState(false);
-  const [addingAgent, setAddingAgent] = useState<AddForm>(EMPTY);
+  const [agentLoading, setAgentLoading] = useState(false);
 
-  const loadAgentMem = useCallback(async (slug: string) => {
+  const loadAgent = useCallback(async (slug: string) => {
     if (!slug) return;
-    setAgentMemLoading(true);
+    setAgentLoading(true);
     try {
       setAgentMem(await apiFetch<AgentMemory[]>(`/memory/agent/${slug}`));
     } finally {
-      setAgentMemLoading(false);
+      setAgentLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (selectedAgent) loadAgentMem(selectedAgent);
-  }, [selectedAgent, loadAgentMem]);
+    if (agentId) loadAgent(agentId);
+  }, [agentId, loadAgent]);
 
-  async function addShared(e: React.FormEvent) {
-    e.preventDefault();
-    if (!addingShared.key.trim() || !addingShared.value.trim()) return;
-    await apiFetch("/memory/shared", {
-      method: "POST",
-      body: JSON.stringify({ ...addingShared, source: "user" }),
-    });
-    setAddingShared(EMPTY);
-    refetchShared();
-  }
-
-  async function addAgent(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selectedAgent || !addingAgent.key.trim() || !addingAgent.value.trim()) return;
-    await apiFetch("/memory/agent", {
-      method: "POST",
-      body: JSON.stringify({ ...addingAgent, agent_id: selectedAgent, source: "user" }),
-    });
-    setAddingAgent(EMPTY);
-    loadAgentMem(selectedAgent);
-  }
-
-  const activeAgent = specialists.find((a) => a.id === selectedAgent);
+  const sharedGroups = useMemo(() => groupByCategory(shared || []), [shared]);
+  const activeAgent = specialists.find((a) => a.id === agentId);
 
   return (
-    <div className="mx-auto max-w-4xl animate-fade-up">
-      <div className="mb-8">
-        <p className="text-sm text-white/40">Memory</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">
-          What my AI team knows about me
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-white/50">
-          Everything here is yours to edit or delete. Shared context is visible to
-          every specialist. Specialist notes stay with one agent.
-        </p>
-      </div>
+    <div className="anim-fade-up">
+      <PageHeader
+        eyebrow="Memory"
+        title="What my AI team knows about me"
+        lede="Everything here is yours — inspect, edit or delete anything. Modeer never saves sensitive details (health, finances, IDs) on its own."
+      />
 
       {/* Shared */}
-      <section className="mb-10">
-        <SectionHeading
-          title="Shared personal context"
-          hint="Used by every agent on your team."
-        />
+      <section className="mb-12">
+        <h2 className="mb-1 text-[15px] font-semibold tracking-tight text-white">
+          Shared with your team
+        </h2>
+        <p className="mb-4 text-[12.5px] text-content-dim">Every specialist can see these.</p>
 
-        {sharedLoading && <Spinner />}
-        {!sharedLoading && (shared || []).length === 0 && (
+        {loading && <Spinner />}
+        {!loading && (shared || []).length === 0 && (
           <EmptyState title="Nothing shared yet">
-            Talk to Modeer and mention something durable about yourself — your studies,
-            your goals, where you&apos;re based — and it shows up here.
+            Tell Modeer something durable about yourself and it shows up here.
           </EmptyState>
         )}
 
-        <div className="flex flex-col gap-2">
-          {(shared || []).map((m) => (
-            <MemoryRow
-              key={m.id}
-              memory={m}
-              onSave={async (patch) => {
-                await apiFetch(`/memory/shared/${m.id}`, {
-                  method: "PATCH",
-                  body: JSON.stringify(patch),
-                });
-                refetchShared();
-              }}
-              onDelete={async () => {
-                await apiFetch(`/memory/shared/${m.id}`, { method: "DELETE" });
-                refetchShared();
-              }}
-            />
+        {sharedGroups.map(([category, rows]) => (
+          <div key={category} className="card mb-3 p-2.5">
+            <p className="px-2 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-content-faint">
+              {categoryLabel(category)}
+            </p>
+            {rows.map((m) => (
+              <MemoryRow
+                key={m.id}
+                memory={m}
+                onSave={async (patch) => {
+                  await apiFetch(`/memory/shared/${m.id}`, {
+                    method: "PATCH",
+                    body: JSON.stringify(patch),
+                  });
+                  refetch();
+                }}
+                onDelete={async () => {
+                  await apiFetch(`/memory/shared/${m.id}`, { method: "DELETE" });
+                  refetch();
+                }}
+              />
+            ))}
+          </div>
+        ))}
+
+        <AddForm
+          onAdd={async (v) => {
+            await apiFetch("/memory/shared", {
+              method: "POST",
+              body: JSON.stringify({ ...v, category: "general", source: "user" }),
+            });
+            refetch();
+          }}
+        />
+      </section>
+
+      {/* Specialist */}
+      <section>
+        <h2 className="mb-1 text-[15px] font-semibold tracking-tight text-white">
+          Known by specific agents
+        </h2>
+        <p className="mb-4 text-[12.5px] text-content-dim">
+          Private notes a specialist keeps — only that agent sees them.
+        </p>
+
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {specialists.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => setAgentId(a.id === agentId ? "" : a.id)}
+              className="tag transition"
+              style={
+                a.id === agentId
+                  ? { ...accentStyle(a.accent), borderColor: a.accent, color: "#fff" }
+                  : undefined
+              }
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: a.accent }} />
+              {a.name.replace(" Agent", "")}
+            </button>
           ))}
         </div>
 
-        <form
-          onSubmit={addShared}
-          className="mt-3 flex flex-col gap-2 rounded-xl border border-dashed border-white/10 p-3.5 sm:flex-row"
-        >
-          <input
-            className="input sm:w-40"
-            placeholder="key (e.g. career_goal)"
-            value={addingShared.key}
-            onChange={(e) => setAddingShared({ ...addingShared, key: e.target.value })}
-          />
-          <input
-            className="input flex-1"
-            placeholder="value"
-            value={addingShared.value}
-            onChange={(e) => setAddingShared({ ...addingShared, value: e.target.value })}
-          />
-          <button type="submit" className="btn-primary shrink-0">
-            Add
-          </button>
-        </form>
-      </section>
-
-      {/* Specialist notes */}
-      <section>
-        <SectionHeading
-          title="Specialist notes"
-          hint="Private to one agent."
-          action={
-            <select
-              value={selectedAgent}
-              onChange={(e) => setSelectedAgent(e.target.value)}
-              className="input !w-auto !py-1.5 text-sm"
-            >
-              <option value="">Choose a specialist…</option>
-              {specialists.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.icon} {a.name}
-                </option>
-              ))}
-            </select>
-          }
-        />
-
-        {!selectedAgent && (
+        {!agentId && (
           <EmptyState title="Pick a specialist">
-            Choose an agent to see and manage the notes it keeps about you.
+            Choose an agent above to see and manage the notes it keeps about you.
           </EmptyState>
         )}
 
-        {selectedAgent && activeAgent && (
-          <>
+        {agentId && activeAgent && (
+          <div style={accentStyle(activeAgent.accent)}>
             <div className="mb-3 flex items-center gap-2.5">
-              <AgentAvatar icon={activeAgent.icon} accent={activeAgent.accent} size={32} />
-              <span className="text-sm text-white/70">{activeAgent.name}&apos;s notes</span>
+              <AgentAvatar icon={activeAgent.icon} accent={activeAgent.accent} size={28} />
+              <span className="text-[13px] text-content-dim">
+                {activeAgent.name}&apos;s private notes
+              </span>
             </div>
 
-            {agentMemLoading && <Spinner />}
-            {!agentMemLoading && agentMem.length === 0 && (
+            {agentLoading && <Spinner />}
+            {!agentLoading && agentMem.length === 0 && (
               <EmptyState title="No notes yet">
                 As you chat with {activeAgent.name}, useful specialist details land here.
               </EmptyState>
             )}
 
-            <div className="flex flex-col gap-2">
-              {agentMem.map((m) => (
-                <MemoryRow
-                  key={m.id}
-                  memory={m}
-                  onSave={async (patch) => {
-                    await apiFetch(`/memory/agent/${m.id}`, {
-                      method: "PATCH",
-                      body: JSON.stringify(patch),
-                    });
-                    loadAgentMem(selectedAgent);
-                  }}
-                  onDelete={async () => {
-                    await apiFetch(`/memory/agent/${m.id}`, { method: "DELETE" });
-                    loadAgentMem(selectedAgent);
-                  }}
-                />
-              ))}
-            </div>
+            {agentMem.length > 0 && (
+              <div className="card p-2.5">
+                {agentMem.map((m) => (
+                  <MemoryRow
+                    key={m.id}
+                    memory={m}
+                    onSave={async (patch) => {
+                      await apiFetch(`/memory/agent/${m.id}`, {
+                        method: "PATCH",
+                        body: JSON.stringify(patch),
+                      });
+                      loadAgent(agentId);
+                    }}
+                    onDelete={async () => {
+                      await apiFetch(`/memory/agent/${m.id}`, { method: "DELETE" });
+                      loadAgent(agentId);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
 
-            <form
-              onSubmit={addAgent}
-              className="mt-3 flex flex-col gap-2 rounded-xl border border-dashed border-white/10 p-3.5 sm:flex-row"
-            >
-              <input
-                className="input sm:w-40"
-                placeholder="key"
-                value={addingAgent.key}
-                onChange={(e) => setAddingAgent({ ...addingAgent, key: e.target.value })}
-              />
-              <input
-                className="input flex-1"
-                placeholder="value"
-                value={addingAgent.value}
-                onChange={(e) => setAddingAgent({ ...addingAgent, value: e.target.value })}
-              />
-              <button type="submit" className="btn-primary shrink-0">
-                Add
-              </button>
-            </form>
-          </>
+            <AddForm
+              onAdd={async (v) => {
+                await apiFetch("/memory/agent", {
+                  method: "POST",
+                  body: JSON.stringify({
+                    ...v,
+                    agent_id: agentId,
+                    category: "general",
+                    source: "user",
+                  }),
+                });
+                loadAgent(agentId);
+              }}
+            />
+          </div>
         )}
       </section>
     </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Icon } from "@/components/ui/Icon";
 import { humanizeKey } from "@/lib/format";
 
 export interface EditableMemory {
@@ -19,16 +20,12 @@ export function MemoryRow({
   onDelete,
 }: {
   memory: EditableMemory;
-  onSave: (patch: { category: string; key: string; value: string }) => Promise<void>;
+  onSave: (patch: { key: string; value: string }) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [draft, setDraft] = useState({
-    category: memory.category,
-    key: memory.key,
-    value: memory.value,
-  });
+  const [draft, setDraft] = useState({ key: memory.key, value: memory.value });
 
   async function save() {
     setBusy(true);
@@ -40,70 +37,66 @@ export function MemoryRow({
     }
   }
 
+  if (editing) {
+    return (
+      <div className="rounded-[12px] border border-line-strong bg-bg-elev p-3">
+        <input
+          className="field mb-2 !py-2 text-[12.5px]"
+          value={draft.key}
+          onChange={(e) => setDraft({ ...draft, key: e.target.value })}
+          placeholder="label"
+        />
+        <textarea
+          className="field min-h-[64px]"
+          value={draft.value}
+          onChange={(e) => setDraft({ ...draft, value: e.target.value })}
+        />
+        <div className="mt-2 flex justify-end gap-2">
+          <button
+            onClick={() => {
+              setDraft({ key: memory.key, value: memory.value });
+              setEditing(false);
+            }}
+            className="btn-ghost h-8 text-[12px]"
+          >
+            Cancel
+          </button>
+          <button onClick={save} disabled={busy} className="btn-primary h-8 text-[12px]">
+            Save
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 sm:flex-row sm:items-start">
-      <div className="w-full sm:w-44 sm:shrink-0">
-        {editing ? (
-          <input
-            className="input !py-1.5 text-xs"
-            value={draft.key}
-            onChange={(e) => setDraft({ ...draft, key: e.target.value })}
-          />
-        ) : (
-          <>
-            <p className="text-sm font-medium text-white/85">{humanizeKey(memory.key)}</p>
-            <p className="text-[11px] text-white/35">
-              {memory.category} · from {memory.source}
-              {memory.sensitive ? " · sensitive" : ""}
-            </p>
-          </>
-        )}
-      </div>
-
+    <div className="group row-hover flex items-start gap-3 rounded-[10px] px-3 py-2.5">
       <div className="min-w-0 flex-1">
-        {editing ? (
-          <textarea
-            className="input min-h-[60px] text-sm"
-            value={draft.value}
-            onChange={(e) => setDraft({ ...draft, value: e.target.value })}
-          />
-        ) : (
-          <p className="text-sm leading-relaxed text-white/70">{memory.value}</p>
-        )}
+        <p className="text-[11px] font-medium uppercase tracking-wide text-content-faint">
+          {humanizeKey(memory.key)}
+          {memory.sensitive && (
+            <span className="ml-2 rounded bg-amber-500/15 px-1 py-0.5 text-[9px] normal-case tracking-normal text-amber-300">
+              sensitive
+            </span>
+          )}
+        </p>
+        <p className="mt-0.5 text-[13.5px] leading-relaxed text-content">{memory.value}</p>
       </div>
-
-      <div className="flex shrink-0 gap-1.5">
-        {editing ? (
-          <>
-            <button onClick={save} disabled={busy} className="btn-ghost !px-2.5 !py-1 text-xs">
-              Save
-            </button>
-            <button
-              onClick={() => {
-                setDraft({ category: memory.category, key: memory.key, value: memory.value });
-                setEditing(false);
-              }}
-              className="btn-ghost !px-2.5 !py-1 text-xs"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={() => setEditing(true)}
-              className="btn-ghost !px-2.5 !py-1 text-xs"
-            >
-              Edit
-            </button>
-            <button
-              onClick={onDelete}
-              className="btn-ghost !px-2.5 !py-1 text-xs hover:!text-red-300"
-            >
-              Delete
-            </button>
-          </>
-        )}
+      <div className="flex shrink-0 gap-0.5 opacity-0 transition group-hover:opacity-100">
+        <button
+          onClick={() => setEditing(true)}
+          className="grid h-7 w-7 place-items-center rounded-[8px] text-content-faint hover:bg-surface-strong hover:text-white"
+          aria-label="Edit"
+        >
+          <Icon name="pencil" size={14} />
+        </button>
+        <button
+          onClick={onDelete}
+          className="grid h-7 w-7 place-items-center rounded-[8px] text-content-faint hover:bg-surface-strong hover:text-red-300"
+          aria-label="Delete"
+        >
+          <Icon name="trash" size={14} />
+        </button>
       </div>
     </div>
   );

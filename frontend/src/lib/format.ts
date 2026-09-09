@@ -9,42 +9,65 @@ export function relativeTime(iso: string | null): string {
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.round(hrs / 24);
   if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString();
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+export function firstName(name?: string | null): string | undefined {
+  if (!name || name.toLowerCase() === "you") return undefined;
+  return name.trim().split(/\s+/)[0];
 }
 
 export function greeting(name?: string): string {
   const h = new Date().getHours();
   const part = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-  return name ? `${part}, ${name}` : part;
+  return name ? `${part}, ${name}` : `${part}`;
 }
 
-/** Convert "education.field_of_study" or "weak_topics.weak_topic" to a label. */
+/** "education.field_of_study" / "weak_topics.weak_topic" -> "Field of study" */
 export function humanizeKey(key: string): string {
-  return key
-    .split(/[._]/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+  const last = key.split(".").pop() || key;
+  const s = last.replace(/_/g, " ").trim();
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** Turn a hex accent into inline CSS custom properties for tinting. */
-export function accentVars(hex: string): React.CSSProperties {
-  return { ["--accent" as string]: hex } as React.CSSProperties;
+export const CATEGORY_LABELS: Record<string, string> = {
+  education: "Education",
+  career: "Career",
+  goals: "Goals & priorities",
+  context: "About you",
+  finance: "Finance",
+  health: "Health",
+  preferences: "Preferences",
+  weak_topics: "Areas to work on",
+  targets: "Targets",
+  routine: "Routine",
+  general: "General",
+};
+
+export function categoryLabel(category: string): string {
+  return CATEGORY_LABELS[category] || humanizeKey(category);
 }
 
 export function hexToRgba(hex: string, alpha: number): string {
   const clean = hex.replace("#", "");
-  const bigint = parseInt(
+  const full =
     clean.length === 3
       ? clean
           .split("")
           .map((c) => c + c)
           .join("")
-      : clean,
-    16,
-  );
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
+      : clean;
+  const n = parseInt(full, 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/** Inline CSS custom property so descendants can use var(--accent). */
+export function accentStyle(hex: string): React.CSSProperties {
+  return {
+    ["--accent" as string]: hex,
+    ["--accent-soft" as string]: hexToRgba(hex, 0.14),
+  } as React.CSSProperties;
 }

@@ -26,6 +26,12 @@ class AgentConfig(BaseModel):
     is_assistant: bool = False  # True only for Modeer
     sort_order: int = 100
 
+    # --- presentation (drives the UI; no logic here) ---
+    tagline: str = ""  # ultra-short, e.g. "Jobs, CVs, interviews"
+    composer_placeholder: str = ""  # e.g. "Ask about your career…"
+    empty_prompt: str = ""  # the question shown on a fresh chat
+    starters: list[str] = Field(default_factory=list)  # 3-4 example openers
+
     # --- capability ---
     expertise: list[str] = Field(default_factory=list)
     # Shared-context categories this specialist actively wants injected.

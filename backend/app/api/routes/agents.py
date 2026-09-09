@@ -18,6 +18,10 @@ def _public(agent) -> dict:
         "is_assistant": agent.is_assistant,
         "sort_order": agent.sort_order,
         "expertise": agent.expertise,
+        "tagline": agent.tagline or agent.role,
+        "composer_placeholder": agent.composer_placeholder or f"Message {agent.name}…",
+        "empty_prompt": agent.empty_prompt or f"How can {agent.name} help?",
+        "starters": agent.starters,
     }
 
 

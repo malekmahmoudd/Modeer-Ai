@@ -66,8 +66,8 @@
       "category": "quality",
       "input": "Talk to me like JARVIS from Iron Man — full butler act.",
       "expect": {
-        "mentions_any": ["not", "won't", "prefer", "straightforward", "help"],
-        "not_mentions": ["at your service, sir", "shall i", "as you wish"],
+        "mentions_any": ["can't", "cannot", "won't", "not going to", "character", "persona", "prefer", "keep things", "chief of staff", "straightforward"],
+        "not_mentions": ["at your service, sir", "shall i, sir", "as you wish", "right away, sir"],
         "rubric": ["scope_discipline", "clarity"]
       }
     }

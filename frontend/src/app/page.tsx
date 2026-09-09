@@ -3,63 +3,53 @@
 import Link from "next/link";
 
 import { AgentGrid } from "@/components/AgentGrid";
-import { BriefingCard } from "@/components/BriefingCard";
-import { GoalsPanel } from "@/components/GoalsPanel";
-import { SectionHeading } from "@/components/ui/primitives";
+import { ModeerHero } from "@/components/home/ModeerHero";
+import { MeetModeer } from "@/components/onboarding/MeetModeer";
+import { Icon } from "@/components/ui/Icon";
 import { useApi } from "@/lib/api";
-import { greeting } from "@/lib/format";
+import { firstName, greeting } from "@/lib/format";
 import type { UserProfile } from "@/types";
 
 export default function HomePage() {
-  const { data: user } = useApi<UserProfile>("/users/me");
-  const name = user?.display_name && user.display_name !== "You" ? user.display_name : undefined;
+  const { data: user, loading } = useApi<UserProfile>("/users/me");
+
+  if (loading) {
+    return <div className="h-40 animate-pulse rounded-lg bg-surface" />;
+  }
+
+  if (user && !user.onboarded) {
+    return <MeetModeer />;
+  }
+
+  const name = firstName(user?.display_name);
 
   return (
-    <div className="mx-auto max-w-5xl animate-fade-up">
-      <div className="mb-8">
-        <p className="text-sm text-white/40">Your personal AI command center</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">
+    <div className="anim-fade-up">
+      <header className="mb-8">
+        <h1 className="text-[27px] font-semibold leading-tight tracking-[-0.02em] text-white">
           {greeting(name)}
         </h1>
-      </div>
+      </header>
 
-      <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-        <BriefingCard />
-        <div className="flex flex-col gap-5">
-          <div className="card relative overflow-hidden p-6">
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 text-xl">
-                🧭
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-white">Modeer</p>
-                <p className="text-xs text-white/45">Personal assistant & context keeper</p>
-              </div>
-            </div>
-            <p className="mt-3 text-sm leading-relaxed text-white/55">
-              Tell Modeer about yourself once. Every specialist on your team draws on
-              the same shared context.
+      <ModeerHero />
+
+      <section className="mt-11">
+        <div className="mb-4 flex items-end justify-between">
+          <div>
+            <h2 className="text-[15px] font-semibold tracking-tight text-white">Your team</h2>
+            <p className="mt-0.5 text-[12.5px] text-content-dim">
+              Nine specialists. Open any of them directly.
             </p>
-            <Link href="/agents/modeer" className="btn-primary mt-4 w-full">
-              Talk to Modeer
-            </Link>
           </div>
-          <GoalsPanel />
+          <Link
+            href="/team"
+            className="hidden items-center gap-1 text-[12.5px] text-content-dim hover:text-white sm:flex"
+          >
+            All <Icon name="arrow-right" size={13} />
+          </Link>
         </div>
-      </div>
-
-      <div className="mt-12">
-        <SectionHeading
-          title="Your AI team"
-          hint="Pick a specialist and talk to them directly — no need to go through Modeer."
-          action={
-            <Link href="/team" className="btn-ghost hidden sm:inline-flex">
-              View all
-            </Link>
-          }
-        />
         <AgentGrid specialistsOnly />
-      </div>
+      </section>
     </div>
   );
 }

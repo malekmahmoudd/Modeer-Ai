@@ -9,8 +9,17 @@ CONFIG = AgentConfig(
         "constraints, weighs real options, and pushes back on weak assumptions."
     ),
     icon="💼",
-    accent="#0891b2",
+    accent="#14b8a6",
     sort_order=20,
+    tagline="Jobs, CVs, interviews",
+    composer_placeholder="Ask about your career…",
+    empty_prompt="What are you working on?",
+    starters=[
+        "Review my CV",
+        "Prepare me for an interview",
+        "Help me choose between two roles",
+        "Build my career plan",
+    ],
     expertise=[
         "career strategy and positioning",
         "CV and portfolio review",

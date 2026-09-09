@@ -22,17 +22,19 @@ from sqlalchemy.orm import Session
 from app.agents.context import build_context
 from app.agents.schema import AgentConfig
 from app.conversations import service as convo_service
+from app.core.config import settings
 from app.db.models import Conversation, User
 from app.goals import service as goal_service
 from app.llm.base import LLMProvider
 from app.llm.provider import get_llm_provider, resolve_model
 from app.memory import service as memory_service
 from app.memory.extraction import extract_candidates
+from app.memory.llm_extraction import llm_extract_candidates
 
 
 @dataclass(slots=True)
 class RuntimeEvent:
-    type: str  # "start" | "delta" | "end" | "error"
+    type: str  # "start" | "delta" | "end" | "memory" | "error"
     data: dict
 
     def as_sse(self) -> str:
@@ -106,10 +108,41 @@ class AgentRuntime:
         assistant_msg = convo_service.add_message(
             db, conversation, "assistant", answer, meta
         )
+        db.commit()
 
-        candidates = extract_candidates(user_message, agent_id=agent.id)
+        # The answer is done — release it now, then do memory work.
+        yield RuntimeEvent(
+            "end",
+            {
+                "conversation_id": conversation.id,
+                "message_id": assistant_msg.id,
+                "content": answer,
+                "context_used": packet.diagnostics["personal_context_count"] > 0
+                or bool(packet.diagnostics["agent_memory_used"]),
+            },
+        )
+
+        # --- candidate memory extraction -------------------------------------
+        if settings.use_llm_extraction:
+            candidates = await llm_extract_candidates(
+                user_message, agent_id=agent.id, provider=self._provider, model=model
+            )
+        else:
+            candidates = extract_candidates(user_message, agent_id=agent.id)
+
         source = "modeer" if agent.is_assistant else agent.id
         memory_service.apply_candidates(db, user.id, candidates, source=source)
+
+        newly_onboarded = False
+        if not user.onboarded:
+            shared_count = len(memory_service.list_shared(db, user.id))
+            assistant_turns = sum(
+                1 for m in convo_service.history(db, conversation.id)
+                if m.role == "assistant"
+            )
+            if shared_count >= 3 or (assistant_turns >= 4 and shared_count >= 1):
+                user.onboarded = True
+                newly_onboarded = True
         db.commit()
 
         stored = [
@@ -126,14 +159,11 @@ class AgentRuntime:
             for c in candidates
         ]
         yield RuntimeEvent(
-            "end",
+            "memory",
             {
                 "conversation_id": conversation.id,
-                "message_id": assistant_msg.id,
-                "content": answer,
                 "memory_candidates": stored,
-                "context_used": packet.diagnostics["personal_context_count"] > 0
-                or bool(packet.diagnostics["agent_memory_used"]),
+                "newly_onboarded": newly_onboarded,
             },
         )
 

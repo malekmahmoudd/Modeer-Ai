@@ -1,29 +1,50 @@
 "use client";
 
+import Link from "next/link";
+
 import { AgentGrid } from "@/components/AgentGrid";
-import { SectionHeading } from "@/components/ui/primitives";
+import { AgentAvatar } from "@/components/AgentAvatar";
+import { Icon } from "@/components/ui/Icon";
+import { PageHeader, SectionLabel } from "@/components/ui/primitives";
+import { useAgents } from "@/features/agents/useAgents";
 
 export default function TeamPage() {
+  const { byId } = useAgents();
+  const modeer = byId("modeer");
+
   return (
-    <div className="mx-auto max-w-5xl animate-fade-up">
-      <div className="mb-8">
-        <p className="text-sm text-white/40">AI Team</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-white">
-          Choose who you want to talk to
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-white/50">
-          Nine specialists and Modeer, your personal assistant. They share what your
-          team knows about you, but each keeps its own conversation and its own notes.
-        </p>
-      </div>
+    <div className="anim-fade-up">
+      <PageHeader
+        eyebrow="Your AI team"
+        title="Choose who to talk to"
+        lede="Modeer keeps everyone in sync with what your team knows about you. Each specialist keeps its own conversation and its own notes — you pick who you need."
+      />
 
-      <SectionHeading title="Personal assistant" />
-      <AgentGrid assistantsOnly />
+      {modeer && (
+        <Link
+          href="/agents/modeer"
+          className="lift card relative mb-9 flex items-center gap-4 overflow-hidden p-5"
+        >
+          <span
+            className="absolute inset-y-0 left-0 w-[3px]"
+            style={{ background: modeer.accent, opacity: 0.6 }}
+          />
+          <AgentAvatar icon={modeer.icon} accent={modeer.accent} size={46} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-[15px] font-semibold tracking-tight text-white">Modeer</p>
+              <span className="tag">Personal assistant</span>
+            </div>
+            <p className="mt-0.5 truncate text-[13px] text-content-dim">
+              Learns you, keeps shared context, plans your day, points you to the right specialist.
+            </p>
+          </div>
+          <Icon name="arrow-right" size={16} className="shrink-0 text-content-faint" />
+        </Link>
+      )}
 
-      <div className="mt-10">
-        <SectionHeading title="Specialists" />
-        <AgentGrid specialistsOnly />
-      </div>
+      <SectionLabel>Specialists</SectionLabel>
+      <AgentGrid specialistsOnly />
     </div>
   );
 }

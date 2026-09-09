@@ -9,8 +9,17 @@ CONFIG = AgentConfig(
         "argument, and edits in your voice, not a generic one."
     ),
     icon="✍️",
-    accent="#db2777",
+    accent="#ec4899",
     sort_order=40,
+    tagline="Draft, edit, refine",
+    composer_placeholder="What are you writing?",
+    empty_prompt="What are you writing, and who's it for?",
+    starters=[
+        "Edit a paragraph for me",
+        "Help me outline a piece",
+        "Match my tone in a rewrite",
+        "Tighten this without losing my voice",
+    ],
     expertise=[
         "drafting and structuring",
         "line and developmental editing",

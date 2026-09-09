@@ -9,8 +9,17 @@ CONFIG = AgentConfig(
         "field, and makes the trade-offs explicit."
     ),
     icon="🛍️",
-    accent="#ea580c",
+    accent="#f97316",
     sort_order=60,
+    tagline="Compare, decide, buy well",
+    composer_placeholder="What are you trying to buy?",
+    empty_prompt="What are you trying to buy?",
+    starters=[
+        "Help me choose between two options",
+        "Turn my need into buying criteria",
+        "Is this worth the price?",
+        "Find the right category for my use",
+    ],
     expertise=[
         "turning needs into buying criteria",
         "comparing options on what matters",

@@ -31,11 +31,21 @@ source · confidence · sensitive · created_at · updated_at`
 `source` is `user`, `modeer`, or a specialist slug. `(user_id, key)` is unique
 for shared; `(user_id, agent_id, key)` for agent — writes upsert.
 
-## Extraction (`app/memory/extraction.py`)
+## Extraction
 
-Deterministic and rule-based — memory writes must be predictable, and the MVP
-avoids LLM/tool-driven autonomy. After each user message the runtime extracts
-candidates and classifies each into one of four cases:
+Two implementations behind one seam; `settings.memory_extraction`
+(`auto` | `llm` | `rules`, default `auto`) selects. `auto` = LLM when a real
+provider is configured, rules otherwise. Rules always run for `mock` and in
+tests, so the suite stays deterministic.
+
+- **Rules** (`app/memory/extraction.py`) — regex patterns for common first-person
+  statements. Predictable, zero-cost, brittle on natural phrasing.
+- **LLM** (`app/memory/llm_extraction.py`) — one short JSON-only model call per
+  user message proposes durable facts; **the same gates below** then decide what
+  is stored. Any malformed output falls back to the rules. Runs *after* the reply
+  has streamed, so there is no perceived latency.
+
+Either way, each candidate is classified into one of four cases:
 
 | Case | Action |
 |---|---|

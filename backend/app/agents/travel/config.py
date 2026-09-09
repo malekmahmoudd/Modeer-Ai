@@ -9,8 +9,17 @@ CONFIG = AgentConfig(
         "itinerary, balances pace and budget, and flags what to decide early."
     ),
     icon="✈️",
-    accent="#0d9488",
+    accent="#0ea5e9",
     sort_order=50,
+    tagline="Plan trips that fit you",
+    composer_placeholder="Where are you thinking of going?",
+    empty_prompt="What trip are you planning?",
+    starters=[
+        "Plan a week-long trip",
+        "Suggest a long weekend break",
+        "Build a budget split for a trip",
+        "Help me pick a destination",
+    ],
     expertise=[
         "itinerary design and pacing",
         "destination and season fit",

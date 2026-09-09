@@ -1,201 +1,186 @@
 # Project status — Modeer Personal AI Team MVP
 
-_Last updated: 2026-09-09 · commit `d831c73`_
+_Last updated: 2026-09-09 · phase: UI/UX + agent-quality polish_
 
 ---
 
 ## 1. Where the project is
 
-The repository is fully initialized and the **first milestone works end to end**.
-Backend and frontend both build, all tests pass, and the core flow (Modeer learns
-a fact → specialists use it → memory is editable) is verified over real HTTP.
+MVP core is complete and the **first milestone works end to end on the real
+model**. This pass focused on the two stated priorities — **UI/UX quality** and
+**specialist-agent performance** — plus making shared personal context actually
+feel intelligent.
 
 | Area | State |
 |---|---|
-| Repo scaffold (backend, frontend, docs, docker-compose, env templates) | ✅ Done |
-| Database models + migration | ✅ Done (8 tables, Alembic `0001`, up/down verified) |
+| Repo scaffold · DB models + migration · API · docs | ✅ Done |
 | Agent runtime + registry + 10 agent configs/prompts | ✅ Done |
-| Two-layer memory + extraction + isolation | ✅ Done |
-| LLM provider abstraction (mock + Anthropic streaming) | ✅ Done |
-| API (health, users, agents, conversations, chat, memory, goals, briefings, team) | ✅ Done |
-| Frontend (Home, Team, Agent workspace, Memory, Goals) + streaming | ✅ Done |
-| Tests (50 pytest, all green) + agent eval fixtures | ✅ Done |
-| Docs (README, product, architecture, agents, memory) | ✅ Done |
-| **Real LLM responses** | ⏳ Needs your API key |
-| **Visual/browser QA of the UI** | ⏳ Needs you (browser tools were off) |
-| **Prompt tuning against a real model** | ⏳ Needs you + a key |
+| **Real LLM provider wired (Groq / OpenAI-compatible)** | ✅ Done — streaming, 429 back-off |
+| **LLM-assisted memory extraction** (rules fallback) | ✅ Done |
+| **Frontend redesign** — new design system, all 5 screens | ✅ Done |
+| **First-run onboarding** ("Meet Modeer" → chat → team) | ✅ Done |
+| Agent prompt improvements (Modeer, Career, Research + global) | ✅ Done |
+| Tests (58 pytest) · ruff · tsc · next build · next lint | ✅ All green |
+| Priority-5 agent evals on the real model | ✅ 31/35 (89%) baseline; re-run after fixes |
+| **Visual/interaction QA in a real browser** | ⛔ Blocked — needs you (browser tools were off this session) |
+| Remaining-5 agents: full eval sweep on real model | ⏳ Rate-limited; spot-checked OK |
 
 ---
 
-## 2. What is done (detail)
+## 2. What changed this pass
 
-### Backend — `backend/`
-- **FastAPI modular monolith.** One app, one DB, one LLM provider, one agent
-  runtime. No microservices, no agent frameworks (LangChain/CrewAI/etc.), no
-  tools, no MCP — matching the brief's exclusions.
-- **Agent runtime** (`app/agents/runtime.py`): persist user message → load agent
-  config → load shared context + agent memory + goals → load conversation
-  history → build context packet → stream from LLM → persist reply →
-  extract candidate memories. Every agent (Modeer + 9 specialists) runs through
-  this; agents are **configuration, not code**.
-- **Agent configs** in `app/agents/<slug>/`: `config.py` (identity, expertise,
-  explicit `reasoning_framework`, `response_behavior`, `safety_boundaries`,
-  model settings) + `prompt.md` (versioned system instructions) + `evals.json`
-  (7 test categories). All 10: modeer, study, travel, shopping, career, finance,
-  fitness, writing, research, email.
-- **Each specialist has a real domain reasoning framework** (internal, never
-  echoed to the user), not a "you are an expert X" flavour line.
-- **Memory:** shared personal context (team-wide, filtered per agent by the
-  agent's `shared_context_fields`) + per-agent private namespaces. Extraction is
-  deterministic/rule-based and conservative — temporary details are dropped,
-  sensitive data (health, salary, IDs) is flagged and **not** stored unless you
-  opt in via `MEMORY_STORE_SENSITIVE=true`.
-- **LLM:** `app/llm/` — `base.py` (interface), `mock_provider.py`
-  (context-aware, no key, used by all tests), `anthropic_provider.py` (streaming
-  Claude Messages API), `provider.py` (factory). Swap providers by editing one
-  file. No model routing.
-- **DB models** (`app/db/models.py`): `users, agents, conversations, messages,
-  shared_memories, agent_memories, goals, briefings` — FKs, indexes,
-  timezone-aware timestamps, string-UUID PKs (portable SQLite↔Postgres).
-  Alembic migration `0001_initial_schema.py`.
-- **API** (`/api/…`): health · users/me · agents · conversations · chat (SSE
-  stream + non-streaming fallback) · memory (shared + agent CRUD) · goals CRUD ·
-  briefings/today · team/ask (explicit "Ask My Team" consult).
-- **Daily briefing:** built only from stored goals + shared context. Never
-  claims external facts (calendar, email, weather).
-- **Tests:** 50 `pytest` cases — registry, config loading, context construction,
-  memory isolation (per-user **and** per-agent), shared-memory behaviour,
-  conversation persistence, user isolation, API surface, and the full milestone
-  flow (`tests/test_milestone_flow.py`). LLM mocked throughout. `ruff` clean.
-- **Evals:** `python -m app.agents.evals` — every agent has cases for in-domain,
-  ambiguous, out-of-domain, personalization, bad-assumption, safety, quality.
+### Phase 1 — Real model
+- Added `LLM_PROVIDER=groq` / `openai` support: a single OpenAI-compatible
+  streaming provider (`app/llm/openai_compat_provider.py`) with **429 rate-limit
+  back-off** (honours `retry-after` / "try again in Ns"). Your `.env` was pointing
+  at Groq `openai/gpt-oss-120b`; that now works.
+- **Security fix:** your Groq key was in `backend/.env.example` (a git-tracked
+  template — though not yet committed). Moved it to `backend/.env` (git-ignored)
+  and restored the template to placeholders. **Rotate that key** — it was shared
+  in plaintext. See §4.
+- Streaming, context injection, Modeer, specialists and memory all verified
+  against the real model over HTTP.
+- Eval harness: added `--delay` (throttle) and `--show`; per-case failures no
+  longer abort the run.
 
-### Frontend — `frontend/`
-- Next.js 15 (App Router) + React 19 + TypeScript + Tailwind. `npm run build`,
-  `lint`, `typecheck` all clean.
-- **Screens:**
-  - **Home** — greeting, Modeer daily briefing card, "Talk to Modeer" CTA, AI
-    Team grid, current goals.
-  - **AI Team** — Modeer + all 9 specialists; each card has icon, accent
-    colour, role, description. Pick one directly.
-  - **Agent workspace** (`/agents/[id]`) — specialist identity header, streaming
-    chat, conversation rail (independent histories per agent), a subtle note
-    when personal context informed a reply, "saved to your context" confirmation.
-  - **Memory** (`/memory`) — "What my AI team knows about me": view / add /
-    edit / delete shared memories and per-specialist notes.
-  - **Goals** (`/goals`) — create, prioritise, complete, delete.
-- SSE streaming hook (`features/chat/useChatStream.ts`). `/api/*` is proxied to
-  the backend in dev, so there is **no CORS setup** to do.
-- Design is a dark "command center" with per-agent accents — deliberately not a
-  ChatGPT-with-a-sidebar clone.
+### Phase 3 — Agent performance (real-model eval: 31/35 on the priority 5)
+Fixed the real problems the eval surfaced:
+- **Modeer** now hands off clearly when a request is squarely a specialist's job
+  ("the Fitness Assistant is built for this — want to take it there?"), instead
+  of quietly doing the specialist's whole job.
+- **Career** — a refusal to fabricate credentials now *pivots* to the honest move
+  (reframe real experience, quantify impact) instead of a bare "I can't help."
+- **Research** — states up front it can't pull/verify live sources and won't
+  invent citations, then stays useful (what to search, where).
+- **Global guardrail** (all agents): personal context is background, not a
+  checklist — use a fact only when it changes the answer; never open with a
+  recap of what you know. (Phase 4.)
+- Two eval cases were harness false-negatives (a correct JARVIS refusal, a
+  correct citation refusal) — expectations corrected.
+- Spot-checked Fitness / Finance / Email on the real model: each shows its
+  domain framework (Fitness asks background + injuries first; Finance leads with
+  "education, not advice"; Email is BLUF with a subject line). Not shallow.
 
-### Verified working (over real HTTP, not just unit tests)
-1. Talk to Modeer, share "I'm studying mechanical engineering… want to be a
-   robotics engineer" → both facts saved to shared context.
-2. Open **Career Agent** directly → it already knows field + goal.
-3. Open **Study Agent** directly → uses the same field for its domain.
-4. Career and Study keep **separate** conversation histories.
-5. SSE streaming emits `start` / `delta` / `end` events.
-6. Edit a memory → returns updated value. Delete → `204`.
-7. Ask My Team with `["career","study"]` → both answer + Modeer synthesises.
+### Phase 4 — Context & memory quality
+- **LLM-assisted extraction** (`app/memory/llm_extraction.py`): when a real
+  provider is set, one short JSON call per user message proposes durable facts;
+  the **same conservative gates** as the rule-based path then decide what's
+  stored (sensitive dropped unless opted in, low-confidence dropped, agent-scoped
+  facts kept only in-domain). Falls back to rules on any bad output. Rules still
+  run for `mock` / tests, so the suite stays deterministic.
+  - Before: "I'm a third-year CS student at Cairo University, goal is an ML
+    internship next summer" → 2 poor facts (`level = "computer science"`).
+  - After: 5 clean facts — field of study, year, institution, inferred location,
+    and the ML-internship **goal**; powerlifting "4×/week" routed to the Fitness
+    agent's private notes; "my salary is …" + "diagnosed with asthma" flagged
+    sensitive and **not stored**.
+- 8 new deterministic tests (`tests/test_llm_extraction.py`) cover parsing,
+  gates, scope routing and fallback.
+- Runtime now emits `end` (answer done) then a trailing `memory` event, so the
+  reply renders instantly and the "saved to your context" confirmation follows.
+
+### Phase 5 — First-run experience
+- New users land on **"Meet Modeer"** (not a form): one line of context → "Start
+  with Modeer" → a guided first message. Onboarding completes itself once Modeer
+  has learned ~3 durable facts (or after a few exchanges with ≥1 fact), and the
+  workspace shows a "Your team is set up" banner linking to the team.
+
+### Phase 2 / UI — full redesign
+New token-based design system (`globals.css` + `tailwind.config.ts`): calmer
+near-black palette, one subtle ambient wash (no gradient soup), hairline borders
+used sparingly, a real type/spacing/radius scale, restrained motion
+(`prefers-reduced-motion` respected), inline SVG icon set.
+
+- **Home** — greeting by name; **Modeer hero panel** (distinct from the grid) with
+  the daily briefing as tappable rows tinted by the related specialist's accent,
+  an inline "Message Modeer…" composer, and an active-goals chip. Below: the team
+  as one-line roster cards (name · tagline · accent — no paragraphs).
+- **Team** — Modeer as a wide feature row, then the nine specialists.
+- **Agent workspace** — clean identity header with a per-agent accent hairline,
+  agent-specific empty-state question + starter chips, agent-specific composer
+  placeholder, auto-growing composer, a small "Personalized from your saved
+  context" link (no token counts / model names / internals), desktop conversation
+  rail + mobile history sheet. A proper markdown renderer (headings, lists,
+  tables, code, quotes) replaces the previous naive one.
+- **Memory** — "Shared with your team" grouped by human category; "Known by
+  specific agents" behind an accent-chip picker; rows read as labelled facts, not
+  raw key/value; inline add / edit / delete; a trust line about sensitive data.
+- **Goals** — restyled, still lightweight (no kanban/dependencies).
+- **Nav** — slim left rail on desktop (no promo clutter), **bottom tab bar** on
+  mobile. Presentation fields (`tagline`, `composer_placeholder`, `empty_prompt`,
+  `starters`) live in each agent's `config.py`, served by the API — the UI stays
+  config-driven.
 
 ---
 
 ## 3. What you need to do
 
-### A. To run it locally (required — one-time, ~5 min)
+### A. Rotate the Groq API key (do this)
+`gsk_…` was pasted into a tracked template file and into this session in
+plaintext. It's now only in the git-ignored `backend/.env`, but treat it as
+exposed: revoke it at <https://console.groq.com/keys>, create a new one, and put
+it in `backend/.env` (never `.env.example`).
 
+### B. Run it
 ```bash
-# 1. Backend
-cd backend
-python -m venv .venv
-.venv\Scripts\activate                 # PowerShell: .venv\Scripts\Activate.ps1
-pip install -r requirements-dev.txt
-copy .env.example .env
-uvicorn app.main:app --reload          # http://localhost:8000  (API docs at /docs)
+# backend  (venv + deps already installed locally)
+cd backend && .venv\Scripts\activate
+uvicorn app.main:app --reload            # :8000
 
-# 2. Frontend (second terminal)
-cd frontend
-npm install
-copy .env.example .env.local
-npm run dev                            # http://localhost:3000
+# frontend
+cd frontend && npm run dev               # :3000
 ```
+`backend/.env` already has your Groq config. SQLite is the default DB — no setup.
+If the Next dev server ever 500s with "Cannot find module './xxx.js'", stop it,
+`rm -rf frontend/.next`, and restart (stale dev cache, not a code bug).
 
-The backend uses **SQLite by default** — nothing else to install. It works fully
-on the mock LLM (responses are placeholders that echo your context, so you can
-see personalization and memory working without a key).
+### C. Visual + interaction QA — the main open item
+Browser tools were disabled this session, so the redesign was verified by
+`next build` / `tsc` / `next lint` and by driving every flow over HTTP — **not by
+looking at it**. Please walk through, at desktop / laptop / tablet / mobile
+widths:
+- Home (onboarded and not), Team, a couple of specialist chats, Memory, Goals.
+- Streaming feel, the accent-hairline identity cue per agent, empty states,
+  the mobile bottom nav + history sheet, composer on a phone keyboard.
+Note anything that feels off; it's fast to iterate from a concrete list.
+(`/chrome` in Claude Code enables browser tools if you want me to do this pass.)
 
-> Note: `.venv` and `node_modules` already exist locally from this session, so
-> `pip install` / `npm install` will be quick or can be skipped.
-
-### B. To get real AI responses (your Anthropic API key)
-
-Edit `backend/.env`:
-
-```env
-LLM_PROVIDER=anthropic
-LLM_API_KEY=sk-ant-...        # <-- your key
-LLM_MODEL=claude-sonnet-5     # or another Claude model
-```
-
-Restart the backend. That's the only secret the project needs. **Do not commit
-`.env`** (it's git-ignored).
-
-### C. To use PostgreSQL instead of SQLite (optional)
-
-```bash
-docker compose up -d db       # Postgres on :5432, user/pass/db all "modeer"
-```
-
-Set in `backend/.env`:
-```env
-DATABASE_URL=postgresql+psycopg://modeer:modeer@localhost:5432/modeer
-```
-Then: `cd backend && alembic upgrade head`.
-
-### D. Decisions and review that need a human
-
+### D. Decisions still yours
 | # | What | Why it needs you |
 |---|---|---|
-| 1 | **Visual QA of the UI** in a browser | Browser tools were disabled this session. Click through all 5 screens on desktop + mobile widths; check the streaming chat feel, accent colours, empty states. |
-| 2 | **Prompt tuning against a real model** | Prompts are strong drafts written without a live model. Run `LLM_PROVIDER=anthropic … python -m app.agents.evals` and iterate on `app/agents/<slug>/prompt.md` where answers miss. |
-| 3 | **Auth strategy** | MVP ships a single local "demo user" (an `X-User-Id` header for tests). Decide if/when you want real accounts before multi-user use. |
-| 4 | **Which 4 agents stay lighter** | Brief said prioritise Modeer/Study/Career/Research/Writing. All 9 are implemented on the same runtime, but Travel/Shopping/Finance/Fitness/Email prompts have had less iteration — decide how deep to go. |
-| 5 | **Deployment target** | No hosting/CI is set up (out of scope for the MVP). Decide where this runs when you're ready. |
-| 6 | **Model id sanity-check** | `LLM_MODEL` defaults to `claude-sonnet-5`; confirm the exact model string you want to bill against. |
+| 1 | Groq free tier is ~8k tokens/min | Fine for use; the full 70-case eval sweep gets rate-limited. Consider a paid tier or a second key for CI-style eval runs. |
+| 2 | Auth strategy | Still a single local "demo user". Decide before multi-user. |
+| 3 | Model choice | `openai/gpt-oss-120b` is solid in testing. Confirm it's what you want, or switch `LLM_MODEL`. |
+| 4 | Deployment target | No hosting/CI yet (out of MVP scope). |
 
 ---
 
-## 4. Not built yet (beyond the milestone — your call on priority)
+## 4. Known limitations / tech debt
 
-These were explicitly deferred by the brief or are natural next steps:
-
-- **"Ask My Team" polish.** A minimal explicit endpoint exists
-  (`POST /api/team/ask`) and is tested, but there's no frontend screen for it
-  yet. Brief said not to prioritise this before core chat is stable — it now is.
-- **Onboarding flow.** Modeer's prompt handles onboarding conversationally, but
-  there's no dedicated first-run wizard / profile-setup UI.
-- **LLM-assisted memory extraction.** Current extraction is rule-based
-  (deterministic, safe, testable). A real model could catch more nuanced facts —
-  add it behind the existing `extract_candidates` seam if wanted.
-- **Briefing scheduling / history view.** Briefings are generated on request and
-  stored per day; there's no "past briefings" screen.
-- **Auth, rate limiting, observability, CI/CD** — not part of the MVP scope.
-- **Eval scoring against a rubric model** (LLM-as-judge). Harness is ready; only
-  heuristic scoring runs today.
+- **Not visually reviewed** (see §3C) — the single biggest open item.
+- **Remaining-5 agents**: only spot-checked on the real model; the full eval
+  sweep was rate-limited. Re-run `python -m app.agents.evals travel shopping
+  finance fitness email --delay 22` when the budget allows.
+- **LLM extraction adds one short model call per user message** (after the reply
+  streams, so no perceived latency). Set `MEMORY_EXTRACTION=rules` to disable.
+- `next lint` prints a deprecation notice (works; Next 16 removes it).
+- The markdown renderer is deliberately small — handles the common cases
+  (headings, lists, tables, code, quotes, bold/italic/links), not full CommonMark.
+- No pagination on conversation / memory / goal lists (fine at MVP scale).
 
 ---
 
-## 5. Known limitations / tech debt
+## 5. Suggested next phase
 
-- **Mock LLM output is intentionally plain** — it echoes injected context to
-  prove the pipeline. Real quality needs a key (section 3B).
-- **`next lint`** prints a deprecation notice (still works; Next 16 will remove
-  it). Migrate to the ESLint CLI eventually.
-- **SQLite on Windows** holds the DB file open until `engine.dispose()` — handled
-  in tests; only relevant if you script DB teardown.
-- **No pagination** on conversation / memory / goal lists (fine at MVP scale).
-- Agent prompts and `evals.json` expectations are first drafts — see 3D#2.
+1. **Do the visual QA pass** (§3C) and fix the concrete list it produces.
+2. **Finish the real-model eval sweep** for all 10 agents; iterate on any prompt
+   below ~80%.
+3. **"Ask My Team" front end** — the API (`POST /api/team/ask`) and synthesis
+   exist; there's no screen yet. This is the natural next feature once UI/UX and
+   agent quality are signed off.
+4. Optional: briefing history view; a real profile/settings screen; auth.
+
+Do not start #3 before #1–#2 are done.
 
 ---
 
@@ -203,14 +188,11 @@ These were explicitly deferred by the brief or are natural next steps:
 
 | Task | Command (from the folder shown) |
 |---|---|
-| Run backend | `backend/` → `uvicorn app.main:app --reload` |
-| Run frontend | `frontend/` → `npm run dev` |
-| Backend tests | `backend/` → `python -m pytest -q` |
-| Backend lint | `backend/` → `ruff check .` |
-| Agent evals | `backend/` → `python -m app.agents.evals` |
-| Frontend checks | `frontend/` → `npm run build` / `npm run lint` / `npm run typecheck` |
-| DB migrate (Postgres) | `backend/` → `alembic upgrade head` |
-| Start Postgres | repo root → `docker compose up -d db` |
+| Run backend / frontend | `uvicorn app.main:app --reload` / `npm run dev` |
+| Backend tests / lint | `python -m pytest -q` / `ruff check .` |
+| Frontend checks | `npm run build` · `npm run lint` · `npm run typecheck` |
+| Agent evals (real model) | `python -m app.agents.evals <slugs> --delay 22 --show` |
+| Force rule-based memory | `MEMORY_EXTRACTION=rules` in `backend/.env` |
+| DB migrate (Postgres) | `alembic upgrade head` |
 
-More detail: `README.md`, `docs/product.md`, `docs/architecture.md`,
-`docs/agents.md`, `docs/memory.md`.
+More detail: `README.md`, `docs/{product,architecture,agents,memory}.md`.

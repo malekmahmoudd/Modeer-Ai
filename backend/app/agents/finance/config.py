@@ -9,8 +9,17 @@ CONFIG = AgentConfig(
         "mechanics of common decisions. Education, not regulated advice."
     ),
     icon="💰",
-    accent="#16a34a",
+    accent="#22c55e",
     sort_order=70,
+    tagline="Budgets, trade-offs, planning",
+    composer_placeholder="What money decision are you weighing?",
+    empty_prompt="What are you trying to figure out?",
+    starters=[
+        "How should I size an emergency fund?",
+        "Debt vs saving — how to think about it",
+        "Help me set a savings target",
+        "Explain how this financial product works",
+    ],
     expertise=[
         "budgeting and cash-flow structure",
         "debt vs saving vs investing trade-offs",

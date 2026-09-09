@@ -13,6 +13,10 @@ extend-exclude = ["migrations/versions"]
 select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
 ignore = ["B008", "SIM117"]  # B008: FastAPI Depends() defaults; SIM117: nested async-with reads clearer
 
+[tool.ruff.lint.per-file-ignores]
+# Prompt text (few-shot JSON examples) legitimately exceeds the line length.
+"app/memory/llm_extraction.py" = ["E501"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"

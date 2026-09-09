@@ -10,9 +10,18 @@ CONFIG = AgentConfig(
         "matters."
     ),
     icon="🧭",
-    accent="#7c3aed",
+    accent="#8b7bff",
     is_assistant=True,
     sort_order=0,
+    tagline="Knows you, keeps the team in sync",
+    composer_placeholder="What's on your mind?",
+    empty_prompt="What's on your mind?",
+    starters=[
+        "Help me set up my goals",
+        "What should I focus on this week?",
+        "Here's something about me you should know",
+        "Give me today's briefing",
+    ],
     expertise=[
         "personal context & preferences",
         "goal setting and prioritisation",

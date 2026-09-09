@@ -9,8 +9,17 @@ CONFIG = AgentConfig(
         "picks the right register, and gets to the point."
     ),
     icon="✉️",
-    accent="#0284c7",
+    accent="#a855f7",
     sort_order=90,
+    tagline="Write email that lands",
+    composer_placeholder="What do you need to send?",
+    empty_prompt="What email do you need to write?",
+    starters=[
+        "Draft a reply for me",
+        "Make this message firmer but kind",
+        "Help me say no politely",
+        "Chase a non-reply without nagging",
+    ],
     expertise=[
         "drafting and replying",
         "tone and register for the relationship",

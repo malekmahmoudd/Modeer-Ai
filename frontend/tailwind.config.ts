@@ -8,27 +8,44 @@ const config: Config = {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       colors: {
-        ink: {
-          950: "#070a12",
-          900: "#0b0f1a",
-          850: "#0f1524",
-          800: "#141b2d",
-          700: "#1c2740",
-          600: "#2b3a5c",
+        bg: "var(--bg)",
+        "bg-elev": "var(--bg-elev)",
+        surface: {
+          DEFAULT: "var(--surface)",
+          hover: "var(--surface-hover)",
+          strong: "var(--surface-strong)",
+        },
+        line: {
+          DEFAULT: "var(--line)",
+          strong: "var(--line-strong)",
+        },
+        content: {
+          DEFAULT: "var(--text)",
+          dim: "var(--text-dim)",
+          faint: "var(--text-faint)",
+        },
+        accent: {
+          DEFAULT: "var(--accent)",
+          soft: "var(--accent-soft)",
         },
       },
-      keyframes: {
-        "fade-up": {
-          "0%": { opacity: "0", transform: "translateY(6px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        shimmer: {
-          "100%": { transform: "translateX(100%)" },
-        },
+      borderRadius: {
+        sm: "var(--radius-sm)",
+        DEFAULT: "var(--radius)",
+        lg: "var(--radius-lg)",
+        xl: "var(--radius-xl)",
       },
-      animation: {
-        "fade-up": "fade-up 0.35s ease-out both",
-        shimmer: "shimmer 1.6s infinite",
+      boxShadow: {
+        1: "var(--shadow-1)",
+        2: "var(--shadow-2)",
+        pop: "var(--shadow-pop)",
+      },
+      maxWidth: {
+        page: "1080px",
+        prose: "44rem",
+      },
+      transitionTimingFunction: {
+        premium: "cubic-bezier(0.2, 0.6, 0.2, 1)",
       },
     },
   },
