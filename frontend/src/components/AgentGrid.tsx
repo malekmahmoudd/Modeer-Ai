@@ -9,7 +9,7 @@ export function AgentGrid({ specialistsOnly = false }: { specialistsOnly?: boole
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="card h-[72px] animate-pulse" />
         ))}
@@ -22,7 +22,7 @@ export function AgentGrid({ specialistsOnly = false }: { specialistsOnly?: boole
   if (specialistsOnly) agents = agents.filter((a) => !a.is_assistant);
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
       {agents.map((agent, i) => (
         <div
           key={agent.id}

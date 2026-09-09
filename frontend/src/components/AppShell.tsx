@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen w-full">
       {/* Desktop rail */}
       <aside
-        className="fixed inset-y-0 left-0 z-30 hidden flex-col justify-between border-r border-line px-4 py-6 md:flex"
+        className="fixed inset-y-0 left-0 z-30 hidden flex-col justify-between border-r border-line px-4 py-6 lg:flex"
         style={{ width: "var(--nav-w)" }}
       >
         <div>
@@ -69,10 +69,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Content */}
-      <div className="flex min-w-0 flex-1 flex-col md:pl-[var(--nav-w)]">
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-[var(--nav-w)]">
         {/* Mobile top bar — hidden in the agent workspace (it has its own header) */}
         {!inWorkspace && (
-          <header className="sticky top-0 z-20 flex items-center border-b border-line bg-bg/85 px-4 py-3 backdrop-blur-md md:hidden">
+          <header className="sticky top-0 z-20 flex items-center border-b border-line bg-bg/85 px-4 py-3 backdrop-blur-md lg:hidden">
             <Brand />
           </header>
         )}
@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className={
             inWorkspace
               ? "min-w-0 flex-1"
-              : "mx-auto min-w-0 flex-1 px-5 py-7 pb-28 sm:px-9 sm:py-11 md:pb-16 w-full max-w-[1140px]"
+              : "mx-auto min-w-0 flex-1 px-5 py-7 pb-28 sm:px-9 sm:py-11 lg:pb-16 w-full max-w-[1140px]"
           }
         >
           {children}
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Mobile bottom tab bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden">
         {NAV.map((item) => {
           const active = isActive(pathname, item.href);
           return (

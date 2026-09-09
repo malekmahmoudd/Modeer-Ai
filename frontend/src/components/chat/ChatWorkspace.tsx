@@ -286,7 +286,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
           </div>
 
           {/* Footer */}
-          <div className="shrink-0 pb-[calc(56px+env(safe-area-inset-bottom))] pt-2 xl:pb-4">
+          <div className="shrink-0 pb-[calc(56px+env(safe-area-inset-bottom))] pt-2 lg:pb-4">
             <div className="mx-auto w-full max-w-[46rem]">
               {savedFacts.length > 0 && (
                 <div className="anim-fade-up mb-2 flex items-start gap-2 rounded-[10px] border border-emerald-500/20 bg-emerald-500/[0.07] px-3 py-2 text-[12px] text-emerald-200/90">

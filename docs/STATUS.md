@@ -1,29 +1,76 @@
 # Project status — Modeer Personal AI Team MVP
 
-_Last updated: 2026-09-09 · phase: UI/UX + agent-quality polish_
+_Last updated: 2026-09-09 · phase: visual/interaction QA_
 
 ---
 
 ## 1. Where the project is
 
-MVP core is complete and the **first milestone works end to end on the real
-model**. This pass focused on the two stated priorities — **UI/UX quality** and
-**specialist-agent performance** — plus making shared personal context actually
-feel intelligent.
+MVP core is complete, the first milestone works end to end, and a **visual +
+interaction QA pass** has been done across all screens at four viewports.
 
 | Area | State |
 |---|---|
 | Repo scaffold · DB models + migration · API · docs | ✅ Done |
 | Agent runtime + registry + 10 agent configs/prompts | ✅ Done |
-| **Real LLM provider wired (Groq / OpenAI-compatible)** | ✅ Done — streaming, 429 back-off |
-| **LLM-assisted memory extraction** (rules fallback) | ✅ Done |
-| **Frontend redesign** — new design system, all 5 screens | ✅ Done |
-| **First-run onboarding** ("Meet Modeer" → chat → team) | ✅ Done |
+| Real LLM provider (Groq / OpenAI-compatible, streaming, 429 back-off) | ✅ Done |
+| LLM-assisted memory extraction (rules fallback) | ✅ Done |
+| Frontend design system + all 5 screens | ✅ Done |
+| First-run onboarding ("Meet Modeer" → chat → team) | ✅ Done |
 | Agent prompt improvements (Modeer, Career, Research + global) | ✅ Done |
+| **Visual QA at desktop / laptop / tablet / mobile** | ✅ Done this pass — screenshots inspected + fixed |
 | Tests (58 pytest) · ruff · tsc · next build · next lint | ✅ All green |
-| Priority-5 agent evals on the real model | ✅ 31/35 (89%) baseline; re-run after fixes |
-| **Visual/interaction QA in a real browser** | ⛔ Blocked — needs you (browser tools were off this session) |
-| Remaining-5 agents: full eval sweep on real model | ⏳ Rate-limited; spot-checked OK |
+| Priority-5 agent evals on the real model | ✅ 31/35 (89%) baseline |
+| Remaining-5 agents: full eval sweep on the real model | ⏳ Rate-limited; spot-checked OK |
+| **Groq API key** | ⚠️ **Daily token limit hit during testing — rotate & consider a paid tier** |
+
+---
+
+## 0. Visual / interaction QA (this pass)
+
+Inspected via headless Chrome (Playwright driving the installed browser) at
+**1440×900, 1280×800, 768×1024, 390×844** with a realistic seeded profile
+(6 shared memories, 3 specialist notes, 5 goals, a 4-message Career thread with
+a markdown table, a Study thread with code + a comprehension check).
+
+**Bugs found and fixed**
+
+| # | Problem | Fix |
+|---|---|---|
+| 1 | `.btn-primary/.btn-accent/.btn-secondary/.btn-ghost` never included the `.btn` base — "Add goal", "+ New", "Add something" rendered as unstyled text | each now `@apply btn` |
+| 2 | Native `<select>` showed the OS control | custom chevron + option colours for `select.field` |
+| 3 | Modeer hero had a hollow empty right half on desktop | two-column layout (identity + summary + composer \| Today's focus) |
+| 4 | Agent workspace: conversation pushed off-centre by a mostly-empty rail | rail removed; history is a bottom-sheet (mobile) / right drawer (desktop); conversation centred |
+| 5 | Chat opened scrolled to the top of a thread | auto-scrolls to the latest message on load |
+| 6 | Last message hidden behind the composer; composer under the mobile tab bar | scroll padding + `pb-[calc(56px+safe-area)]` on the footer |
+| 7 | Memory / Goals: a narrow column floating in a wide empty area | constrained + left-aligned to the nav gutter; denser rows; edit/delete visible at rest |
+| 8 | Specialist empty state floated high with a void below | vertically centred; larger starter chips |
+| 9 | Mobile agent page showed the app top bar **and** the agent header | app top bar hidden in the workspace |
+| 10 | Tablet (768) with the desktop sidebar → cramped, truncated taglines | sidebar now appears at `lg` (1024); tablet gets the mobile layout; grid is 1/2/3-col at base/`md`/`xl` |
+| 11 | Next.js dev "N" badge sat on top of the user avatar | `devIndicators: false` |
+| 12 | `humanizeKey` → "MI internship" | acronyms (ml, gpa, cv, …) upper-cased |
+| 13 | Briefing rows had a redundant dot **and** emoji **and** coloured name | dropped the emoji; generic CTA row filtered out |
+
+**Still weak / minor (not blocking)**
+
+- Short conversations leave empty space above the composer (expected — content is
+  top-aligned so you read from the top; matches ChatGPT/Claude).
+- Memory/Goals pages are short — noticeable empty space below the content on tall
+  desktop screens.
+- Agent glyphs are OS colour emoji in an accent-tinted tile. Consistent and
+  legible, but a bespoke icon set would feel more "designed"; deferred (10 icons,
+  higher risk than reward right now).
+- Markdown tables are readable but tight on a 390px phone (they wrap; wider ones
+  scroll).
+- Edit/delete hit targets on Memory rows are ~28px — fine with a mouse, a touch
+  bump would be nicer.
+
+**Not verifiable without you**
+
+The QA used headless screenshots, not hands-on interaction. Please still click
+through once for *feel*: streaming cadence, focus states, the mobile keyboard
+pushing the composer, drawer open/close animation, and hover states (screenshots
+can't show those).
 
 ---
 
@@ -99,9 +146,10 @@ used sparingly, a real type/spacing/radius scale, restrained motion
 - **Agent workspace** — clean identity header with a per-agent accent hairline,
   agent-specific empty-state question + starter chips, agent-specific composer
   placeholder, auto-growing composer, a small "Personalized from your saved
-  context" link (no token counts / model names / internals), desktop conversation
-  rail + mobile history sheet. A proper markdown renderer (headings, lists,
-  tables, code, quotes) replaces the previous naive one.
+  context" link (no token counts / model names / internals). Conversation history
+  is a drawer (bottom-sheet on mobile, right-side on desktop). A proper markdown
+  renderer (headings, lists, tables, code, quotes) replaces the previous naive
+  one. _Rail replaced with the drawer in the QA pass — see §0._
 - **Memory** — "Shared with your team" grouped by human category; "Known by
   specific agents" behind an accent-chip picker; rows read as labelled facts, not
   raw key/value; inline add / edit / delete; a trust line about sensitive data.
@@ -115,11 +163,16 @@ used sparingly, a real type/spacing/radius scale, restrained motion
 
 ## 3. What you need to do
 
-### A. Rotate the Groq API key (do this)
-`gsk_…` was pasted into a tracked template file and into this session in
-plaintext. It's now only in the git-ignored `backend/.env`, but treat it as
-exposed: revoke it at <https://console.groq.com/keys>, create a new one, and put
-it in `backend/.env` (never `.env.example`).
+### A. The Groq key — rotate it, and mind the limits
+- It was pasted into a git-tracked template and into this session in plaintext.
+  It now lives only in git-ignored `backend/.env`. **Revoke it** at
+  <https://console.groq.com/keys>, make a new one, put it in `backend/.env`
+  (never `.env.example`).
+- Testing this session **exhausted the free tier's daily token budget**
+  (200k tokens/day). Real chat will 502 until it resets (~24h) or you upgrade.
+  The provider already retries on 429; a daily cap it can't retry around.
+- While the key was capped, this pass's UI screenshots were taken with the
+  backend on `LLM_PROVIDER=mock` (your `.env` is back on `groq`, untouched).
 
 ### B. Run it
 ```bash
@@ -130,25 +183,25 @@ uvicorn app.main:app --reload            # :8000
 # frontend
 cd frontend && npm run dev               # :3000
 ```
-`backend/.env` already has your Groq config. SQLite is the default DB — no setup.
-If the Next dev server ever 500s with "Cannot find module './xxx.js'", stop it,
-`rm -rf frontend/.next`, and restart (stale dev cache, not a code bug).
+SQLite is the default DB — no setup. The dev DB (`backend/modeer.db`, git-ignored)
+currently holds a **seeded demo profile** from QA (memories, goals, two example
+conversations); `rm backend/modeer.db` for a clean slate.
 
-### C. Visual + interaction QA — the main open item
-Browser tools were disabled this session, so the redesign was verified by
-`next build` / `tsc` / `next lint` and by driving every flow over HTTP — **not by
-looking at it**. Please walk through, at desktop / laptop / tablet / mobile
-widths:
-- Home (onboarded and not), Team, a couple of specialist chats, Memory, Goals.
-- Streaming feel, the accent-hairline identity cue per agent, empty states,
-  the mobile bottom nav + history sheet, composer on a phone keyboard.
-Note anything that feels off; it's fast to iterate from a concrete list.
-(`/chrome` in Claude Code enables browser tools if you want me to do this pass.)
+> The Next **dev** server intermittently 500s with "Cannot find module
+> './xxx.js'" after many hot-reloads (a known Next 15 dev-cache bug on Windows).
+> `rm -rf frontend/.next` and restart. `npm run build` is unaffected — the QA
+> screenshots were taken against `npm run start` for exactly this reason.
+
+### C. Hands-on interaction check (small, ~10 min)
+Screenshots covered layout at all four widths; they can't show *feel*. Click
+through once for: streaming cadence, focus rings, the phone keyboard pushing the
+composer, the history drawer open/close, hover states on the team cards, and the
+"saved to your context" confirmation after a real message.
 
 ### D. Decisions still yours
 | # | What | Why it needs you |
 |---|---|---|
-| 1 | Groq free tier is ~8k tokens/min | Fine for use; the full 70-case eval sweep gets rate-limited. Consider a paid tier or a second key for CI-style eval runs. |
+| 1 | Groq tier | Free tier: ~8k tokens/min **and 200k/day**. A paid tier (or a 2nd key) is needed for full eval sweeps and heavy use. |
 | 2 | Auth strategy | Still a single local "demo user". Decide before multi-user. |
 | 3 | Model choice | `openai/gpt-oss-120b` is solid in testing. Confirm it's what you want, or switch `LLM_MODEL`. |
 | 4 | Deployment target | No hosting/CI yet (out of MVP scope). |
@@ -157,27 +210,29 @@ Note anything that feels off; it's fast to iterate from a concrete list.
 
 ## 4. Known limitations / tech debt
 
-- **Not visually reviewed** (see §3C) — the single biggest open item.
+- Visual QA done via headless screenshots; hands-on interaction check still
+  wanted (§3C).
 - **Remaining-5 agents**: only spot-checked on the real model; the full eval
   sweep was rate-limited. Re-run `python -m app.agents.evals travel shopping
-  finance fitness email --delay 22` when the budget allows.
+  finance fitness email --delay 22` when the Groq budget allows.
 - **LLM extraction adds one short model call per user message** (after the reply
   streams, so no perceived latency). Set `MEMORY_EXTRACTION=rules` to disable.
 - `next lint` prints a deprecation notice (works; Next 16 removes it).
-- The markdown renderer is deliberately small — handles the common cases
-  (headings, lists, tables, code, quotes, bold/italic/links), not full CommonMark.
+- The markdown renderer is deliberately small — headings, lists, tables, code,
+  quotes, bold/italic/links; not full CommonMark.
 - No pagination on conversation / memory / goal lists (fine at MVP scale).
+- Minor visual items in §0 ("still weak / minor").
 
 ---
 
 ## 5. Suggested next phase
 
-1. **Do the visual QA pass** (§3C) and fix the concrete list it produces.
-2. **Finish the real-model eval sweep** for all 10 agents; iterate on any prompt
-   below ~80%.
+1. **Hands-on interaction check** (§3C) — fix anything that feels off.
+2. **Finish the real-model eval sweep** for all 10 agents once the Groq budget
+   resets; iterate on any prompt below ~80%.
 3. **"Ask My Team" front end** — the API (`POST /api/team/ask`) and synthesis
-   exist; there's no screen yet. This is the natural next feature once UI/UX and
-   agent quality are signed off.
+   exist; there's no screen yet. The natural next feature once UI/UX and agent
+   quality are signed off.
 4. Optional: briefing history view; a real profile/settings screen; auth.
 
 Do not start #3 before #1–#2 are done.
