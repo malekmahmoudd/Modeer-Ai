@@ -14,7 +14,7 @@ export default function AgentWorkspacePage({
   return (
     <Suspense
       fallback={
-        <div className="grid h-[70vh] place-items-center text-content-faint">
+        <div className="grid h-[70vh] place-items-center">
           <Spinner />
         </div>
       }

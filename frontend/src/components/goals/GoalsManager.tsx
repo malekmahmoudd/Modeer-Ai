@@ -16,10 +16,11 @@ const PRIORITIES = [
 ];
 
 export function GoalsManager() {
-  const { data, loading, refetch } = useApi<Goal[]>("/goals");
+  const { data, loading, error, refetch } = useApi<Goal[]>("/goals");
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState(3);
   const [adding, setAdding] = useState(false);
+  const [addErr, setAddErr] = useState<string | null>(null);
 
   const goals = data || [];
   const active = goals.filter((g) => g.status !== "done");
@@ -29,11 +30,14 @@ export function GoalsManager() {
     e.preventDefault();
     if (!title.trim()) return;
     setAdding(true);
+    setAddErr(null);
     try {
       await apiFetch("/goals", { method: "POST", body: JSON.stringify({ title, priority }) });
       setTitle("");
       setPriority(3);
       refetch();
+    } catch (ex) {
+      setAddErr(ex instanceof Error ? ex.message : "Couldn't add that goal.");
     } finally {
       setAdding(false);
     }
@@ -49,60 +53,89 @@ export function GoalsManager() {
   }
 
   return (
-    <div className="anim-fade-up max-w-2xl">
+    <div className="anim-fade max-w-3xl">
       <PageHeader
         eyebrow="Goals"
         title="Goals & priorities"
         lede="Modeer and your team use these to shape advice and your daily briefing. Keep it short — a handful of things that actually matter."
       />
 
-      <form onSubmit={add} className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input
-          className="field flex-1"
-          placeholder="What do you want to achieve?"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <div className="flex gap-2">
-          <select
-            className="field !w-auto flex-1"
-            value={priority}
-            onChange={(e) => setPriority(Number(e.target.value))}
-          >
-            {PRIORITIES.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-          <button type="submit" disabled={adding} className="btn-primary shrink-0">
-            Add goal
-          </button>
+      <form onSubmit={add} className="mb-9">
+        <div className="flex flex-col gap-2.5 sm:flex-row">
+          <label htmlFor="goal-title" className="sr-only">
+            What do you want to achieve?
+          </label>
+          <input
+            id="goal-title"
+            className="field flex-1"
+            placeholder="What do you want to achieve?"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <div className="flex gap-2.5">
+            <label htmlFor="goal-priority" className="sr-only">
+              Priority
+            </label>
+            <select
+              id="goal-priority"
+              className="field !w-auto flex-1"
+              value={priority}
+              onChange={(e) => setPriority(Number(e.target.value))}
+            >
+              {PRIORITIES.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={adding || !title.trim()}
+              className="btn btn-pink shrink-0"
+            >
+              {adding ? "Adding…" : "Add goal"}
+            </button>
+          </div>
         </div>
+        {addErr && (
+          <p role="alert" className="mt-2 text-[13px] font-bold text-pink-deep">
+            {addErr}
+          </p>
+        )}
       </form>
 
       <SectionLabel>Active</SectionLabel>
       {loading && <Spinner />}
-      {!loading && active.length === 0 && (
+      {error && (
+        <p role="alert" className="border-2 border-ink bg-pink-pale px-3 py-2 text-[14px] font-semibold">
+          Couldn&apos;t load your goals: {error}
+        </p>
+      )}
+      {!loading && !error && active.length === 0 && (
         <EmptyState title="No active goals">Add one above to get started.</EmptyState>
       )}
-      <div className="flex flex-col gap-2">
+
+      <ul className="flex flex-col gap-2.5">
         {active
           .slice()
           .sort((a, b) => a.priority - b.priority)
           .map((g) => (
-            <GoalItem key={g.id} goal={g} onPatch={patch} onRemove={remove} />
+            <li key={g.id}>
+              <GoalItem goal={g} onPatch={patch} onRemove={remove} />
+            </li>
           ))}
-      </div>
+      </ul>
 
       {done.length > 0 && (
-        <div className="mt-10">
+        <div className="mt-11">
           <SectionLabel>Completed</SectionLabel>
-          <div className="flex flex-col gap-2 opacity-55">
+          <ul className="flex flex-col gap-2.5 opacity-70">
             {done.map((g) => (
-              <GoalItem key={g.id} goal={g} onPatch={patch} onRemove={remove} />
+              <li key={g.id}>
+                <GoalItem goal={g} onPatch={patch} onRemove={remove} />
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
     </div>
@@ -120,41 +153,43 @@ function GoalItem({
 }) {
   const label = PRIORITIES.find((p) => p.value === goal.priority)?.label ?? "—";
   const done = goal.status === "done";
-  const isTop = goal.priority <= 1;
+  const isTop = goal.priority <= 1 && !done;
+
   return (
-    <div className="card group flex items-center gap-3 px-3.5 py-2.5">
+    <div className="flex items-center gap-3 border-2 border-ink bg-paper-hi px-3 py-2.5 shadow-pop-xs">
       <button
         onClick={() => onPatch(goal.id, { status: done ? "active" : "done" })}
-        className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border transition ${
-          done
-            ? "border-emerald-400/40 bg-emerald-400/20 text-emerald-300"
-            : "border-line-strong text-transparent hover:border-content-dim hover:text-content-faint"
+        aria-pressed={done}
+        aria-label={done ? `Mark "${goal.title}" as active` : `Mark "${goal.title}" as done`}
+        className={`grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-ink transition ${
+          done ? "bg-sun text-ink" : "bg-paper-hi text-transparent hover:bg-sun-pale hover:text-ink-faint"
         }`}
-        aria-label="Toggle complete"
       >
-        <Icon name="check" size={12} />
+        <Icon name="check" size={19} strokeWidth={3} />
       </button>
+
       <span
-        className={`min-w-0 flex-1 text-[13.5px] ${done ? "text-content-dim line-through" : "text-white/90"}`}
+        className={`min-w-0 flex-1 text-[15px] font-semibold leading-snug ${
+          done ? "text-ink-soft line-through" : "text-ink"
+        }`}
       >
         {goal.title}
       </span>
+
       <span
-        className="tag shrink-0"
-        style={
-          isTop && !done
-            ? { borderColor: "rgba(251,191,36,0.3)", color: "#fcd34d", background: "rgba(251,191,36,0.08)" }
-            : undefined
-        }
+        className={`shrink-0 border-2 border-ink px-2 py-0.5 text-[11.5px] font-black uppercase tracking-wide ${
+          isTop ? "bg-pink text-white" : "bg-paper-lo text-ink"
+        }`}
       >
         {label}
       </span>
+
       <button
         onClick={() => onRemove(goal.id)}
-        className="grid h-7 w-7 shrink-0 place-items-center rounded-[8px] text-content-faint opacity-40 transition hover:text-red-300 group-hover:opacity-100"
-        aria-label="Delete goal"
+        className="btn-icon !h-11 !w-11 shrink-0 hover:!bg-pink hover:!text-white"
+        aria-label={`Delete goal "${goal.title}"`}
       >
-        <Icon name="trash" size={14} />
+        <Icon name="trash" size={17} />
       </button>
     </div>
   );

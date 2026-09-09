@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { AgentAvatar } from "@/components/AgentAvatar";
+import { AgentBadge } from "@/components/art/AgentPortrait";
 import { MemoryRow } from "@/components/memory/MemoryRow";
 import { Icon } from "@/components/ui/Icon";
-import { EmptyState, PageHeader, Spinner } from "@/components/ui/primitives";
+import { EmptyState, PageHeader, SectionHead, Spinner } from "@/components/ui/primitives";
 import { useAgents } from "@/features/agents/useAgents";
 import { apiFetch, useApi } from "@/lib/api";
-import { accentStyle, categoryLabel } from "@/lib/format";
+import { categoryLabel } from "@/lib/format";
 import type { AgentMemory, SharedMemory } from "@/types";
 
 const EMPTY = { key: "", value: "" };
@@ -22,45 +22,84 @@ function groupByCategory<T extends { category: string }>(rows: T[]): [string, T[
   return [...map.entries()];
 }
 
-function AddForm({ onAdd }: { onAdd: (v: { key: string; value: string }) => Promise<void> }) {
+function AddForm({
+  onAdd,
+  label,
+}: {
+  onAdd: (v: { key: string; value: string }) => Promise<void>;
+  label: string;
+}) {
   const [v, setV] = useState(EMPTY);
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="btn-ghost mt-1 h-9 text-[12.5px]"
-      >
-        <Icon name="plus" size={14} /> Add something
+      <button onClick={() => setOpen(true)} className="btn mt-3 !min-h-[42px] !text-[13.5px]">
+        <Icon name="plus" size={16} /> {label}
       </button>
     );
   }
+
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault();
-        if (!v.key.trim() || !v.value.trim()) return;
-        await onAdd(v);
-        setV(EMPTY);
-        setOpen(false);
+        if (!v.key.trim() || !v.value.trim()) {
+          setErr("Give it a short label and a value.");
+          return;
+        }
+        setBusy(true);
+        setErr(null);
+        try {
+          await onAdd(v);
+          setV(EMPTY);
+          setOpen(false);
+        } catch (ex) {
+          setErr(ex instanceof Error ? ex.message : "Couldn't save that.");
+        } finally {
+          setBusy(false);
+        }
       }}
-      className="mt-2 flex flex-col gap-2 rounded-[12px] border border-dashed border-line-strong p-3 sm:flex-row"
+      className="mt-3 border-2 border-dashed border-ink bg-paper-hi p-3"
     >
-      <input
-        className="field sm:w-44"
-        placeholder="label (e.g. Career goal)"
-        value={v.key}
-        onChange={(e) => setV({ ...v, key: e.target.value })}
-      />
-      <input
-        className="field flex-1"
-        placeholder="what should the team know?"
-        value={v.value}
-        onChange={(e) => setV({ ...v, value: e.target.value })}
-      />
-      <button type="submit" className="btn-primary shrink-0">
-        Save
-      </button>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          className="field sm:w-52"
+          placeholder="Label (e.g. Career goal)"
+          aria-label="Label"
+          value={v.key}
+          onChange={(e) => setV({ ...v, key: e.target.value })}
+        />
+        <input
+          className="field flex-1"
+          placeholder="What should the team know?"
+          aria-label="Value"
+          value={v.value}
+          onChange={(e) => setV({ ...v, value: e.target.value })}
+        />
+      </div>
+      {err && (
+        <p role="alert" className="mt-2 text-[13px] font-bold text-pink-deep">
+          {err}
+        </p>
+      )}
+      <div className="mt-3 flex gap-2">
+        <button type="submit" disabled={busy} className="btn btn-pink !min-h-[40px] !text-[13.5px]">
+          {busy ? "Saving…" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setErr(null);
+          }}
+          className="btn !min-h-[40px] !text-[13.5px]"
+        >
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }
@@ -69,7 +108,7 @@ export function MemoryManager() {
   const { agents } = useAgents();
   const specialists = agents.filter((a) => !a.is_assistant);
 
-  const { data: shared, loading, refetch } = useApi<SharedMemory[]>("/memory/shared");
+  const { data: shared, loading, error, refetch } = useApi<SharedMemory[]>("/memory/shared");
   const [agentId, setAgentId] = useState("");
   const [agentMem, setAgentMem] = useState<AgentMemory[]>([]);
   const [agentLoading, setAgentLoading] = useState(false);
@@ -92,53 +131,63 @@ export function MemoryManager() {
   const activeAgent = specialists.find((a) => a.id === agentId);
 
   return (
-    <div className="anim-fade-up max-w-2xl">
+    <div className="anim-fade max-w-3xl">
       <PageHeader
         eyebrow="Memory"
         title="What my AI team knows about me"
         lede="Everything here is yours — inspect, edit or delete anything. Modeer never saves sensitive details (health, finances, IDs) on its own."
       />
 
-      {/* Shared */}
-      <section className="mb-12">
-        <h2 className="mb-1 text-[15px] font-semibold tracking-tight text-white">
-          Shared with your team
-        </h2>
-        <p className="mb-4 text-[12.5px] text-content-dim">Every specialist can see these.</p>
+      {/* ---------- shared ---------- */}
+      <section className="mb-14">
+        <SectionHead title="Shared with your team" />
+        <p className="-mt-2 mb-5 text-[14px] font-semibold text-ink-soft">
+          Every specialist can see these.
+        </p>
 
         {loading && <Spinner />}
-        {!loading && (shared || []).length === 0 && (
+        {error && (
+          <p role="alert" className="border-2 border-ink bg-pink-pale px-3 py-2 text-[14px] font-semibold">
+            Couldn&apos;t load your memory: {error}
+          </p>
+        )}
+
+        {!loading && !error && (shared ?? []).length === 0 && (
           <EmptyState title="Nothing shared yet">
-            Tell Modeer something durable about yourself and it shows up here.
+            Tell Modeer something lasting about yourself and it shows up here.
           </EmptyState>
         )}
 
         {sharedGroups.map(([category, rows]) => (
-          <div key={category} className="card mb-2.5 p-2">
-            <p className="px-2 pb-1 pt-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-content-faint">
+          <div key={category} className="mb-4 border-2 border-ink bg-paper-hi shadow-pop-xs">
+            <p className="border-b-2 border-ink bg-sun px-3 py-1.5 text-[11.5px] font-black uppercase tracking-[0.13em] text-ink">
               {categoryLabel(category)}
             </p>
-            {rows.map((m) => (
-              <MemoryRow
-                key={m.id}
-                memory={m}
-                onSave={async (patch) => {
-                  await apiFetch(`/memory/shared/${m.id}`, {
-                    method: "PATCH",
-                    body: JSON.stringify(patch),
-                  });
-                  refetch();
-                }}
-                onDelete={async () => {
-                  await apiFetch(`/memory/shared/${m.id}`, { method: "DELETE" });
-                  refetch();
-                }}
-              />
-            ))}
+            <ul>
+              {rows.map((m) => (
+                <li key={m.id} className="border-b border-ink/20 last:border-b-0">
+                  <MemoryRow
+                    memory={m}
+                    onSave={async (patch) => {
+                      await apiFetch(`/memory/shared/${m.id}`, {
+                        method: "PATCH",
+                        body: JSON.stringify(patch),
+                      });
+                      refetch();
+                    }}
+                    onDelete={async () => {
+                      await apiFetch(`/memory/shared/${m.id}`, { method: "DELETE" });
+                      refetch();
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
           </div>
         ))}
 
         <AddForm
+          label="Add something"
           onAdd={async (v) => {
             await apiFetch("/memory/shared", {
               method: "POST",
@@ -149,32 +198,32 @@ export function MemoryManager() {
         />
       </section>
 
-      {/* Specialist */}
+      {/* ---------- specialist ---------- */}
       <section>
-        <h2 className="mb-1 text-[15px] font-semibold tracking-tight text-white">
-          Known by specific agents
-        </h2>
-        <p className="mb-4 text-[12.5px] text-content-dim">
+        <SectionHead title="Known by one specialist" />
+        <p className="-mt-2 mb-5 text-[14px] font-semibold text-ink-soft">
           Private notes a specialist keeps — only that agent sees them.
         </p>
 
-        <div className="mb-4 flex flex-wrap gap-1.5">
-          {specialists.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => setAgentId(a.id === agentId ? "" : a.id)}
-              className="tag transition"
-              style={
-                a.id === agentId
-                  ? { ...accentStyle(a.accent), borderColor: a.accent, color: "#fff" }
-                  : undefined
-              }
-            >
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: a.accent }} />
-              {a.name.replace(" Agent", "")}
-            </button>
-          ))}
-        </div>
+        <ul className="mb-6 flex flex-wrap gap-2.5" role="list">
+          {specialists.map((a) => {
+            const on = a.id === agentId;
+            return (
+              <li key={a.id}>
+                <button
+                  onClick={() => setAgentId(on ? "" : a.id)}
+                  aria-pressed={on}
+                  className={`flex items-center gap-2 border-2 border-ink py-1.5 pl-1.5 pr-3 text-[13px] font-bold transition ${
+                    on ? "bg-pink text-white shadow-pop-xs" : "bg-paper-hi text-ink hover:bg-sun-pale"
+                  }`}
+                >
+                  <AgentBadge slug={a.id} size={30} />
+                  {a.name.replace(/ (Agent|Assistant)$/, "")}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
 
         {!agentId && (
           <EmptyState title="Pick a specialist">
@@ -183,15 +232,9 @@ export function MemoryManager() {
         )}
 
         {agentId && activeAgent && (
-          <div style={accentStyle(activeAgent.accent)}>
-            <div className="mb-3 flex items-center gap-2.5">
-              <AgentAvatar icon={activeAgent.icon} accent={activeAgent.accent} size={28} />
-              <span className="text-[13px] text-content-dim">
-                {activeAgent.name}&apos;s private notes
-              </span>
-            </div>
-
+          <>
             {agentLoading && <Spinner />}
+
             {!agentLoading && agentMem.length === 0 && (
               <EmptyState title="No notes yet">
                 As you chat with {activeAgent.name}, useful specialist details land here.
@@ -199,28 +242,35 @@ export function MemoryManager() {
             )}
 
             {agentMem.length > 0 && (
-              <div className="card p-2.5">
-                {agentMem.map((m) => (
-                  <MemoryRow
-                    key={m.id}
-                    memory={m}
-                    onSave={async (patch) => {
-                      await apiFetch(`/memory/agent/${m.id}`, {
-                        method: "PATCH",
-                        body: JSON.stringify(patch),
-                      });
-                      loadAgent(agentId);
-                    }}
-                    onDelete={async () => {
-                      await apiFetch(`/memory/agent/${m.id}`, { method: "DELETE" });
-                      loadAgent(agentId);
-                    }}
-                  />
-                ))}
+              <div className="border-2 border-ink bg-paper-hi shadow-pop-xs">
+                <p className="border-b-2 border-ink bg-sun px-3 py-1.5 text-[11.5px] font-black uppercase tracking-[0.13em] text-ink">
+                  {activeAgent.name}&apos;s private notes
+                </p>
+                <ul>
+                  {agentMem.map((m) => (
+                    <li key={m.id} className="border-b border-ink/20 last:border-b-0">
+                      <MemoryRow
+                        memory={m}
+                        onSave={async (patch) => {
+                          await apiFetch(`/memory/agent/${m.id}`, {
+                            method: "PATCH",
+                            body: JSON.stringify(patch),
+                          });
+                          loadAgent(agentId);
+                        }}
+                        onDelete={async () => {
+                          await apiFetch(`/memory/agent/${m.id}`, { method: "DELETE" });
+                          loadAgent(agentId);
+                        }}
+                      />
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
             <AddForm
+              label={`Add a note for ${activeAgent.name.replace(/ (Agent|Assistant)$/, "")}`}
               onAdd={async (v) => {
                 await apiFetch("/memory/agent", {
                   method: "POST",
@@ -234,7 +284,7 @@ export function MemoryManager() {
                 loadAgent(agentId);
               }}
             />
-          </div>
+          </>
         )}
       </section>
     </div>

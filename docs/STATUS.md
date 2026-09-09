@@ -1,13 +1,14 @@
 # Project status — Modeer Personal AI Team MVP
 
-_Last updated: 2026-09-09 · phase: visual/interaction QA_
+_Last updated: 2026-09-09 · phase: “Sunshine & Ink” visual redesign_
 
 ---
 
 ## 1. Where the project is
 
-MVP core is complete, the first milestone works end to end, and a **visual +
-interaction QA pass** has been done across all screens at four viewports.
+MVP core is complete, the first milestone works end to end, and the frontend has
+been rebuilt in the **“Sunshine & Ink”** visual language (§0). Product behaviour,
+the API and the agents are unchanged.
 
 | Area | State |
 |---|---|
@@ -15,10 +16,11 @@ interaction QA pass** has been done across all screens at four viewports.
 | Agent runtime + registry + 10 agent configs/prompts | ✅ Done |
 | Real LLM provider (Groq / OpenAI-compatible, streaming, 429 back-off) | ✅ Done |
 | LLM-assisted memory extraction (rules fallback) | ✅ Done |
-| Frontend design system + all 5 screens | ✅ Done |
+| **Frontend visual language: “Sunshine & Ink”** | ✅ Redesigned this pass — see §0 |
 | First-run onboarding ("Meet Modeer" → chat → team) | ✅ Done |
 | Agent prompt improvements (Modeer, Career, Research + global) | ✅ Done |
-| **Visual QA at desktop / laptop / tablet / mobile** | ✅ Done this pass — screenshots inspected + fixed |
+| Visual QA at desktop / laptop / tablet / mobile | ✅ Re-verified after the redesign |
+| **Character artwork** | ⚠️ Provisional hand-authored SVG — no image generator here (§0.1) |
 | Tests (58 pytest) · ruff · tsc · next build · next lint | ✅ All green |
 | Priority-5 agent evals on the real model | ✅ 31/35 (89%) baseline |
 | Remaining-5 agents: full eval sweep on the real model | ⏳ Rate-limited; spot-checked OK |
@@ -26,7 +28,97 @@ interaction QA pass** has been done across all screens at four viewports.
 
 ---
 
-## 0. Visual / interaction QA (this pass)
+## 0. Sunshine & Ink redesign (this pass)
+
+The frontend was rebuilt to match the **Concept A — “Sunshine & Ink”** reference:
+warm cream paper, comic yellow, vivid pink, near-black ink, big diagonal fields,
+heavy display type, black-outlined comic panels, and original human character
+illustrations. **No backend, agent, API or product behaviour changed.**
+
+### Design system
+`src/app/globals.css` + `tailwind.config.ts` define one token set —
+`--paper #FFF7DF`, `--sun #FFDA45`, `--pink #FF438A`, `--ink #151714`,
+`--navy #202D3B`; 2px ink borders; hard offset “pop” shadows (no blur); a paper
+grain / halftone texture used only on artwork and colour fields, never behind
+body text.
+
+Type: **Archivo Black** (display), **Permanent Marker** (the MODEER wordmark
+only), **Caveat** (sparse handwritten margin notes — never used for chat, forms,
+navigation or descriptions), **Inter** (all interface text).
+
+### Character artwork  ⚠️ see §0.1
+- `src/components/art/Portrait.tsx` — a comic portrait engine: variable-weight
+  ink contours, crosshatch shading, halftone, warm colour, per-character head
+  width / jaw / chin / eye geometry, 10 hairstyles, glasses, facial hair,
+  wardrobe and background props.
+- `src/lib/characters.ts` — the **replaceable asset map keyed by agent slug**.
+  Setting `CHARACTERS.study.image = "/art/study.png"` swaps in finished artwork
+  with no layout change. No interface text is baked into any artwork; every name
+  and role is HTML. Each character carries meaningful `alt` text; decorative
+  instances are `aria-hidden`.
+
+### Screens
+- **Home** — top nav replaces the dark sidebar. Hero: “Meet Modeer” in heavy
+  display, “Your personal AI team.”, a real composer (cream, ink outline, pink
+  action) that submits into the existing Modeer conversation flow, and Modeer’s
+  large portrait as a cut-out over three diagonal cream/yellow/pink fields.
+  Below: “Your team” with an ink rule, then illustrated panels — first desktop
+  row Study, Career, Research, Writing — and a **Today** band carrying the daily
+  briefing and goals.
+- **Team** — Modeer as a distinct featured row, then the full nine-specialist
+  roster as panels.
+- **Agent workspaces** — compact illustrated identity header with a yellow
+  geometric detail, cream reading surface, yellow user bubbles vs. plain ink
+  prose for the assistant, small portrait per message, a quiet
+  “personalised from your saved context” pill, and a persistent composer.
+  Markdown (headings, lists, links, tables, quotes, code) keeps scrolling
+  containers. Large artwork stays in headers and empty states.
+- **Memory** — paper sections with yellow category headers; “Shared with your
+  team” vs “Known by one specialist” preserved; specialist picker uses portrait
+  thumbnails; edit/delete are always visible at 44px.
+- **Goals** — cream rows, ink controls, priority shown as **text plus** colour.
+- **Onboarding, history drawer, empty/loading/error states** all restyled; no
+  dark-theme components remain.
+
+### Verified (headless Chrome, real backend + real Groq streaming)
+20/20 interaction checks pass with no console or page errors:
+hero composer → Modeer → live streamed reply · history drawer open/close ·
+goal create/complete/delete · memory add/edit/delete · specialist notes ·
+team → specialist navigation · no horizontal overflow at 390px on any route.
+Checked at **1440×900, 1280×800, 768×1024, 390×844**; screenshots in
+`qa-screenshots/` (git-ignored).
+
+`pytest` 58 passed · `ruff` clean · `tsc` clean · `next build` clean ·
+`next lint` clean.
+
+### 0.1 Remaining differences from the reference — read this
+
+**This environment has no image generator** (no AI image tool, no MCP image
+server, no diffusers/ImageMagick/Inkscape — checked before starting). The
+reference’s characters are rendered comic illustrations; ours are **hand-authored
+SVG**, so:
+
+- Faces are cleaner and flatter than the reference’s inked, textured rendering.
+  Crosshatch, halftone and contour shading are present but simpler.
+- Poses are frontal busts. The reference’s Modeer leans on one hand; there are no
+  hands, arms or props held by the characters.
+- Backgrounds are simplified flat shapes rather than detailed scenes.
+- Everyone shares one underlying face construction, varied by geometry, hair,
+  skin, wardrobe and expression — distinct people, but a narrower range than
+  drawn art would give.
+
+Other differences: the reference’s decorative slogans were deliberately not all
+reproduced (the brief asked for sparse annotations, and some concept text is
+accidental); nine specialists means the 4-column Home grid leaves one panel on
+its own row.
+
+**Provisional assets to refine later** (all in `src/lib/characters.ts`):
+`modeer`, `study`, `career`, `research`, `writing`, `travel`, `shopping`,
+`finance`, `fitness`, `email`.
+
+---
+
+## 0b. Earlier visual / interaction QA
 
 Inspected via headless Chrome (Playwright driving the installed browser) at
 **1440×900, 1280×800, 768×1024, 390×844** with a realistic seeded profile

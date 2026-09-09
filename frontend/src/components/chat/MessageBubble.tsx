@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { AgentAvatar } from "@/components/AgentAvatar";
+import { AgentBadge } from "@/components/art/AgentPortrait";
 import { ThinkingDots } from "@/components/ui/primitives";
 import { renderMarkdown } from "@/lib/markdown";
 import type { Agent, Message } from "@/types";
@@ -17,7 +17,7 @@ export function MessageBubble({
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[82%] whitespace-pre-wrap rounded-[14px] rounded-br-[5px] bg-surface-strong px-3.5 py-2.5 text-[14px] leading-relaxed text-white">
+        <div className="max-w-[85%] whitespace-pre-wrap rounded-lg border-2 border-ink bg-sun-pale px-4 py-2.5 text-[15px] leading-relaxed text-ink">
           {message.content}
         </div>
       </div>
@@ -33,30 +33,26 @@ export function MessageBubble({
 
   return (
     <div className="flex gap-3">
-      <div className="pt-0.5">
-        <AgentAvatar icon={agent.icon} accent={agent.accent} size={28} />
-      </div>
+      <AgentBadge slug={agent.id} size={38} className="mt-0.5" />
       <div className="min-w-0 flex-1">
-        <div className="prose-chat max-w-[46rem]">
+        <div className="prose-ink">
           {empty && streaming ? (
             <ThinkingDots />
           ) : (
             <>
               {renderMarkdown(message.content)}
-              {streaming && <span className="caret" />}
+              {streaming && <span className="caret" aria-hidden />}
             </>
           )}
         </div>
+
         {!streaming && contextUsed && (
           <Link
             href="/memory"
-            className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] text-content-faint transition hover:text-content-dim"
+            className="mt-2.5 inline-flex items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-wide text-ink-soft transition hover:text-pink-deep"
           >
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ background: agent.accent }}
-            />
-            Personalized from your saved context
+            <span className="h-2 w-2 rounded-full bg-pink" aria-hidden />
+            Personalised from your saved context
           </Link>
         )}
       </div>

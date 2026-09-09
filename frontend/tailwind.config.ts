@@ -6,46 +6,46 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        brush: ["var(--font-brush)", "cursive"],
+        hand: ["var(--font-hand)", "cursive"],
       },
       colors: {
-        bg: "var(--bg)",
-        "bg-elev": "var(--bg-elev)",
-        surface: {
-          DEFAULT: "var(--surface)",
-          hover: "var(--surface-hover)",
-          strong: "var(--surface-strong)",
+        paper: {
+          DEFAULT: "var(--paper)",
+          hi: "var(--paper-hi)",
+          lo: "var(--paper-lo)",
         },
-        line: {
-          DEFAULT: "var(--line)",
-          strong: "var(--line-strong)",
+        sun: {
+          DEFAULT: "var(--sun)",
+          deep: "var(--sun-deep)",
+          pale: "var(--sun-pale)",
         },
-        content: {
-          DEFAULT: "var(--text)",
-          dim: "var(--text-dim)",
-          faint: "var(--text-faint)",
+        pink: {
+          DEFAULT: "var(--pink)",
+          deep: "var(--pink-deep)",
+          pale: "var(--pink-pale)",
         },
-        accent: {
-          DEFAULT: "var(--accent)",
-          soft: "var(--accent-soft)",
+        ink: {
+          DEFAULT: "var(--ink)",
+          soft: "var(--ink-soft)",
+          faint: "var(--ink-faint)",
         },
+        navy: "var(--navy)",
       },
       borderRadius: {
         sm: "var(--radius-sm)",
         DEFAULT: "var(--radius)",
         lg: "var(--radius-lg)",
-        xl: "var(--radius-xl)",
       },
       boxShadow: {
-        1: "var(--shadow-1)",
-        2: "var(--shadow-2)",
-        pop: "var(--shadow-pop)",
+        pop: "var(--pop)",
+        "pop-sm": "var(--pop-sm)",
+        "pop-xs": "var(--pop-xs)",
       },
       maxWidth: {
-        page: "1080px",
-        prose: "44rem",
-      },
-      transitionTimingFunction: {
-        premium: "cubic-bezier(0.2, 0.6, 0.2, 1)",
+        page: "1240px",
+        read: "46rem",
       },
     },
   },

@@ -28,11 +28,11 @@ export function Composer({
     const el = ref.current;
     if (!el) return;
     el.style.height = "0px";
-    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 190)}px`;
   }, [value]);
 
   useEffect(() => {
-    if (autoFocus) ref.current?.focus();
+    if (autoFocus && window.matchMedia("(min-width: 768px)").matches) ref.current?.focus();
   }, [autoFocus]);
 
   const canSend = value.trim().length > 0 && !streaming && !disabled;
@@ -43,9 +43,13 @@ export function Composer({
         e.preventDefault();
         if (canSend) onSend();
       }}
-      className="flex items-end gap-2 rounded-[14px] border border-line bg-bg-elev p-2 pl-3.5 transition focus-within:border-line-strong"
+      className="flex items-end gap-2 rounded-lg border-2 border-ink bg-paper-hi p-2 pl-3.5 shadow-pop-xs transition focus-within:border-pink focus-within:shadow-pop-sm"
     >
+      <label htmlFor="composer" className="sr-only">
+        {placeholder}
+      </label>
       <textarea
+        id="composer"
         ref={ref}
         rows={1}
         value={value}
@@ -57,19 +61,20 @@ export function Composer({
           }
         }}
         placeholder={placeholder}
-        className="max-h-[200px] min-h-[26px] flex-1 resize-none bg-transparent py-1.5 text-[14px] leading-relaxed text-white outline-none placeholder:text-content-faint"
+        disabled={disabled}
+        className="max-h-[190px] min-h-[28px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-ink outline-none placeholder:text-ink-faint focus-visible:outline-none"
       />
       <button
         type="submit"
         disabled={!canSend}
-        aria-label="Send"
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] transition disabled:opacity-35"
+        aria-label={streaming ? "Sending" : "Send message"}
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-ink transition disabled:opacity-40"
         style={{
-          background: canSend ? "var(--accent)" : "var(--surface-strong)",
-          color: canSend ? "var(--accent-contrast)" : "var(--text-faint)",
+          background: canSend ? "var(--pink)" : "var(--paper-lo)",
+          color: canSend ? "#fff" : "var(--ink-faint)",
         }}
       >
-        {streaming ? <Spinner className="h-4 w-4" /> : <Icon name="arrow-up" size={17} />}
+        {streaming ? <Spinner className="!h-4 !w-4 !border-white !border-t-transparent" /> : <Icon name="arrow-up" size={20} strokeWidth={2.8} />}
       </button>
     </form>
   );

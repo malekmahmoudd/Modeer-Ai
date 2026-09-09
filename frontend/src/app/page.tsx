@@ -3,50 +3,53 @@
 import Link from "next/link";
 
 import { AgentGrid } from "@/components/AgentGrid";
+import { Scribble } from "@/components/art/Ink";
+import { TodayBand } from "@/components/home/TodayBand";
 import { ModeerHero } from "@/components/home/ModeerHero";
 import { MeetModeer } from "@/components/onboarding/MeetModeer";
-import { Icon } from "@/components/ui/Icon";
+import { SectionHead } from "@/components/ui/primitives";
 import { useApi } from "@/lib/api";
-import { firstName, greeting } from "@/lib/format";
 import type { UserProfile } from "@/types";
 
 export default function HomePage() {
   const { data: user, loading } = useApi<UserProfile>("/users/me");
 
   if (loading) {
-    return <div className="h-40 animate-pulse rounded-lg bg-surface" />;
+    return (
+      <div className="py-16" aria-busy>
+        <div className="h-10 w-64 animate-pulse rounded bg-paper-lo" />
+        <div className="mt-6 h-64 w-full animate-pulse rounded border-2 border-ink bg-paper-lo" />
+      </div>
+    );
   }
 
-  if (user && !user.onboarded) {
-    return <MeetModeer />;
-  }
-
-  const name = firstName(user?.display_name);
+  if (user && !user.onboarded) return <MeetModeer />;
 
   return (
-    <div className="anim-fade-up">
-      <header className="mb-6">
-        <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.02em] text-white">
-          {greeting(name)}
-        </h1>
-      </header>
-
+    <div className="anim-fade">
       <ModeerHero />
 
-      <section className="mt-9">
-        <div className="mb-4 flex items-end justify-between">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-content-faint">
-            Your team
-          </h2>
-          <Link
-            href="/team"
-            className="flex items-center gap-1 text-[12px] text-content-faint hover:text-content-dim"
-          >
-            All specialists <Icon name="arrow-right" size={12} />
+      <section className="pt-8 sm:pt-10">
+        <SectionHead
+          title="Your team"
+          aside={
+            <Scribble className="hidden max-w-[190px] text-right lg:block">
+              Different minds.
+              <br />
+              A brighter you.
+            </Scribble>
+          }
+        />
+        <AgentGrid specialistsOnly />
+
+        <div className="mt-5 flex justify-center md:justify-start">
+          <Link href="/team" className="btn btn-sun">
+            Meet the whole team
           </Link>
         </div>
-        <AgentGrid specialistsOnly />
       </section>
+
+      <TodayBand />
     </div>
   );
 }

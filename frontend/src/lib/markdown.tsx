@@ -54,7 +54,7 @@ export function renderMarkdown(src: string): ReactNode[] {
       out.push(
         <pre
           key={k++}
-          className="my-2 overflow-x-auto rounded-[10px] border border-line bg-bg-elev p-3 text-[12.5px] leading-relaxed"
+          className="my-3 overflow-x-auto rounded border-2 border-ink bg-paper-lo p-3 text-[13px] leading-relaxed"
         >
           <code>{buf.join("\n")}</code>
         </pre>,
@@ -70,7 +70,7 @@ export function renderMarkdown(src: string): ReactNode[] {
 
     // horizontal rule
     if (/^(\s*[-*_]){3,}\s*$/.test(line)) {
-      out.push(<hr key={k++} className="my-3 border-line" />);
+      out.push(<hr key={k++} className="my-4 border-0 border-t-2 border-ink" />);
       i++;
       continue;
     }
@@ -79,7 +79,7 @@ export function renderMarkdown(src: string): ReactNode[] {
     const h = line.match(/^(#{1,4})\s+(.*)$/);
     if (h) {
       out.push(
-        <p key={k++} className="mb-1 mt-3 text-[13.5px] font-semibold text-white first:mt-0">
+        <p key={k++} className="mb-1.5 mt-4 text-[15px] font-extrabold text-ink first:mt-0">
           {inline(h[2], `h${k}`)}
         </p>,
       );
@@ -97,14 +97,14 @@ export function renderMarkdown(src: string): ReactNode[] {
         i++;
       }
       out.push(
-        <div key={k++} className="my-2 overflow-x-auto">
-          <table className="w-full border-collapse text-[12.5px]">
+        <div key={k++} className="my-3 overflow-x-auto border-2 border-ink">
+          <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr>
                 {header.map((c, ci) => (
                   <th
                     key={ci}
-                    className="border-b border-line-strong px-2.5 py-1.5 text-left font-semibold text-white"
+                    className="border-b-2 border-ink bg-sun-pale px-3 py-2 text-left font-extrabold text-ink"
                   >
                     {inline(c, `th${k}-${ci}`)}
                   </th>
@@ -115,7 +115,7 @@ export function renderMarkdown(src: string): ReactNode[] {
               {rows.map((r, ri) => (
                 <tr key={ri}>
                   {r.map((c, ci) => (
-                    <td key={ci} className="border-b border-line px-2.5 py-1.5 align-top text-content-dim">
+                    <td key={ci} className="border-b border-ink/25 px-3 py-2 align-top text-ink-soft">
                       {inline(c, `td${k}-${ri}-${ci}`)}
                     </td>
                   ))}
@@ -138,7 +138,7 @@ export function renderMarkdown(src: string): ReactNode[] {
       out.push(
         <blockquote
           key={k++}
-          className="my-2 border-l-2 border-line-strong pl-3 text-content-dim"
+          className="my-3 border-l-[3px] border-pink pl-3 text-ink-soft"
         >
           {inline(buf.join(" "), `q${k}`)}
         </blockquote>,

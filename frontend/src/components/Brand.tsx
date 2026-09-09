@@ -1,29 +1,33 @@
 import Link from "next/link";
 
-import { Icon } from "@/components/ui/Icon";
+/** The Modeer wordmark: heavy brush lettering with a pink ink underline. */
+export function Brand({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
+  const text =
+    size === "lg" ? "text-[34px]" : size === "sm" ? "text-[20px]" : "text-[26px]";
+  const rule = size === "lg" ? "h-[7px]" : size === "sm" ? "h-[4px]" : "h-[5px]";
 
-export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/" className="group flex items-center gap-2.5">
+    <Link href="/" className="group inline-block leading-none" aria-label="Modeer — home">
       <span
-        className="grid place-items-center rounded-[11px] text-white"
-        style={{
-          width: 32,
-          height: 32,
-          background: "linear-gradient(150deg, #8b7bff, #5b46d6)",
-          boxShadow: "0 6px 20px -8px rgba(139,123,255,0.7)",
-        }}
+        className={`wordmark block ${text} text-ink`}
+        style={{ transform: "skewX(-7deg)" }}
       >
-        <Icon name="compass" size={18} />
+        MODEER
       </span>
-      {!compact && (
-        <span className="leading-tight">
-          <span className="block text-[13.5px] font-semibold tracking-tight text-white">
-            Modeer
-          </span>
-          <span className="block text-[11px] text-content-faint">Personal AI team</span>
-        </span>
-      )}
+      <svg
+        viewBox="0 0 120 8"
+        preserveAspectRatio="none"
+        className={`mt-1 block w-[74%] ${rule}`}
+        aria-hidden
+      >
+        <path
+          d="M2,6 C30,1 74,1 118,4"
+          fill="none"
+          stroke="var(--pink)"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+      </svg>
     </Link>
   );
 }

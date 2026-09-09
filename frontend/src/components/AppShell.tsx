@@ -17,7 +17,9 @@ const NAV = [
 ];
 
 function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  if (href === "/") return pathname === "/";
+  if (href === "/team") return pathname.startsWith("/team") || pathname.startsWith("/agents");
+  return pathname.startsWith(href);
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -25,83 +27,85 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { data: user } = useApi<UserProfile>("/users/me");
   const name = firstName(user?.display_name);
 
-  // The agent workspace manages its own full-height layout.
+  // The agent workspace owns its own full-height layout.
   const inWorkspace = pathname.startsWith("/agents/");
 
   return (
-    <div className="flex min-h-screen w-full">
-      {/* Desktop rail */}
-      <aside
-        className="fixed inset-y-0 left-0 z-30 hidden flex-col justify-between border-r border-line px-4 py-6 lg:flex"
-        style={{ width: "var(--nav-w)" }}
-      >
-        <div>
-          <div className="px-1.5">
-            <Brand />
-          </div>
-          <nav className="mt-8 flex flex-col gap-0.5">
+    <div className="flex min-h-dvh flex-col bg-paper">
+      {/* ---------- top navigation ---------- */}
+      <header className="sticky top-0 z-40 border-b-2 border-ink bg-paper">
+        <div className="mx-auto flex h-[var(--nav-h)] w-full max-w-page items-center gap-6 px-4 sm:px-7">
+          <Brand size="sm" />
+
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
             {NAV.map((item) => {
               const active = isActive(pathname, item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13.5px] transition ${
-                    active
-                      ? "bg-surface-strong font-medium text-white"
-                      : "text-content-dim hover:bg-surface hover:text-white"
-                  }`}
+                  aria-current={active ? "page" : undefined}
+                  className="relative px-3 py-2 text-[15px] font-bold text-ink transition hover:text-pink-deep"
                 >
-                  <Icon name={item.icon} size={17} className={active ? "text-accent" : ""} />
                   {item.label}
+                  <span
+                    className={`absolute inset-x-2 -bottom-0.5 h-[4px] rounded-full bg-pink transition-opacity ${
+                      active ? "opacity-100" : "opacity-0"
+                    }`}
+                    aria-hidden
+                  />
                 </Link>
               );
             })}
           </nav>
+
+          <div className="ml-auto flex items-center gap-2">
+            {name && (
+              <span className="hidden items-center gap-2 sm:flex">
+                <span className="text-[13px] font-semibold text-ink-soft">{name}</span>
+                <span
+                  className="grid h-9 w-9 place-items-center rounded-full border-2 border-ink bg-sun text-[13px] font-black"
+                  aria-hidden
+                >
+                  {name.charAt(0).toUpperCase()}
+                </span>
+              </span>
+            )}
+          </div>
         </div>
+      </header>
 
-        <div className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-content-dim">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-surface-strong text-[12px] font-semibold text-white">
-            {(name || "Y").charAt(0).toUpperCase()}
-          </span>
-          <span className="text-[12.5px]">{name || "Your space"}</span>
-        </div>
-      </aside>
+      {/* ---------- page ---------- */}
+      <main
+        id="main"
+        className={
+          inWorkspace
+            ? "flex min-h-0 flex-1 flex-col"
+            : "mx-auto w-full max-w-page flex-1 px-4 pb-28 pt-7 sm:px-7 sm:pt-10 md:pb-16"
+        }
+      >
+        {children}
+      </main>
 
-      {/* Content */}
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-[var(--nav-w)]">
-        {/* Mobile top bar — hidden in the agent workspace (it has its own header) */}
-        {!inWorkspace && (
-          <header className="sticky top-0 z-20 flex items-center border-b border-line bg-bg/85 px-4 py-3 backdrop-blur-md lg:hidden">
-            <Brand />
-          </header>
-        )}
-
-        <main
-          className={
-            inWorkspace
-              ? "min-w-0 flex-1"
-              : "mx-auto min-w-0 flex-1 px-5 py-7 pb-28 sm:px-9 sm:py-11 lg:pb-16 w-full max-w-[1140px]"
-          }
-        >
-          {children}
-        </main>
-      </div>
-
-      {/* Mobile bottom tab bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden">
+      {/* ---------- mobile tab bar ---------- */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t-2 border-ink bg-paper pb-[env(safe-area-inset-bottom)] md:hidden"
+        aria-label="Main"
+      >
         {NAV.map((item) => {
           const active = isActive(pathname, item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 py-2.5 text-[10.5px] ${
-                active ? "text-white" : "text-content-faint"
-              }`}
+              aria-current={active ? "page" : undefined}
+              className="relative flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] font-bold text-ink"
             >
-              <Icon name={item.icon} size={20} className={active ? "text-accent" : ""} />
-              {item.label}
+              {active && (
+                <span className="absolute inset-x-5 top-0 h-[4px] bg-pink" aria-hidden />
+              )}
+              <Icon name={item.icon} size={20} className={active ? "text-pink-deep" : "text-ink-soft"} />
+              <span className={active ? "text-ink" : "text-ink-soft"}>{item.label}</span>
             </Link>
           );
         })}
