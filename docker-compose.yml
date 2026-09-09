@@ -1,0 +1,29 @@
+# Minimal Docker Compose: PostgreSQL only.
+# The application (frontend + backend) runs on the host for a fast dev loop.
+#
+#   docker compose up -d db
+#
+# Connection string for backend/.env:
+#   DATABASE_URL=postgresql+psycopg://modeer:modeer@localhost:5432/modeer
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: modeer-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: modeer
+      POSTGRES_PASSWORD: modeer
+      POSTGRES_DB: modeer
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U modeer -d modeer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

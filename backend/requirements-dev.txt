@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest>=8.2,<9
+pytest-asyncio>=0.23,<0.25
+anyio>=4.4,<5
+coverage>=7.5,<8
+ruff>=0.5,<0.9

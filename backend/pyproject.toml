@@ -1,0 +1,23 @@
+[project]
+name = "modeer-backend"
+version = "0.1.0"
+description = "Modeer personal AI team — FastAPI modular monolith"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+ignore = ["B008", "SIM117"]  # B008: FastAPI Depends() defaults; SIM117: nested async-with reads clearer
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/agents/*/prompt.md"]
