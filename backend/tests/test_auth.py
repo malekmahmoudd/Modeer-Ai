@@ -129,9 +129,11 @@ def test_ask_my_team_rejects_anonymous_and_forged_callers(client, make_user, mon
 #: touches one person's data and must refuse an anonymous caller.
 PUBLIC_ROUTES = {
     ("GET", "/api/health"),
+    ("GET", "/api/health/detail"),  # an uptime check must not need a credential
     ("GET", "/api/agents"),
     ("GET", "/api/agents/{agent_id}"),
     ("GET", "/api/auth/status"),
+    ("GET", "/api/legal/privacy"),  # readable before you accept an invitation
     ("POST", "/api/auth/login"),
     ("POST", "/api/auth/logout"),
 }

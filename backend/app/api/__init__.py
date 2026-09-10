@@ -10,6 +10,7 @@ from app.api.routes import (
     conversations,
     goals,
     health,
+    legal,
     memory,
     team,
     users,
@@ -17,6 +18,7 @@ from app.api.routes import (
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(health.router)
+api_router.include_router(legal.router)
 api_router.include_router(users.router)
 api_router.include_router(agents.router)
 api_router.include_router(conversations.router)

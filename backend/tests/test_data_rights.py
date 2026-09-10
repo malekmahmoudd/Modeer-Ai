@@ -201,3 +201,20 @@ def test_one_account_cannot_delete_anothers_conversation(client, make_user, monk
     client.post("/api/auth/logout")
     client.post("/api/auth/login", json={"access_key": "a" * 40}, headers=origin)
     assert client.get(f"/api/conversations/{conversation_id}").status_code == 200
+
+
+def test_privacy_notice_is_readable_without_an_account(client, make_user, monkeypatch):
+    """Someone deciding whether to accept an invitation has to read it first."""
+    _enable_auth(monkeypatch, [(make_user("Alice"), "a" * 40)])
+    response = client.get("/api/legal/privacy")
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["format"] == "markdown"
+    text = body["content"]
+    # The things a person most needs to be told, and would be worst served by
+    # us quietly dropping.
+    assert "provider" in text.lower()
+    assert "delete" in text.lower()
+    assert "backup" in text.lower()
+    assert "not medical, legal or financial advice" in text.lower()

@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.agents.sync import sync_agents
 from app.api import api_router
 from app.core.config import settings
+from app.core.observability import install as install_observability
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
 
@@ -28,9 +29,7 @@ async def lifespan(app: FastAPI):
             db.commit()
             logger.info("Synced %d agents into the registry table", n)
     except Exception as exc:  # noqa: BLE001
-        logger.warning(
-            "Agent sync skipped (has the database been migrated?): %s", exc
-        )
+        logger.warning("Agent sync skipped (has the database been migrated?): %s", exc)
     yield
 
 
@@ -40,6 +39,8 @@ app = FastAPI(
     description="Personal AI assistant (Modeer) plus a shared-context specialist team.",
     lifespan=lifespan,
 )
+
+install_observability(app)
 
 app.add_middleware(
     CORSMiddleware,
