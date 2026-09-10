@@ -11,6 +11,7 @@ from collections.abc import AsyncIterator
 import httpx
 
 from app.core.config import settings
+from app.core.observability import record_rate_limit
 from app.llm.base import LLMMessage, LLMProvider
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,9 @@ class OpenAICompatProvider(LLMProvider):
                             response.headers.get("retry-after", "none"),
                         )
                         if response.status_code == 429:
+                            # Records the throttle and alerts the operator when
+                            # the retry-after says the daily budget is spent.
+                            record_rate_limit(_retry_after(response))
                             raise ProviderError(
                                 "The AI provider is at its usage limit. "
                                 "Please wait a minute and "

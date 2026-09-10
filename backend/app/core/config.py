@@ -26,6 +26,20 @@ class Settings(BaseSettings):
     # Conservative UTF-8 input units plus maximum output tokens, UTC day.
     memory_timeout_seconds: float = Field(default=8, ge=1, le=30)
 
+    # --- Operations ---
+    #: Accounts allowed to see the monitoring dashboard. It shows every
+    #: account's usage, so it is not for every invitee.
+    admin_accounts: list[str] = Field(default_factory=list)
+    #: Alerting. Any channel left blank is simply not used; with none set,
+    #: alerting is off. See app/core/alerts.py.
+    alert_webhook_url: str = Field(default="", repr=False)
+    alert_telegram_bot_token: str = Field(default="", repr=False)
+    alert_telegram_chat_id: str = Field(default="", repr=False)
+    #: Alert once this many unhandled errors have happened since start, then
+    #: again on each further multiple. Low, because on a private deployment
+    #: any unhandled error is worth a look.
+    alert_error_threshold: int = Field(default=3, ge=1)
+
     @model_validator(mode="after")
     def validate_security(self):
         if self.environment == "production":

@@ -26,6 +26,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.core.alerts import Severity, notify
+from app.core.config import settings
+
 logger = logging.getLogger("modeer.access")
 
 #: A request slower than this is worth a warning on its own line. Chat streams
@@ -45,6 +48,12 @@ class Health:
     last_error_at: datetime | None = None
     last_error_id: str | None = None
     last_error_type: str | None = None
+    #: Provider throttling. A per-minute 429 is routine; a daily-quota 429 means
+    #: the product is down for everyone until the budget refills, which is the
+    #: one an operator has to hear about.
+    provider_rate_limits: int = 0
+    provider_quota_exhausted_at: datetime | None = None
+    provider_last_retry_after: float | None = None
 
     def snapshot(self) -> dict:
         uptime = (datetime.now(UTC) - self.started_at).total_seconds()
@@ -54,6 +63,15 @@ class Health:
             "requests": self.requests,
             "by_status_class": dict(sorted(self.by_status_class.items())),
             "unhandled_errors": self.unhandled_errors,
+            "provider": {
+                "rate_limits": self.provider_rate_limits,
+                "quota_exhausted_at": (
+                    self.provider_quota_exhausted_at.isoformat()
+                    if self.provider_quota_exhausted_at
+                    else None
+                ),
+                "last_retry_after_seconds": self.provider_last_retry_after,
+            },
             "last_error": (
                 {
                     "at": self.last_error_at.isoformat() if self.last_error_at else None,
@@ -129,10 +147,45 @@ def install(app: FastAPI) -> None:
             type(exc).__name__,
             exc_info=exc,
         )
+        if health.unhandled_errors % settings.alert_error_threshold == 0:
+            notify(
+                "Unhandled errors",
+                f"{health.unhandled_errors} since start. Latest incident {incident} "
+                f"({type(exc).__name__}) on {_route_template(request)}.",
+                Severity.CRITICAL,
+                key=f"errors-{health.unhandled_errors // settings.alert_error_threshold}",
+            )
         return JSONResponse(
             status_code=500,
             content={
                 "error": "Something went wrong on our side. Please try again.",
                 "incident": incident,
             },
+        )
+
+
+#: A retry-after beyond this is the provider rationing by the day, not the
+#: minute. Same threshold the eval harness uses to decide a run cannot finish.
+DAILY_QUOTA_RETRY_SECONDS = 180.0
+
+
+def record_rate_limit(retry_after: float | None) -> None:
+    """Note a provider 429, and alert if the daily budget looks spent.
+
+    Called from the provider on every 429. A short retry-after is ordinary
+    throttling and only moves a counter; a long one means nobody can use the
+    product until the budget refills, and that is worth waking someone for.
+    """
+    from app.core.alerts import Severity, notify
+
+    health.provider_rate_limits += 1
+    health.provider_last_retry_after = retry_after
+    if retry_after is not None and retry_after > DAILY_QUOTA_RETRY_SECONDS:
+        health.provider_quota_exhausted_at = datetime.now(UTC)
+        notify(
+            "AI provider daily quota exhausted",
+            f"The provider asked for a {retry_after:.0f}s wait. Replies will fail "
+            f"for everyone until the budget refills.",
+            Severity.CRITICAL,
+            key="provider-quota",
         )

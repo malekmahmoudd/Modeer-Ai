@@ -55,6 +55,81 @@ trusting the cron entry, and confirm `restore-check.sh` prints
 | `MODEER_BACKUP_OFFHOST` | unset | A backup on the same disk as the database is not a backup. |
 | `MODEER_BACKUP_KEEP_DAYS` | 30 | Older archives are deleted. |
 
+## The dashboard
+
+`GET /api/admin/dashboard` — one server-rendered page: status, request counts by
+status class, unhandled errors with the latest incident id, provider rate-limit
+and quota state, and every account's token spend today against its budget.
+`GET /api/admin/metrics` is the same data as JSON.
+
+Both are gated on `ADMIN_ACCOUNTS`, a list of account ids. **Empty means nobody**,
+not everybody — the page shows other people's usage. Non-admins get 404 rather
+than 403, because an operator page should not confirm its own existence.
+
+```sh
+ADMIN_ACCOUNTS=["01f2...","03a9..."]      # account ids, from provision_user.py
+```
+
+It cannot tell you the app is down: a page served by the app is proof the app is
+up. That is what the watchdog below is for.
+
+## Alerts
+
+Set at least one channel, or nothing will ever reach you. Both are free.
+
+```sh
+# Any webhook that accepts JSON: Discord, Slack, ntfy
+ALERT_WEBHOOK_URL=https://discord.com/api/webhooks/...
+
+# Or Telegram: talk to @BotFather for a token, @userinfobot for your chat id
+ALERT_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
+ALERT_TELEGRAM_CHAT_ID=987654321
+```
+
+The app alerts on:
+
+| Event | Severity | Why it matters |
+|---|---|---|
+| Unhandled errors reaching `ALERT_ERROR_THRESHOLD` (default 3) | critical | Something is broken and users are seeing it |
+| Provider daily quota exhausted | critical | Replies fail for **everyone** until the budget refills |
+| Modeer down or degraded (from the watchdog) | critical | The app cannot report this itself |
+
+The same event alerts at most once every 15 minutes, so a crash loop is one
+message rather than three hundred. Alerts carry event names, counts, exception
+types and route templates — **never message content**, because they land in a
+chat app.
+
+**Send a test alert the day you set this up:**
+
+```sh
+curl -X POST https://your-domain/api/admin/test-alert -H "Cookie: modeer_session=..."
+```
+
+An alerting path nobody has exercised is a guess, and the day you find out is
+the day it mattered.
+
+## Detecting downtime
+
+The app alerts on its own errors. It cannot alert on its own death — a stopped
+process sends nothing. `deploy/watchdog.sh` is the outside check:
+
+```cron
+*/5 * * * * MODEER_URL=https://your-domain             ALERT_WEBHOOK_URL=https://...             /srv/modeer/deploy/watchdog.sh >> /var/log/modeer-watchdog.log 2>&1
+```
+
+It alerts only on a **change** of state, so an outage is one message and its
+recovery is another.
+
+Where you run it decides what it catches:
+
+- **On the app host** — catches the container dying, the app hanging, the
+  database being unreachable. Not the host dying or losing its network.
+- **Somewhere else** — a second small VPS, a home machine, or a free uptime
+  service pointed at `/api/health` — catches those too.
+
+Running it on the app host is far better than nothing and takes one line. A
+second copy elsewhere is what makes it complete. Both are free.
+
 ## What to watch
 
 `GET /api/health` — liveness. `GET /api/health/detail` — readiness plus what the
