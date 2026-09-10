@@ -1,6 +1,70 @@
 # Project status — Modeer Personal AI Team MVP
 
-_Last updated: 2026-09-09 · phase: “Sunshine & Ink” visual redesign_
+_Last updated: 2026-09-10 · phase: hardening for a private, invite-only deployment_
+
+---
+
+## Latest pass — quality, security, deployment prep (2026-09-10)
+
+**Not deployable yet.** Nothing has been published, no host or domain is chosen,
+and the container stack has never been built or launched. What follows is what is
+done, what is verified, and what is still open. Sections below this one describe
+the earlier redesign phase and are unchanged.
+
+### Done and verified
+
+| Area | State |
+|---|---|
+| Response-quality rubric (`app/agents/rubric.py`) + 32 tests | ✅ Replaces keyword scoring — see `docs/agent-quality.md` |
+| Agent prompt fixes (guardrails, Writing, Shopping, Career, Study) | ✅ 8/13 → 12/13 on the same rubric |
+| Live quality run, full responses stored and reviewed | ✅ `docs/live-quality-*.json` |
+| Auth on every personal-data route, enforced by a route-table sweep | ✅ `tests/test_auth.py` |
+| Ask My Team: anonymous + cross-account regression tests | ✅ New |
+| Session expiry, key revocation, foreign-secret cookie, origin checks | ✅ Tested |
+| Live end-to-end journey on the real provider, isolated DB | ✅ 12/12 — `backend/journey_check.py` |
+| Backend tests · ruff | ✅ 101 passed, lint clean |
+| Frontend production build | ✅ Rebuilt, unchanged this pass |
+| Backup: retention, AES-256 encryption, off-host copy, restore check | ✅ Written — ⚠️ never executed (no Docker) |
+| Temporary patch/diagnostic scripts | ✅ Removed or folded into `backend/tools/` |
+
+### Fixed this pass, worth knowing
+
+- **`chat/stream` answered 422 before 401.** Auth ran inside the handler, after
+  body validation, so an anonymous caller learned the request schema. Auth is now
+  a FastAPI dependency (`core.auth.caller_id`) on both chat routes and Ask My
+  Team. A test walks the real route table so a new endpoint cannot skip it.
+- **Rate limits were being recorded as bad answers.** Two earlier quality runs
+  had empty replies scored as quality failures; they were 429s. The eval harness
+  now backs off and retries, and tells a per-minute throttle apart from a daily
+  quota (`ProviderError.retry_after`) so it aborts instead of burning a run.
+- **An aborted run destroyed the previous results file.** It now writes to
+  `<out>.partial` and promotes only on completion.
+
+### Still open
+
+1. **11 of 13 cases unconfirmed on `openai/gpt-oss-120b`.** Its 200,000
+   tokens-per-day budget was spent, so the complete after-run is on
+   `qwen/qwen3.8-27b`. A later `gpt-oss-120b` attempt got 2 cases through before
+   the cap returned; both passed, including Study — 735 words with an invented
+   countdown before, 333 words and no calendar claim after. Re-run
+   `python quality_check.py` on a mostly idle day.
+2. **Eval variance is large and unmeasured.** One sample per agent at temperature
+   0.3–0.6: across three runs Career failed on length then passed, Research came
+   in under the ceiling then three words over. Sampling each case several times is
+   the highest-value next step for the eval itself.
+3. **The LLM judge is an aid, not a gate.** `openai/gpt-oss-20b` produces regular
+   false positives. Read the stored responses.
+4. **Docker cannot run here: WSL is not installed.** No image build, no PostgreSQL
+   migration, no HTTPS, no persistence check, and `deploy/backup.ps1` /
+   `restore-check.ps1` have never been executed. See `docs/DEPLOYMENT.md`.
+5. **Browser and mobile testing was not repeated.** No browser automation is
+   available in this environment; the journey was verified at the HTTP layer
+   instead. The real login page, mobile reconnects and interruption-by-navigation
+   still need a human with a browser.
+6. **Abuse protection is unreviewed.** There is no per-user request quota or
+   rate limit in the app. Invite-only keeps the blast radius small, but a single
+   account can still exhaust the shared provider budget — which happened during
+   this pass, to this machine.
 
 ---
 
