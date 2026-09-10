@@ -1,29 +1,34 @@
-"""OpenAI-compatible chat-completions provider (streaming).
+"""Bounded OpenAI-compatible streaming with safe, actionable errors."""
 
-Works with any endpoint that speaks the OpenAI `/chat/completions` protocol —
-Groq, OpenAI, Together, Fireworks, local servers, etc. Selected by
-`LLM_PROVIDER=groq` or `LLM_PROVIDER=openai`; the base URL can be overridden with
-`LLM_BASE_URL`.
-"""
 from __future__ import annotations
 
 import asyncio
 import json
-import re
+import logging
+import time
 from collections.abc import AsyncIterator
 
 import httpx
 
+from app.core.config import settings
 from app.llm.base import LLMMessage, LLMProvider
 
-_RETRY_HINT = re.compile(r"try again in ([0-9.]+)s")
-_MAX_RETRIES = 4
-_MAX_BACKOFF = 30.0
+logger = logging.getLogger(__name__)
+_DEFAULT_BASE = {"groq": "https://api.groq.com/openai/v1", "openai": "https://api.openai.com/v1"}
 
-_DEFAULT_BASE = {
-    "groq": "https://api.groq.com/openai/v1",
-    "openai": "https://api.openai.com/v1",
-}
+
+class ProviderError(RuntimeError):
+    """Safe to display; never includes upstream bodies, credentials or prompts.
+
+    ``retry_after`` carries the upstream header's value in seconds when there was
+    one. It is a number, not upstream text, so it leaks nothing — and it lets an
+    unattended caller tell a minute-long throttle apart from a daily quota that
+    no amount of waiting will clear.
+    """
+
+    def __init__(self, message: str, *, retry_after: float | None = None) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
 
 
 class OpenAICompatProvider(LLMProvider):
@@ -34,7 +39,7 @@ class OpenAICompatProvider(LLMProvider):
         self._api_key = api_key
         self._base_url = (base_url or _DEFAULT_BASE.get(name, "")).rstrip("/")
         if not self._base_url:
-            raise ValueError(f"LLM_BASE_URL is required for the {name} provider")
+            raise ValueError("LLM_BASE_URL is required")
 
     async def stream_chat(
         self,
@@ -48,64 +53,108 @@ class OpenAICompatProvider(LLMProvider):
         payload = {
             "model": model,
             "temperature": temperature,
-            "max_tokens": max_tokens,
             "stream": True,
             "messages": [
                 {"role": "system", "content": system},
                 *({"role": m.role, "content": m.content} for m in messages),
             ],
         }
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "Content-Type": "application/json",
-        }
-        async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, read=180.0)) as client:
-            for attempt in range(_MAX_RETRIES + 1):
-                emitted = False
-                async with client.stream(
-                    "POST",
-                    f"{self._base_url}/chat/completions",
-                    headers=headers,
-                    json=payload,
-                ) as resp:
-                    if resp.status_code == 429 and attempt < _MAX_RETRIES:
-                        body = (await resp.aread()).decode("utf-8", "replace")
-                        await asyncio.sleep(_retry_after(resp, body))
-                        continue
-                    if resp.status_code >= 400:
-                        detail = (await resp.aread()).decode("utf-8", "replace")
-                        raise RuntimeError(
-                            f"{self.name} API {resp.status_code}: {detail[:500]}"
-                        )
-                    async for line in resp.aiter_lines():
-                        if not line.startswith("data:"):
-                            continue
-                        data = line[5:].strip()
-                        if not data or data == "[DONE]":
-                            continue
-                        try:
-                            event = json.loads(data)
-                        except json.JSONDecodeError:
-                            continue
-                        choices = event.get("choices") or []
-                        if not choices:
-                            continue
-                        text = (choices[0].get("delta") or {}).get("content")
-                        if text:
-                            emitted = True
-                            yield text
-                if emitted or resp.status_code != 429:
-                    return
-
-
-def _retry_after(resp: httpx.Response, body: str) -> float:
-    header = resp.headers.get("retry-after")
-    if header:
+        if model.startswith("openai/gpt-oss") and self.name == "groq":
+            payload["max_completion_tokens"] = max_tokens + 512
+            payload["reasoning_effort"] = settings.llm_reasoning_effort
+        else:
+            payload["max_tokens"] = max_tokens
+        started = time.monotonic()
+        emitted = False
+        finished = False
         try:
-            return min(float(header), _MAX_BACKOFF)
-        except ValueError:
-            pass
-    hint = _RETRY_HINT.search(body)
-    if hint:
-        return min(float(hint.group(1)) + 0.5, _MAX_BACKOFF)
-    return 5.0
+            async with asyncio.timeout(settings.llm_timeout_seconds):
+                async with httpx.AsyncClient(timeout=httpx.Timeout(15, read=20)) as client:
+                    async with client.stream(
+                        "POST",
+                        f"{self._base_url}/chat/completions",
+                        headers={"Authorization": f"Bearer {self._api_key}"},
+                        json=payload,
+                    ) as response:
+                        logger.info(
+                            "provider=%s status=%s remaining_tokens=%s retry_after=%s",
+                            self.name,
+                            response.status_code,
+                            response.headers.get("x-ratelimit-remaining-tokens", "unknown"),
+                            response.headers.get("retry-after", "none"),
+                        )
+                        if response.status_code == 429:
+                            raise ProviderError(
+                                "The AI provider is at its usage limit. "
+                                "Please wait a minute and "
+                                "try again.",
+                                retry_after=_retry_after(response),
+                            )
+                        if response.status_code >= 400:
+                            raise ProviderError(
+                                f"The AI provider could not respond (HTTP {response.status_code}). "
+                                "Please try again later."
+                            )
+                        async for line in response.aiter_lines():
+                            if not line.startswith("data:"):
+                                continue
+                            data = line[5:].strip()
+                            if data == "[DONE]":
+                                finished = True
+                                break
+                            if not data:
+                                continue
+                            try:
+                                event = json.loads(data)
+                            except ValueError:
+                                continue
+                            if event.get("error"):
+                                raise ProviderError(
+                                    "The AI provider interrupted the reply. Please try again."
+                                )
+                            choices = event.get("choices") or []
+                            if not choices:
+                                continue
+                            choice = choices[0]
+                            reason = choice.get("finish_reason")
+                            if reason == "length":
+                                raise ProviderError(
+                                    "The reply reached its length limit. "
+                                    "Please ask for a shorter "
+                                    "answer."
+                                )
+                            if reason:
+                                finished = True
+                            text = (choice.get("delta") or {}).get("content")
+                            if text:
+                                if not emitted:
+                                    logger.info(
+                                        "provider=%s first_text_seconds=%.2f",
+                                        self.name,
+                                        time.monotonic() - started,
+                                    )
+                                emitted = True
+                                yield text
+            if not emitted or not finished:
+                raise ProviderError("The AI reply was incomplete. Please try again.")
+        except (TimeoutError, httpx.TimeoutException) as exc:
+            raise ProviderError(
+                "The AI provider took too long to reply. Please try again."
+            ) from exc
+        except httpx.RequestError as exc:
+            raise ProviderError("Could not reach the AI provider. Please try again.") from exc
+        finally:
+            logger.info(
+                "provider=%s elapsed_seconds=%.2f completed=%s",
+                self.name,
+                time.monotonic() - started,
+                finished,
+            )
+
+
+def _retry_after(response: httpx.Response) -> float | None:
+    """The upstream retry-after header in seconds, when it sent a usable one."""
+    try:
+        return float(response.headers.get("retry-after", ""))
+    except ValueError:
+        return None

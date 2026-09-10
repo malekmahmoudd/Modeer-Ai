@@ -1,21 +1,46 @@
 """Application configuration, loaded from environment / .env."""
+
 from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # --- General ---
     app_name: str = "Modeer Personal AI Team"
     environment: str = Field(default="development")
     debug: bool = Field(default=True)
+    auth_required: bool = False
+    auth_secret: str = Field(default="", repr=False)
+    auth_access_keys: dict[str, str] = Field(default_factory=dict, repr=False)
+    session_seconds: int = Field(default=604800, ge=60, le=2592000)
+    llm_timeout_seconds: float = Field(default=35, ge=1, le=120)
+    llm_reasoning_effort: str = "low"
+    memory_timeout_seconds: float = Field(default=8, ge=1, le=30)
+
+    @model_validator(mode="after")
+    def validate_security(self):
+        if self.environment == "production":
+            if self.debug or not self.auth_required:
+                raise ValueError("Production requires DEBUG=false and AUTH_REQUIRED=true")
+            if not self.frontend_url.startswith("https://"):
+                raise ValueError("Production FRONTEND_URL must use HTTPS")
+        if self.auth_required:
+            if len(self.auth_secret) < 32 or not self.auth_access_keys:
+                raise ValueError(
+                    "Authentication requires a strong AUTH_SECRET and AUTH_ACCESS_KEYS"
+                )
+            if any(
+                len(v) != 64 or any(c not in "0123456789abcdef" for c in v)
+                for v in self.auth_access_keys.values()
+            ):
+                raise ValueError("Access keys must be SHA-256 hex digests")
+        return self
 
     # --- Database ---
     # Defaults to a local SQLite file so the API runs with zero setup.

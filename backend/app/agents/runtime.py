@@ -12,8 +12,11 @@ configurations, never separate applications.
     -> persist assistant message (+ diagnostics)
     -> extract candidate memories from the user's message
 """
+
 from __future__ import annotations
 
+import asyncio
+import logging
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 
@@ -26,6 +29,7 @@ from app.core.config import settings
 from app.db.models import Conversation, User
 from app.goals import service as goal_service
 from app.llm.base import LLMProvider
+from app.llm.openai_compat_provider import ProviderError
 from app.llm.provider import get_llm_provider, resolve_model
 from app.memory import service as memory_service
 from app.memory.extraction import extract_candidates
@@ -96,7 +100,13 @@ class AgentRuntime:
                 parts.append(delta)
                 yield RuntimeEvent("delta", {"text": delta})
         except Exception as exc:  # noqa: BLE001 - surface provider failures to the client
-            yield RuntimeEvent("error", {"error": f"{type(exc).__name__}: {exc}"})
+            logging.getLogger(__name__).warning("Reply failed: %s", type(exc).__name__)
+            message = (
+                str(exc)
+                if isinstance(exc, ProviderError)
+                else "The reply was interrupted. Please try again."
+            )
+            yield RuntimeEvent("error", {"error": message})
             return
 
         answer = "".join(parts).strip() or "(no response)"
@@ -105,9 +115,7 @@ class AgentRuntime:
             "provider": self._provider.name,
             "context": packet.diagnostics,
         }
-        assistant_msg = convo_service.add_message(
-            db, conversation, "assistant", answer, meta
-        )
+        assistant_msg = convo_service.add_message(db, conversation, "assistant", answer, meta)
         db.commit()
 
         # The answer is done — release it now, then do memory work.
@@ -124,9 +132,15 @@ class AgentRuntime:
 
         # --- candidate memory extraction -------------------------------------
         if settings.use_llm_extraction:
-            candidates = await llm_extract_candidates(
-                user_message, agent_id=agent.id, provider=self._provider, model=model
-            )
+            try:
+                candidates = await asyncio.wait_for(
+                    llm_extract_candidates(
+                        user_message, agent_id=agent.id, provider=self._provider, model=model
+                    ),
+                    timeout=settings.memory_timeout_seconds,
+                )
+            except TimeoutError:
+                candidates = extract_candidates(user_message, agent_id=agent.id)
         else:
             candidates = extract_candidates(user_message, agent_id=agent.id)
 
@@ -137,8 +151,7 @@ class AgentRuntime:
         if not user.onboarded:
             shared_count = len(memory_service.list_shared(db, user.id))
             assistant_turns = sum(
-                1 for m in convo_service.history(db, conversation.id)
-                if m.role == "assistant"
+                1 for m in convo_service.history(db, conversation.id) if m.role == "assistant"
             )
             if shared_count >= 3 or (assistant_turns >= 4 and shared_count >= 1):
                 user.onboarded = True
