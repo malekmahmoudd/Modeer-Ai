@@ -1,18 +1,23 @@
 from __future__ import annotations
 
+import json
+import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.agents.registry import get_agent
 from app.agents.runtime import AgentRuntime
 from app.conversations import service as convo_service
 from app.conversations.schemas import ChatRequest
+from app.core.auth import caller_id
 from app.db.session import SessionLocal
 from app.users.service import get_by_id, get_or_create_demo_user
 
 router = APIRouter(prefix="/agents", tags=["chat"])
+
+CallerId = Annotated[str | None, Depends(caller_id)]
 
 
 def _resolve_user(db, x_user_id: str | None):
@@ -28,7 +33,7 @@ def _resolve_user(db, x_user_id: str | None):
 async def chat_stream(
     agent_id: str,
     body: ChatRequest,
-    x_user_id: Annotated[str | None, Header()] = None,
+    x_user_id: CallerId,
 ):
     agent = get_agent(agent_id)
     if agent is None:
@@ -39,21 +44,24 @@ async def chat_stream(
         try:
             user = _resolve_user(db, x_user_id)
             try:
-                convo = convo_service.get_or_create(
-                    db, user.id, agent_id, body.conversation_id
-                )
+                convo = convo_service.get_or_create(db, user.id, agent_id, body.conversation_id)
             except (KeyError, ValueError) as exc:
                 yield f'data: {{"type": "error", "error": "{exc}"}}\n\n'
                 return
             db.commit()
             runtime = AgentRuntime()
-            async for event in runtime.run_stream(
-                db, user, agent, convo, body.message
-            ):
+            async for event in runtime.run_stream(db, user, agent, convo, body.message):
                 yield event.as_sse()
         except Exception as exc:  # noqa: BLE001
             db.rollback()
-            yield f'data: {{"type": "error", "error": "{type(exc).__name__}: {exc}"}}\n\n'
+            logging.getLogger(__name__).warning("Chat failure: %s", type(exc).__name__)
+            yield (
+                "data: "
+                + json.dumps(
+                    {"type": "error", "error": "The reply was interrupted. Please try again."}
+                )
+                + "\n\n"
+            )
         finally:
             db.close()
 
@@ -68,7 +76,7 @@ async def chat_stream(
 async def chat_sync(
     agent_id: str,
     body: ChatRequest,
-    x_user_id: Annotated[str | None, Header()] = None,
+    x_user_id: CallerId,
 ) -> dict:
     """Non-streaming convenience endpoint (used by tests and as a fallback)."""
     agent = get_agent(agent_id)
@@ -79,17 +87,20 @@ async def chat_sync(
     try:
         user = _resolve_user(db, x_user_id)
         try:
-            convo = convo_service.get_or_create(
-                db, user.id, agent_id, body.conversation_id
-            )
+            convo = convo_service.get_or_create(db, user.id, agent_id, body.conversation_id)
         except (KeyError, ValueError) as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         db.commit()
 
         runtime = AgentRuntime()
-        collected = {"content": "", "context": {}, "memory_candidates": [],
-                     "conversation_id": convo.id, "context_used": False,
-                     "newly_onboarded": False}
+        collected = {
+            "content": "",
+            "context": {},
+            "memory_candidates": [],
+            "conversation_id": convo.id,
+            "context_used": False,
+            "newly_onboarded": False,
+        }
         async for event in runtime.run_stream(db, user, agent, convo, body.message):
             if event.type == "start":
                 collected["context"] = event.data.get("context", {})

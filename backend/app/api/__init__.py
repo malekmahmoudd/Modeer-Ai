@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.api.routes import (
     agents,
+    auth,
     briefings,
     chat,
     conversations,
@@ -24,3 +25,5 @@ api_router.include_router(memory.router)
 api_router.include_router(goals.router)
 api_router.include_router(briefings.router)
 api_router.include_router(team.router)
+
+api_router.include_router(auth.router)

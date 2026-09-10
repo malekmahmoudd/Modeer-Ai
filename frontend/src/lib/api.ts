@@ -23,6 +23,9 @@ export async function apiFetch<T>(
       ...(init.headers || {}),
     },
   });
+  if (res.status === 401 && typeof window !== "undefined" && window.location.pathname !== "/login") {
+    window.location.assign("/login");
+  }
   if (!res.ok) {
     let detail = res.statusText;
     try {
