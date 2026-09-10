@@ -24,7 +24,8 @@ the earlier redesign phase and are unchanged.
 | Live end-to-end journey on the real provider, isolated DB | ✅ 12/12 — `backend/journey_check.py` |
 | Backend tests · ruff | ✅ 101 passed, lint clean |
 | Frontend production build | ✅ Rebuilt, unchanged this pass |
-| Backup: retention, AES-256 encryption, off-host copy, restore check | ✅ Written — ⚠️ never executed (no Docker) |
+| Container stack: build, migrate, HTTPS, streaming, persistence | ✅ Run end to end locally — see `docs/DEPLOYMENT.md` |
+| Backup: retention, AES-256 encryption, off-host copy, restore check | ✅ Executed; archive also decrypts with plain openssl |
 | Temporary patch/diagnostic scripts | ✅ Removed or folded into `backend/tools/` |
 
 ### Fixed this pass, worth knowing
@@ -54,9 +55,10 @@ the earlier redesign phase and are unchanged.
    the highest-value next step for the eval itself.
 3. **The LLM judge is an aid, not a gate.** `openai/gpt-oss-20b` produces regular
    false positives. Read the stored responses.
-4. **Docker cannot run here: WSL is not installed.** No image build, no PostgreSQL
-   migration, no HTTPS, no persistence check, and `deploy/backup.ps1` /
-   `restore-check.ps1` have never been executed. See `docs/DEPLOYMENT.md`.
+4. **TLS for a real domain is untested.** The local run used `DOMAIN=localhost`,
+   which makes Caddy use its internal CA; Let's Encrypt needs a public hostname,
+   so certificate issuance can only be proven on the real host. Restoring *over*
+   a populated database has also not been rehearsed — only into an empty one.
 5. **Browser and mobile testing was not repeated.** No browser automation is
    available in this environment; the journey was verified at the HTTP layer
    instead. The real login page, mobile reconnects and interruption-by-navigation

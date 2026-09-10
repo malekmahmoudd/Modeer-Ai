@@ -76,8 +76,25 @@ after the backup:
 ./deploy/restore-check.ps1
 ```
 
-It fails loudly if the archive will not restore or restores with no users. For a
-real recovery, restore to a **new database**, never over the live one:
+It fails loudly if the archive will not restore or restores with no users.
+
+**The archive is plain `openssl enc`, on purpose.** In a real recovery you may
+not have these scripts, this repo, or Windows. Any machine with openssl and
+`pg_restore` can get the data back:
+
+```sh
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 240000 \
+  -pass file:/path/to/passphrase -in modeer-TIMESTAMP.dump.enc -out modeer.dump
+pg_restore --list modeer.dump          # should list nine TABLE DATA entries
+```
+
+This was verified against an archive produced by `backup.ps1`. Note the reason
+the passphrase is *mounted and read by openssl* rather than piped in: PowerShell
+appends a carriage return to piped stdin, which silently became part of the
+passphrase and produced archives that only decrypted from PowerShell. If you
+change how the passphrase reaches openssl, re-run the check above.
+
+For a real recovery, restore to a **new database**, never over the live one:
 
 ```sh
 docker compose --env-file deploy/.env -f deploy/compose.yml exec db createdb -U modeer modeer_restore
@@ -91,22 +108,49 @@ Point a separate test backend at modeer_restore, verify record counts, log in an
 
 For local SQLite, backend/backup_sqlite.py uses SQLite's online backup API and integrity_check; it refuses overwriting. The isolated journey database was snapshotted and reopened with matching user/message/memory counts.
 
-### Not yet verified
+### Verified on 2026-09-10
 
-Docker's Linux engine will not start on this machine: **WSL is not installed**
-(`wsl --status` reports it missing), and Docker Desktop is configured for the
-`desktop-linux` context, so the daemon has no backend. Until someone runs
-`wsl --install` from an elevated prompt and reboots, the following remain
-unverified and must be checked before this is called deployable:
+The whole stack was built and run locally with `DOMAIN=localhost`, which makes
+Caddy issue an internal certificate instead of going to Let's Encrypt:
 
-- image builds for backend and frontend;
-- `alembic upgrade head` against PostgreSQL rather than SQLite;
-- HTTPS issuance and streaming through Caddy;
-- data persistence across `docker compose down` / `up`;
-- `deploy/backup.ps1` and `deploy/restore-check.ps1` end to end — both are
-  written against a running stack and have not been executed.
+- both images build;
+- `alembic upgrade head` applies the initial schema to PostgreSQL 16, creating
+  all nine tables — previously only ever run against SQLite;
+- the documented bootstrap works end to end: database alone, migrate, provision,
+  merge the digest, bring the stack up;
+- HTTPS through Caddy: `/api/health` reports `environment: production`,
+  `/api/goals` is 401 anonymously, `/api/auth/status` reports `required: true`,
+  and the frontend shell serves;
+- login returns a `Secure`, `HttpOnly` cookie that authenticates subsequent
+  requests;
+- **streaming is not buffered by Caddy** — a live reply arrived as 288 SSE
+  events spread over 0.95s with 40 gaps above 10ms. Worth testing this way
+  rather than with the mock provider, which emits every event within the same
+  millisecond and so proves nothing either way;
+- data and sessions survive `docker compose down` / `up`: row counts unchanged
+  and the existing cookie still authenticated, so a redeploy does not sign
+  everyone out;
+- `backup.ps1` and `restore-check.ps1` run end to end — dump, archive
+  verification, AES-256 encryption, off-host copy, retention, then decrypt and
+  restore into a scratch database with matching row counts.
 
-Compose syntax validation passed. Everything above is reviewed but untested.
+### Still not verified
+
+- **TLS for a real domain.** Let's Encrypt needs a public hostname, so only
+  Caddy's internal CA has been exercised. This can only be tested on the real
+  host.
+- **Restoring over a populated database.** Only restores into an empty scratch
+  database have been rehearsed.
+
+### Windows: run these from PowerShell
+
+Git Bash rewrites POSIX paths before they reach Docker, so
+`docker cp modeer-provision:/tmp/invite.json .` fails with a mangled
+`C:/Users/.../Temp/invite.json`. Either run the bootstrap from PowerShell, or
+prefix the command with `MSYS_NO_PATHCONV=1`. The same applies to any
+`docker compose exec` that names a container-side path.
+
+The backup scripts must run from PowerShell — they are PowerShell.
 
 ## Updates and rollback
 
