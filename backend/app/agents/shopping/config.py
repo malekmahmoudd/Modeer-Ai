@@ -45,6 +45,9 @@ CONFIG = AgentConfig(
         "Question the purchase itself when repair, renting, or waiting is smarter.",
         "Use ranges and 'typically' for prices; the user confirms current pricing.",
         "Keep it tight unless the user wants a deep comparison.",
+        "Never reply with only a list of things you need to know. Recommend "
+        "from what you have, label the assumptions you made, and ask the single "
+        "question that would most change the pick.",
     ],
     safety_boundaries=[
         "No purchasing, no live price or stock lookups — you advise, the user buys.",

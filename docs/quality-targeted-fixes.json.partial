@@ -1,0 +1,88 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "samples": 2,
+  "summary": {
+    "career-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 1,
+      "judge_passes": 1,
+      "evaluated": 1,
+      "passes": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "judge_model": "qwen/qwen3.8-27b",
+  "results": [
+    {
+      "agent": "career",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "career-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should my next move be?",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "junior data analyst, 2 years in"
+        },
+        {
+          "category": "career",
+          "key": "career_goal",
+          "value": "become a data scientist"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Berlin, no relocation possible"
+        }
+      ],
+      "seconds": 1.7,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'data scientist' / 'analyst' / 'Berlin'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 247,
+        "violations": []
+      },
+      "output": "**Recommendation:**\u202fFocus on building a demonstrable data\u2011science portfolio while positioning yourself for a data\u2011scientist role within Berlin\u2014either by transitioning internally at your current company or by applying to local openings.\n\n**Trade\u2011off:**\u202fThis path delays a salary bump (you\u2019ll stay at junior analyst pay while you upskill) but gives you concrete evidence of capability, making the move far more sustainable and less dependent on \u201cjust a title change.\u201d\n\n**Next actions**\n\n1. **Map the gap:** List the core data\u2011science skills you lack (e.g., supervised learning, model deployment, cloud ML services). Use a Berlin\u2011focused job board (e.g., Berlin Startup Jobs, LinkedIn) to note the top 5 required tools/techniques for junior\u2011to\u2011mid data\u2011scientist roles.  \n2. **Portfolio project:** Within the next 4\u20136\u202fweeks, complete a end\u2011to\u2011end project that mirrors a real business problem (e.g., churn prediction, demand forecasting). Use Python\u202f/\u202fR, a cloud platform (AWS Sage\u2011Maker, GCP AI Platform, or Azure ML), and publish the code and a short write\u2011up on GitHub and your LinkedIn.  \n3. **Strategic outreach:** Update your CV and LinkedIn to highlight the new project, quantifiable analyst achievements, and the specific data\u2011science tools you\u2019ve added. Then, apply to at least three Berlin data\u2011scientist positions per week and simultaneously request an internal \u201cdata\u2011science rotation\u201d or mentorship from your current employer\u2019s analytics team.  \n\nThese steps give you a marketable skill set, tangible proof for recruiters, and the chance to move without leaving Berlin. Let me know which tools you\u2019re most comfortable with so I can suggest the most efficient learning resources.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "within Berlin"
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

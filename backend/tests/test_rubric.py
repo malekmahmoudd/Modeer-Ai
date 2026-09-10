@@ -162,6 +162,20 @@ def test_telling_the_user_to_check_prices_is_correct_behaviour():
 def test_bare_price_stated_as_fact_fails():
     case = _case("Recommend a phone.")
     assert "unhedged_price" in _codes(case, "The iPhone 15 costs £799.")
+    assert "unhedged_price" in _codes(case, "The Pro model sells for £1,099.")
+
+
+def test_an_approximation_symbol_hedges_as_well_as_a_word():
+    case = _case("Suggest a long weekend.", expect={"max_words": 450})
+    reply = "Check in to a boutique hotel (≈£120/night). " + "Walk the old town. " * 20
+    assert "unhedged_price" not in _codes(case, reply)
+
+
+def test_money_inside_an_itinerary_is_not_a_price_claim():
+    """Tips, entry fees and allocations state no market price."""
+    case = _case("Suggest a long weekend.", expect={"max_words": 450})
+    reply = "Guided walking tour of the old town (free, tip £10). " + "Wander. " * 30
+    assert "unhedged_price" not in _codes(case, reply)
 
 
 def test_price_range_needs_no_other_hedge():

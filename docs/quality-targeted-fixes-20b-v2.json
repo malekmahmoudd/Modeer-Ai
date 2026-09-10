@@ -1,0 +1,542 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-20b",
+  "samples": 2,
+  "summary": {
+    "writing-personalization-1": {
+      "attempts": 2,
+      "responses": 2,
+      "provider_errors": 0,
+      "deterministic_passes": 2,
+      "judge_available": 2,
+      "judge_passes": 1,
+      "evaluated": 2,
+      "passes": 1,
+      "pass_rate": 0.5
+    },
+    "travel-personalization-1": {
+      "attempts": 2,
+      "responses": 2,
+      "provider_errors": 0,
+      "deterministic_passes": 2,
+      "judge_available": 2,
+      "judge_passes": 1,
+      "evaluated": 2,
+      "passes": 1,
+      "pass_rate": 0.5
+    },
+    "fitness-personalization-1": {
+      "attempts": 2,
+      "responses": 2,
+      "provider_errors": 0,
+      "deterministic_passes": 2,
+      "judge_available": 2,
+      "judge_passes": 2,
+      "evaluated": 2,
+      "passes": 2,
+      "pass_rate": 1.0
+    },
+    "writing-unknown-facts": {
+      "attempts": 2,
+      "responses": 2,
+      "provider_errors": 0,
+      "deterministic_passes": 2,
+      "judge_available": 2,
+      "judge_passes": 2,
+      "evaluated": 2,
+      "passes": 2,
+      "pass_rate": 1.0
+    }
+  },
+  "judge_model": "qwen/qwen3.8-27b",
+  "results": [
+    {
+      "agent": "writing",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "writing-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Draft a short bio for a conference program.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "staff security engineer at a fintech"
+        },
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "move into security research and speaking"
+        }
+      ],
+      "seconds": 0.92,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'security' / 'engineer' / 'fintech' / 'research'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 12,
+        "violations": []
+      },
+      "output": "Alex  \nStaff Security Engineer, FinTech Company  \nAspiring security researcher and public speaker.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": "Staff Security Engineer, FinTech Company"
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Alex\nStaff Security Engineer, FinTech Company\nAspiring security researcher and public speaker."
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "travel",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 1.62,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 370,
+        "violations": []
+      },
+      "output": "**Long\u2011Weekend Break \u2013 3\u202fNights, 4\u202fDays**\n\n**Assumptions**\n- Departure from Manchester, UK.  \n- You prefer a single city, relaxed pace, plenty of caf\u00e9s, no early\u2011morning flights.  \n- You\u2019re comfortable with a moderate budget (\u2248\u202f\u00a3350\u2013\u00a3450 total).  \n\n**City Recommendation** \u2013 *Edinburgh, Scotland* (easy 2\u2011hour train, vibrant caf\u00e9s, historic walk\u2011throughs).  \n\n| Day | Morning | Afternoon | Evening |\n|-----|---------|-----------|---------|\n| **Day\u202f1** | Depart Manchester by late\u2011afternoon train (\u2248\u202f\u00a330). Arrive Edinburgh ~\u202f5\u202fpm. Check\u2011in at a 3\u2011star boutique hotel (\u2248\u202f\u00a3120/night). | Light stroll to Grassmarket, grab a coffee at *The Elephant House*. | Dinner at a local pub (\u2248\u202f\u00a325). Evening walk along the Royal Mile. |\n| **Day\u202f2** | Breakfast at *The Cupping Room* (\u2248\u202f\u00a312). Visit Edinburgh Castle (entry \u00a320). | Walk up Arthur\u2019s Seat for sunset views. Caf\u00e9 break at *The Elephant House* again. | Dinner at *The Witchery* (\u2248\u202f\u00a335). Optional ghost tour (\u2248\u202f\u00a315). |\n| **Day\u202f3** | Brunch at *The Elephant House* (\u2248\u202f\u00a315). Explore the Royal Botanic Garden (free). | Visit the National Museum of Scotland (free). Coffee at *Caf\u00e9 Murano* (\u2248\u202f\u00a38). | Farewell dinner at a caf\u00e9\u2011restaurant (\u2248\u202f\u00a325). Evening stroll along the Water of Leith. |\n| **Day\u202f4** | Breakfast at hotel (incl.) or local caf\u00e9 (\u2248\u202f\u00a310). Check\u2011out. | Last\u2011minute shopping on Princes Street. | Return to Manchester by late\u2011afternoon train (\u2248\u202f\u00a330). |\n\n**Budget Split (est.)**\n\n| Category | Approx. Cost |\n|----------|--------------|\n| Train (round\u2011trip) | \u00a360 |\n| Lodging (3 nights) | \u00a3360 |\n| Food & drinks | \u00a3120 |\n| Activities & entry | \u00a370 |\n| Misc / buffer | \u00a330 |\n| **Total** | **\u2248\u202f\u00a3640** |\n\n*Note*: Prices are ranges; check current rates. Adjust lodging or dining to fit a tighter budget if needed.\n\n**Book Now**\n- Train tickets (best price if bought early).  \n- Hotel reservation (confirm cancellation policy).  \n\n**Decide Later**\n- Optional tours (ghost tour, museum tickets).  \n- Dining reservations for higher\u2011priced restaurants.\n\n---\n\n**Next Actions**\n1. Confirm the city (Edinburgh or another preference).  \n2. Check train availability for your preferred departure time.  \n3. Reserve the hotel and book train tickets.\n\nLet me know if you\u2019d like a different city or any adjustments!",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": false,
+            "evidence": "You\u2019re comfortable with a moderate budget (\u2248 \u00a3350\u2013\u00a3450 total)."
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "**Long\u2011Weekend Break \u2013 3 Nights, 4 Days**"
+          },
+          "currency": {
+            "pass": true,
+            "evidence": "Prices are ranges; check current rates."
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "Depart Manchester by late\u2011afternoon train"
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": "Check train availability for your preferred departure time."
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "The reply invents a specific budget constraint (\u00a3350\u2013\u00a3450) that was not provided in the context.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "fitness",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "fitness-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Adjust my training for this week.",
+      "context": [
+        {
+          "category": "routine",
+          "key": "workout_frequency",
+          "value": "4x/week upper-lower, home gym with dumbbells and a pull-up bar"
+        },
+        {
+          "category": "routine",
+          "key": "constraint",
+          "value": "travelling Thu-Fri with no equipment"
+        }
+      ],
+      "seconds": 1.19,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'travel' / 'dumbbell' / 'upper-lower' / 'bodyweight' / 'home'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 262,
+        "violations": []
+      },
+      "output": "**Assumptions**\n\n- 4\u2011day split (Upper\u202f/\u202fLower, Upper\u202f/\u202fLower)  \n- Home gym: dumbbells + pull\u2011up bar  \n- Travel Thu\u2011Fri: no equipment \u2192 body\u2011weight only  \n- Goal: maintain strength & volume for the week\n\n---\n\n### Week Plan\n\n| Day | Focus | Main Workouts | Notes |\n|-----|-------|---------------|-------|\n| **Mon** | Upper | 3\u00d78\u202fDB Bench Press, 3\u00d78\u202fDB Row, 3\u00d710\u202fPull\u2011ups, 3\u00d712\u202fDB Shoulder Press | Keep same load as usual |\n| **Tue** | Lower | 3\u00d710\u202fDB Squat, 3\u00d712\u202fDB Romanian Deadlift, 3\u00d715\u202fCalf Raise | |\n| **Wed** | Upper | 3\u00d78\u202fDB Incline Press, 3\u00d78\u202fDB Chest\u2011Fly, 3\u00d78\u202fDB Lateral Raise, 3\u00d710\u202fChin\u2011ups | |\n| **Thu** | Body\u2011weight (travel) | 3\u00d715\u202fPush\u2011ups, 3\u00d712\u202fBody\u2011weight Squats, 3\u00d710\u202fInverted Rows (under table), 3\u00d730\u202fsec Plank | |\n| **Fri** | Body\u2011weight (travel) | 3\u00d712\u202fDips (chair), 3\u00d715\u202fLunges, 3\u00d710\u202fPike Push\u2011ups, 3\u00d730\u202fsec Side Plank each side | |\n| **Sat** | Lower | 3\u00d78\u202fDB Front Squat, 3\u00d710\u202fDB Lunge, 3\u00d712\u202fHip Thrust, 3\u00d715\u202fCalf Raise | |\n| **Sun** | Rest | | |\n\n**Progression rule**  \nIf you can complete the last set with good form, add 2.5\u202fkg to the dumbbells next week. If you hit failure on two consecutive sets, keep weight and add one more set to that exercise.\n\n**Busy\u2011week fallback**  \nIf you miss a day, swap the missed workout into the next available day (e.g., move Monday\u2019s upper to Tuesday) and keep the same volume.\n\n---\n\nLet me know if any exercise feels off or if you\u2019d like a different emphasis.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": "4\u2011day split (Upper / Lower, Upper / Lower)"
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "Travel Thu\u2011Fri: no equipment \u2192 body\u2011weight only"
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "writing",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "writing-unknown-facts",
+      "model": "openai/gpt-oss-20b",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "seconds": 1.31,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 5,
+        "violations": []
+      },
+      "output": "I don\u2019t have that information.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "I don\u2019t have that information."
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": "I don\u2019t have that information."
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "writing",
+      "sample": 2,
+      "prompt_version": 2,
+      "case": "writing-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Draft a short bio for a conference program.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "staff security engineer at a fintech"
+        },
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "move into security research and speaking"
+        }
+      ],
+      "seconds": 1.25,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'security' / 'engineer' / 'fintech' / 'research'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 69,
+        "violations": []
+      },
+      "output": "Alex  \nStaff Security Engineer, FinTech  \n[placeholder]  \n\nAlex is a staff security engineer at a leading fintech company, where they design and implement robust security architectures for high\u2011volume payment systems. With a strong foundation in threat modeling, secure coding, and incident response, Alex is now focused on advancing into security research and public speaking, aiming to share insights on emerging attack vectors and defensive strategies with the broader security community.",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": false,
+            "evidence": "where they design and implement robust security architectures for high\u2011volume payment systems. With a strong foundation in threat modeling, secure coding, and incident response"
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Alex is a staff security engineer at a leading fintech company..."
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "The reply invents specific job responsibilities (designing architectures for payment systems) and skills (threat modeling, secure coding, incident response) that are not present in the context.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "travel",
+      "sample": 2,
+      "prompt_version": 2,
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 1.22,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 310,
+        "violations": []
+      },
+      "output": "**Long\u2011weekend break: 3\u2011day \u201cslow\u2011city\u201d stay in a single city**\n\n| Day | Morning | Afternoon | Evening |\n|-----|---------|-----------|---------|\n| **Day\u202f1** | Arrive late\u2011afternoon (no early flight). Check into a boutique hotel or well\u2011rated B&B. Rest. | Walk to a local caf\u00e9 for a relaxed brunch. Explore a nearby park or historic quarter on foot. | Dinner at a cosy, highly\u2011rated restaurant. Evening stroll along a river or canal. |\n| **Day\u202f2** | Breakfast at a popular caf\u00e9 with local specialties. Visit a small museum or art gallery (skip large tourist sites). | Lunch at a street\u2011food market or a caf\u00e9 with a view. Spend the afternoon at a local bookshop or a craft shop, then a quiet coffee break. | Light dinner at a caf\u00e9\u2011restaurant. Optional: attend a small live\u2011music event or a local theatre show. |\n| **Day\u202f3** | Late breakfast at the hotel or a nearby caf\u00e9. Take a leisurely walk to a scenic viewpoint or a botanical garden. | Lunch in a caf\u00e9 that serves seasonal dishes. Pack a picnic to enjoy in a park. | Early\u2011night departure or late\u2011afternoon train/flight back home. |\n\n**Budget split (approx.)**\n\n- Transport (flight/rail + local): 30\u202f%  \n- Lodging (3 nights): 35\u202f%  \n- Food & caf\u00e9s: 20\u202f%  \n- Activities & entrance fees: 10\u202f%  \n- Buffer / souvenirs: 5\u202f%\n\n**Book now**\n\n- Flight/rail tickets (late\u2011afternoon departure)  \n- Hotel/B&B reservation (confirm early\u2011check\u2011in if possible)  \n\n**Decide later**\n\n- Specific caf\u00e9s or restaurants (check recent reviews)  \n- Optional evening entertainment (tickets may be flexible)  \n\n**Assumptions to confirm**\n\n- You prefer a city with a vibrant caf\u00e9 culture (e.g., Lisbon, Edinburgh, Bruges, or a similar destination).  \n- No early flights means arrival after 14:00 local time.  \n- You have no dietary restrictions noted.  \n\nLet me know which city you\u2019re leaning toward, and I can fine\u2011tune the details.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": "You have no dietary restrictions noted."
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Long\u2011weekend break: 3\u2011day \u201cslow\u2011city\u201d stay in a single city"
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "Arrive late\u2011afternoon (no early flight)"
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "fitness",
+      "sample": 2,
+      "prompt_version": 2,
+      "case": "fitness-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Adjust my training for this week.",
+      "context": [
+        {
+          "category": "routine",
+          "key": "workout_frequency",
+          "value": "4x/week upper-lower, home gym with dumbbells and a pull-up bar"
+        },
+        {
+          "category": "routine",
+          "key": "constraint",
+          "value": "travelling Thu-Fri with no equipment"
+        }
+      ],
+      "seconds": 1.5,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'travel' / 'dumbbell' / 'upper-lower' / 'bodyweight' / 'home'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 324,
+        "violations": []
+      },
+      "output": "**Assumptions**  \n- Goal: maintain strength & volume while traveling.  \n- 4\u2011day split: Upper\u2011Lower, 4\u202f\u00d7\u202fweek.  \n- Home gym: dumbbells + pull\u2011up bar.  \n- Thu\u2011Fri traveling, no equipment.  \n\n---\n\n### Week\u2011long schedule\n\n| Day | Workout | Notes |\n|-----|---------|-------|\n| **Mon** | Upper (dumbbells + bar) | 4\u202f\u00d7\u202f8\u202f\u00d7\u202f3 (bench, rows, overhead press, pull\u2011ups) |\n| **Tue** | Lower (dumbbells) | 4\u202f\u00d7\u202f10\u202f\u00d7\u202f3 (squats, lunges, Romanian deadlifts, calf raises) |\n| **Wed** | Upper (body\u2011weight) | 3\u202f\u00d7\u202f12\u202f\u00d7\u202f3 (push\u2011ups, inverted rows, dips, planks) \u2013 no equipment |\n| **Thu** | **Travel \u2013 no equipment** | 30\u202fmin brisk walk or light jog; stretch |\n| **Fri** | **Travel \u2013 no equipment** | 30\u202fmin body\u2011weight circuit (air squats, lunges, push\u2011ups, plank) |\n| **Sat** | Lower (dumbbells) | 4\u202f\u00d7\u202f10\u202f\u00d7\u202f3 (front squats, Bulgarian split, glute bridges, calf raises) |\n| **Sun** | Upper (dumbbells + bar) | 4\u202f\u00d7\u202f8\u202f\u00d7\u202f3 (incline press, single\u2011arm rows, overhead press, pull\u2011ups) |\n\n**Progression rule**  \n- Every 4\u202fweeks, add 2.5\u202fkg to each dumbbell set if all sets stay \u2265\u202f8 reps.  \n- If you hit 12 reps on all sets, increase volume to 5\u202fsets for the next 4\u202fweeks, then return to 4\u202fsets.  \n- Deload every 8th week: reduce weight to 60\u202f% and keep reps.\n\n**Busy\u2011week fallback**  \nIf you can\u2019t hit the full plan, do:  \n- **Mon**: Upper (dumbbells) \u2013 3\u202f\u00d7\u202f8\u202f\u00d7\u202f2  \n- **Tue**: Lower (dumbbells) \u2013 3\u202f\u00d7\u202f10\u202f\u00d7\u202f2  \n- **Wed**: Upper (body\u2011weight) \u2013 2\u202f\u00d7\u202f12\u202f\u00d7\u202f2  \n- **Sat**: Lower (dumbbells) \u2013 3\u202f\u00d7\u202f10\u202f\u00d7\u202f2  \n- **Sun**: Upper (dumbbells) \u2013 3\u202f\u00d7\u202f8\u202f\u00d7\u202f2  \n\n---\n\n**Next steps**  \n1. Confirm you have no current injuries or limitations.  \n2. Log the weights you use each session to track progression.  \n3. After week\u202f4, we\u2019ll reassess and adjust loads or volume.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": "Assumptions\n- Goal: maintain strength & volume while traveling.\n- 4\u2011day split: Upper\u2011Lower, 4 \u00d7 week.\n- Home gym: dumbbells + pull\u2011up bar.\n- Thu\u2011Fri traveling, no equipment."
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "Thu | **Travel \u2013 no equipment** | 30 min brisk walk or light jog; stretch"
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "writing",
+      "sample": 2,
+      "prompt_version": 2,
+      "case": "writing-unknown-facts",
+      "model": "openai/gpt-oss-20b",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "seconds": 0.62,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 5,
+        "violations": []
+      },
+      "output": "I don\u2019t have that information.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "I don\u2019t have that information."
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": "I don\u2019t have that information."
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

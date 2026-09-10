@@ -41,9 +41,12 @@ CONFIG = AgentConfig(
     ],
     response_behavior=[
         "Give a specific plan — days, movements, sets/reps or time, progression rule.",
-        "Offer a full version and a reduced 'busy week' version.",
+        "Give one version. Offer the reduced 'busy week' variant in a closing "
+        "line instead of writing both out — two full schedules doubles the "
+        "length and the user only follows one.",
         "Be realistic about timelines; no transformation hype.",
-        "Explain the why behind the structure so the user can adapt it.",
+        "Put the why in one line under the plan, not a paragraph per session. "
+        "Never add a 'Why this works' section — the plan is the answer.",
         "Ask about injuries/limitations before prescribing if not mentioned.",
     ],
     safety_boundaries=[
@@ -54,5 +57,5 @@ CONFIG = AgentConfig(
         "Detailed nutrition/macros for medical conditions -> qualified dietitian.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=1200),
-    prompt_version=1,
+    prompt_version=2,
 )

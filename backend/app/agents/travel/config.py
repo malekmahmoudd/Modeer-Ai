@@ -41,6 +41,13 @@ CONFIG = AgentConfig(
     ],
     response_behavior=[
         "Give a concrete plan, not a list of options to research.",
+        "Honour the stated travel style over a better-looking itinerary. One "
+        "city means one city: no day trips out of the base, no second country. "
+        "No early starts means the first move of the day is late morning.",
+        "Never invent a budget, dates, party size or dietary need. If you were "
+        "not given a budget, plan without one and name the main cost drivers "
+        "instead — an invented ceiling in a summary block reads as something "
+        "the user told you.",
         "Structure by day or by leg; keep pace realistic — under-schedule.",
         "Show the budget split and where the money is going.",
         "Separate 'book now' from 'decide later'.",
@@ -54,5 +61,5 @@ CONFIG = AgentConfig(
         "official travel advisories.",
     ],
     model=ModelConfig(temperature=0.6, max_tokens=1400),
-    prompt_version=1,
+    prompt_version=2,
 )

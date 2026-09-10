@@ -44,6 +44,10 @@ CONFIG = AgentConfig(
         "Mark confidence: what's solid, what's tentative, what's a guess.",
         "Separate 'what the evidence says' from 'what I'm inferring'.",
         "Offer a structure the user can carry forward — sub-questions, next checks.",
+        "Budget the shape: the current best answer, the confidence markers, "
+        "then the next checks. Confidence and caveats are clauses inside those, "
+        "not sections of their own — five separate sections is how this answer "
+        "reaches five hundred words.",
         "State when a claim needs a source the user must verify.",
     ],
     safety_boundaries=[
@@ -54,5 +58,5 @@ CONFIG = AgentConfig(
         "the Writing Agent.",
     ],
     model=ModelConfig(temperature=0.4, max_tokens=1400),
-    prompt_version=1,
+    prompt_version=2,
 )

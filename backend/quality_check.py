@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -124,24 +125,38 @@ async def _complete_with_backoff(agent, packet) -> tuple[str, float, str]:
 async def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--agents", nargs="*", default=DEFAULT_AGENTS)
+    parser.add_argument("--resume", action="store_true", help="Continue matching .partial results")
+    parser.add_argument("--samples", type=int, default=1)
+    parser.add_argument("--model", help="Evaluation-only override for every agent")
     parser.add_argument("--out", default="../docs/live-quality-results.json")
     parser.add_argument("--judge-model", default="openai/gpt-oss-120b")
     parser.add_argument("--no-judge", action="store_true")
     parser.add_argument("--pace", type=float, default=PACE_SECONDS)
     args = parser.parse_args()
 
-    cases = build_cases(args.agents)
+    if args.samples < 1 or args.pace < 0:
+        parser.error("samples must be positive and pace nonnegative")
+    cases = [
+        (slug, case, sample)
+        for sample in range(1, args.samples + 1)
+        for slug, case in build_cases(args.agents)
+    ]
     out = Path(args.out)
     # Progress goes to a sibling file so an aborted run cannot destroy the last
     # complete one; it is promoted over `out` only when every case has run.
     partial = out.with_suffix(out.suffix + ".partial")
-    results: list[dict] = []
+    results: list[dict] = resume_rows(partial, args, cases) if args.resume else []
+    completed = len(results)
     aborted = ""
 
-    for index, (slug, case) in enumerate(cases):
+    for index, (slug, case, sample) in enumerate(cases):
+        if index < completed:
+            continue
         if index:
             await asyncio.sleep(args.pace)
-        agent = require_agent(slug)
+        agent = require_agent(slug).model_copy(deep=True)
+        if args.model:
+            agent.model.model = args.model
         packet = build_context(
             agent=agent,
             user=_fake_user(case.get("profile")),
@@ -162,6 +177,8 @@ async def main() -> int:
         verdict = review(case, text)
         row = {
             "agent": slug,
+            "sample": sample,
+            "prompt_version": agent.prompt_version,
             "case": case["id"],
             "model": resolve_model(agent.model.model),
             "input": case["input"],
@@ -178,17 +195,17 @@ async def main() -> int:
             await asyncio.sleep(args.pace / 2)
             judgement = await judge(case, text, provider=get_llm_provider(), model=args.judge_model)
             row["judge"] = judgement.as_dict()
-            judged_ok = judgement.passed or not judgement.available
+            judged_ok = judgement.passed if judgement.available else None
         else:
             judged_ok = True
 
-        row["passed"] = bool(text) and not error and verdict.passed and judged_ok
+        row["passed"] = None if error or not text else False if not verdict.passed else judged_ok
         results.append(row)
 
         _write(partial, args, results)
         _print_row(row)
 
-    passed = sum(1 for r in results if r["passed"])
+    passed = sum(1 for r in results if r["passed"] is True)
     if aborted:
         print(f"PARTIAL {passed}/{len(results)} of {len(cases)} — kept in {partial}")
         print(f"{out} still holds the last complete run.")
@@ -199,12 +216,65 @@ async def main() -> int:
     return 0 if passed == len(results) else 1
 
 
+def resume_rows(path: Path, args, cases) -> list[dict]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        data["model"] != (args.model or settings.llm_model)
+        or data["judge_model"] != (None if args.no_judge else args.judge_model)
+        or data.get("samples", 1) != args.samples
+    ):
+        raise ValueError("Resume settings differ from the saved run")
+    rows = data["results"]
+    if len(rows) > len(cases):
+        raise ValueError("Resume case list differs")
+    for row, (slug, case, sample) in zip(rows, cases, strict=False):
+        agent = require_agent(slug)
+        if (
+            row["agent"] != slug
+            or row["case"] != case["id"]
+            or row.get("sample", 1) != sample
+            or row["input"] != case["input"]
+            or row.get("prompt_version") != agent.prompt_version
+            or row["model"] != (args.model or resolve_model(agent.model.model))
+        ):
+            raise ValueError("Resume case, prompt version or model differs")
+    return rows
+
+
+def summarize(results: list[dict]) -> dict:
+    """Separate provider/judge availability from observed answer quality."""
+    grouped: dict[str, list[dict]] = {}
+    for row in results:
+        grouped.setdefault(row["case"], []).append(row)
+    summary = {}
+    for case, rows in grouped.items():
+        valid = [r for r in rows if r["output"] and not r["error"]]
+        judged = [r for r in valid if (r.get("judge") or {}).get("available")]
+        evaluated = [r for r in valid if r["passed"] is not None]
+        summary[case] = {
+            "attempts": len(rows),
+            "responses": len(valid),
+            "provider_errors": len(rows) - len(valid),
+            "deterministic_passes": sum(r["review"]["passed"] for r in valid),
+            "judge_available": len(judged),
+            "judge_passes": sum(r["judge"]["passed"] for r in judged),
+            "evaluated": len(evaluated),
+            "passes": sum(r["passed"] is True for r in evaluated),
+            "pass_rate": (
+                sum(r["passed"] is True for r in evaluated) / len(evaluated) if evaluated else None
+            ),
+        }
+    return summary
+
+
 def _write(path: Path, args, results: list[dict]) -> None:
     path.write_text(
         json.dumps(
             {
                 "provider": settings.llm_provider,
-                "model": settings.llm_model,
+                "model": args.model or settings.llm_model,
+                "samples": args.samples,
+                "summary": summarize(results),
                 "judge_model": None if args.no_judge else args.judge_model,
                 "results": results,
             },
@@ -215,7 +285,7 @@ def _write(path: Path, args, results: list[dict]) -> None:
 
 
 def _print_row(row: dict) -> None:
-    mark = "PASS" if row["passed"] else "FAIL"
+    mark = "UNAVAILABLE" if row["passed"] is None else "PASS" if row["passed"] else "FAIL"
     print(f"{mark} {row['agent']:9} {row['case']:30} {row['seconds']:>6}s", flush=True)
     if row["error"]:
         print(f"    provider: {row['error']}", flush=True)
@@ -232,4 +302,5 @@ def _print_row(row: dict) -> None:
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     raise SystemExit(asyncio.run(main()))

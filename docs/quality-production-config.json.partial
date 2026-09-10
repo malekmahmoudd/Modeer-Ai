@@ -1,0 +1,297 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "samples": 2,
+  "summary": {
+    "writing-personalization-1": {
+      "attempts": 2,
+      "responses": 2,
+      "provider_errors": 0,
+      "deterministic_passes": 2,
+      "judge_available": 2,
+      "judge_passes": 2,
+      "evaluated": 2,
+      "passes": 2,
+      "pass_rate": 1.0
+    },
+    "travel-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 0,
+      "judge_available": 1,
+      "judge_passes": 1,
+      "evaluated": 1,
+      "passes": 0,
+      "pass_rate": 0.0
+    },
+    "writing-unknown-facts": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 1,
+      "judge_passes": 1,
+      "evaluated": 1,
+      "passes": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "judge_model": "qwen/qwen3.8-27b",
+  "results": [
+    {
+      "agent": "writing",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "writing-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Draft a short bio for a conference program.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "staff security engineer at a fintech"
+        },
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "move into security research and speaking"
+        }
+      ],
+      "seconds": 0.66,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'security' / 'engineer' / 'fintech' / 'research'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 26,
+        "violations": []
+      },
+      "output": "Alex is a staff security engineer at a fintech. [placeholder: specific focus area or current project]. Alex is working toward moving into security research and speaking.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": "Alex is a staff security engineer at a fintech."
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Alex is a staff security engineer at a fintech."
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "travel",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 2.62,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": false,
+        "words": 521,
+        "violations": [
+          {
+            "code": "too_long",
+            "detail": "521 words against a 450-word ceiling",
+            "evidence": ""
+          }
+        ]
+      },
+      "output": "**Long\u2011weekend suggestion \u2013 Barcelona, Spain**  \n*Why it fits:* One vibrant city, renowned caf\u00e9 culture, plenty of relaxed walking routes, and the main international airport offers late\u2011morning arrivals from Manchester (e.g., 11\u202fam\u202f+\u202f).  \n\n---\n\n### Draft itinerary (4\u202fdays\u202f/\u202f3\u202fnights)\n\n| Day | Morning | Mid\u2011day / Afternoon | Evening |\n|-----|---------|---------------------|---------|\n| 1 | Flight Manchester\u202f\u2192\u202fBarcelona (late\u2011morning) \u2013 collect luggage, take Aerobus to city centre | Check\u2011in at a boutique hotel or well\u2011rated Airbnb in the Gothic/El Born area (\u2248\u202f2\u2011night stay). Stroll to **Caf\u00e9 de la Luz** for brunch. Walk the historic Barri G\u00f2tic, visit the Cathedral and the Picasso Museum (pre\u2011book tickets). | Tapas dinner at **El Xampanyet** (reserve if possible). Light walk along La Rambla, optional flamenco bar. |\n| 2 | Late breakfast at **Satan\u2019s Coffee Corner** (open 9\u202fam). | Explore **Parc G\u00fcell** (buy timed entry online). Picnic in the park with local market goodies. Return to the city for a relaxed coffee at **Satan\u2019s** or **Satan\u2019s** second location. | Sunset at **Barceloneta** beach, seafood dinner at **Can Maj\u00f3** (reserve). |\n| 3 | Sleep\u2011in, then brunch at **Caf\u00e9 Cometa** (El Born). | Leisurely walk through **El Born** boutiques, visit the **Basilica de Santa Maria del Mar**. Optional guided food\u2011tour of the **Mercat de Sant Antoni** (book 2\u202fweeks ahead). | Evening cocktail at a rooftop bar (e.g., **Hotel 1898**). Free time for night\u2011life or a quiet night in a caf\u00e9. |\n| 4 | Pack, final coffee at **Satan\u2019s** (or any favourite spot). | Check\u2011out, Aerobus to airport. Flight Barcelona\u202f\u2192\u202fManchester (late\u2011afternoon/evening). |\n\n---\n\n### Budget split (per person, mid\u2011range)\n\n| Category | Approx. range | % of total |\n|----------|---------------|------------|\n| Flights (return, economy) | \u00a3120\u2011\u00a3200 | 30\u202f% |\n| Accommodation (3 nights, boutique hotel/Airbnb) | \u00a3180\u2011\u00a3300 | 30\u202f% |\n| Food & caf\u00e9s (incl. 2\u20113 restaurant meals) | \u00a3120\u2011\u00a3180 | 20\u202f% |\n| Activities & tickets (Picasso Museum, Parc G\u00fcell, food tour) | \u00a360\u2011\u00a3100 | 10\u202f% |\n| Local transport (Aerobus, metro day passes) | \u00a330\u2011\u00a345 | 5\u202f% |\n| **Buffer / misc** | \u00a320\u2011\u00a340 | 5\u202f% |\n| **Total** | **\u00a3630\u2011\u00a3865** | 100\u202f% |\n\n*All figures are indicative; verify current prices when you book.*\n\n---\n\n### Time\u2011sensitive actions\n\n**Book now (within 2\u202fweeks)**  \n- Return flights (late\u2011morning departure, late\u2011afternoon return) \u2013 price drops often close quickly.  \n- Hotel/Airbnb in the Gothic/El Born area (high demand for weekend stays).  \n- Picasso Museum timed entry.  \n\n**Decide later (flexible)**  \n- Parc G\u00fcell tickets (can be bought up to a week before).  \n- Food tour of Mercat de Sant Antoni (optional).  \n- Restaurant reservations for dinner (most have a few days\u2019 leeway).  \n\n---\n\n### Assumptions to confirm  \n\n1. Travel dates fall in a season when Barcelona\u2019s weather is mild (April\u2011October).  \n2. No visa is required for UK citizens for short stays (check the latest UK\u2011Spain entry rules).  \n3. You are comfortable with a moderate budget range shown above.  \n\n---\n\n**Next step:** Which month or season are you planning this long weekend for, so I can note any seasonal events or weather tips?",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Draft itinerary (4 days / 3 nights)"
+          },
+          "currency": {
+            "pass": true,
+            "evidence": "All figures are indicative; verify current prices when you book."
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "One vibrant city, renowned caf\u00e9 culture... late\u2011morning arrivals"
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "writing",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "writing-unknown-facts",
+      "model": "qwen/qwen3.8-27b",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "seconds": 0.78,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 48,
+        "violations": []
+      },
+      "output": "I do not know your university, employer, salary, or exam date.\n\nMy personal context and notes for you are currently empty, so I have no record of these details. If you share them with me, I can use that information to help with future writing or planning tasks.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": "I do not know your university, employer, salary, or exam date."
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "I do not know your university, employer, salary, or exam date."
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": "My personal context and notes for you are currently empty"
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "writing",
+      "sample": 2,
+      "prompt_version": 2,
+      "case": "writing-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Draft a short bio for a conference program.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "staff security engineer at a fintech"
+        },
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "move into security research and speaking"
+        }
+      ],
+      "seconds": 0.78,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'security' / 'engineer' / 'fintech' / 'research'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 26,
+        "violations": []
+      },
+      "output": "Alex is a staff security engineer at a fintech. [placeholder for specific focus or expertise]. Alex is working toward a career in security research and speaking.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": "Alex is a staff security engineer at a fintech."
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Alex is a staff security engineer at a fintech. [placeholder for specific focus or expertise]. Alex is working toward a career in security research and speaking."
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

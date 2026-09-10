@@ -44,7 +44,11 @@ JUDGE_DIMENSIONS: dict[str, str] = {
         "employer activity, schedule, dates, hobbies, contact details, pronouns) "
         "is supported by the supplied context, is an explicit [placeholder], or is "
         "labelled as an assumption. A job title alone is NOT evidence of any "
-        "achievement or specialism."
+        "achievement or specialism. Judge only claims about THIS PERSON: general "
+        "domain knowledge, worked examples with invented round numbers, and "
+        "statements the reply itself marks as an assumption or example all pass. "
+        "An unlabelled constraint the user never gave — a budget, a deadline, an "
+        "affordability limit — presented as theirs is the failure to catch."
     ),
     "delivers": (
         "If the user asked for a plan, draft, itinerary or recommendation, the "
@@ -58,7 +62,12 @@ JUDGE_DIMENSIONS: dict[str, str] = {
         "No claim that depends on information the assistant cannot have — current "
         "prices, stock, which product generation is newest, live schedules — is "
         "stated as current fact. Naming a product is fine; asserting it is the "
-        "latest or quoting today's price is not."
+        "latest, or quoting today's price, is not. These all PASS and are not "
+        "your concern: a price range, a figure hedged with 'typically', 'around' "
+        "or '≈', a budget the reply allocates, a worked example introduced by "
+        "'if' or 'example', a column header, and telling the user to go and check "
+        "the current price. Fail only a bare figure asserted as what something "
+        "costs right now."
     ),
     "respects_preferences": (
         "The reply honours the stated preferences and constraints in the context "
@@ -118,6 +127,16 @@ _UNREQUESTED_RATIONALE = re.compile(
 )
 
 _CURRENCY = re.compile(r"[£$€]\s?\d[\d,]*(?:\.\d+)?|\b\d[\d,]*\s?(?:usd|gbp|eur)\b", re.I)
+#: Models hedge with a symbol as often as a word — "≈£120/night", "~£45".
+_APPROX_SYMBOL = re.compile(r"[≈~∼]\s?[£$€]?\s?\d")
+#: A price stated as fact: something costs, retails at, or sells for a figure.
+#: A bare amount in a budget line or an itinerary cell asserts nothing.
+_PRICE_ASSERTION = re.compile(
+    r"\b(?:costs?|retails?(?:\s+(?:at|for))?|sells?\s+for|is\s+priced\s+at|"
+    r"goes?\s+for|comes?\s+in\s+at|price\s+is|priced\s+at)\s+"
+    r"(?:about\s+|around\s+)?[£$€]\s?\d",
+    re.I,
+)
 _HEDGE = re.compile(
     r"\b(typically|roughly|around|approximately|about|varies|varied|range[sd]?|"
     r"ballpark|order of|check (?:current|the current|today)|verify|confirm|"
@@ -177,6 +196,20 @@ _DEFERRED_PROMISE = re.compile(
     re.I,
 )
 
+#: An interrogation does not need question marks. Shopping asked for everything
+#: it needed as a numbered list of statements — "1. What you mainly use a phone
+#: for." — and slipped past a check that only counted "?".
+_INFO_REQUEST = re.compile(
+    r"\b(?:i|we)(?:'d)?\s+(?:need|want|would (?:need|like))\s+to\s+know\b"
+    r"|\bcould you (?:tell|let) me\b"
+    r"|\b(?:tell|let) me\b[^.!?\n]{0,40}\b(?:more about|a bit more|the following)\b"
+    r"|\bbefore (?:i|we) can\b[^.!?\n]{0,60}\b(?:recommend|suggest|draft|plan|build)\b"
+    r"|\byour answers will\b"
+    r"|\bwith (?:those|these) answers\b"
+    r"|\b(?:a few|some) (?:quick )?questions\b",
+    re.I,
+)
+
 #: Ordinary answers longer than this read as padded rather than thorough. A case
 #: whose deliverable is genuinely long (a week of training, a two-week syllabus)
 #: raises it with ``expect.max_words`` rather than dropping the check.
@@ -229,10 +262,18 @@ def _looks_like_a_deliverable(text: str) -> bool:
         # questions still counts as structure, so this has to be checked first.
         return False
     sentences = [s.strip() for s in _SENTENCE_SPLIT.split(text) if s.strip()]
+    # A reply that opens by asking for information is interviewing the user
+    # whether or not it punctuates the requests as questions, so everything it
+    # asks for counts against it the same way.
+    asking = bool(_INFO_REQUEST.search(text))
     questions = [s for s in sentences if s.endswith("?")]
-    if not questions:
+    if not questions and not asking:
         return True
     statements = [s for s in sentences if not s.endswith("?")]
+    if asking and not questions:
+        # Nothing is punctuated as a question, so fall back to whether real
+        # content survives once the request framing and its list are removed.
+        return sum(len(s.split()) for s in statements if not _INFO_REQUEST.search(s)) >= 90
     body = "\n".join(line for line in text.splitlines() if not line.strip().startswith(("?", ">")))
     if len(_STRUCTURE_LINE.findall(body)) >= 3 and len(statements) > len(questions):
         return True
@@ -295,16 +336,18 @@ def review(case: dict, output: str, *, max_words: int = DEFAULT_MAX_WORDS) -> Re
             )
         )
 
-    # Prices are allowed as ranges or hedged estimates; a bare figure is a claim
-    # about a market the agent cannot see. Two figures in one sentence is
-    # arithmetic ("for a €300,000 flat, that is a €30,000 target"), not a claim.
+    # Only an asserted price counts here: something *costs* a figure. Money
+    # appears constantly in these answers as budget lines, tips, worked examples
+    # and allocations, and every looser version of this check produced more false
+    # positives than findings. Staleness that a regex cannot see -- "the typical
+    # Dublin flat price today" -- is the judge's `currency` dimension, which
+    # catches it with the context a pattern does not have.
     for sentence in _SENTENCE_SPLIT.split(text):
         if (
-            _CURRENCY.search(sentence)
-            and len(_CURRENCY.findall(sentence)) < 2
+            _PRICE_ASSERTION.search(sentence)
             and not _PRICE_RANGE.search(sentence)
             and not _HYPOTHETICAL_AMOUNT.search(sentence)
-            and not _BUDGET_LINE.search(sentence)
+            and not _APPROX_SYMBOL.search(sentence)
             and not _HEDGE.search(sentence)
         ):
             violations.append(

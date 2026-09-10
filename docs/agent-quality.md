@@ -110,7 +110,70 @@ offered rather than included.
 **`expect.max_words`** was added to the five fixtures whose deliverable is
 genuinely long, instead of weakening the default ceiling for everyone.
 
-## Results
+## The baseline confirmation, and what it changed (2026-09-10)
+
+The `gpt-oss-120b` run that had been outstanding finally completed 12 of 13
+cases, and it undercut the headline number below. **On the baseline model the
+deterministic layer scored 7/12, not the 12/13 measured on `qwen3.8-27b`.** The
+qwen result was flattering: the prompts were tuned against it, and the failures
+it no longer showed were still there on the model the app actually defaults to.
+
+Failures on the baseline model, all confirmed real by reading the responses:
+Career 386w and inventing an affordability constraint out of "cannot relocate";
+Research 514w; Fitness 549w; Travel routing a day trip to another country
+against a one-city preference; Shopping replying with nothing but a numbered
+list of things it needed to know.
+
+### Fixes
+
+- **Verbosity — structure before count.** Rule 1 led with "under 350 words", and
+  models are poor at counting. It now specifies the *shape* first (advice is a
+  recommendation, the trade-off, at most three next actions; a plan is one line
+  per step) and says to delete whole sections rather than trim adjectives.
+  Fitness was writing two full schedules because its config asked for a "busy
+  week" version as well; Research had five mandated sections. Both now name one.
+- **Invented constraints.** Rule 3 gained: never derive a new constraint from one
+  you were given — "cannot relocate" is not "cannot afford to".
+- **Stale figures beyond products.** Rule 4 now covers every market figure —
+  property prices, rents, salaries, fares — not only product prices.
+- **Shopping** may not reply with only a list of what it needs to know.
+- **Travel** must honour the stated style over a better-looking itinerary, and
+  may not invent a budget, dates or party size.
+
+### Results after the fixes
+
+| Run | Deterministic layer |
+|---|---|
+| Before, `gpt-oss-120b` | **7/12** |
+| After, `gpt-oss-20b`, 2 samples × 7 agents | **18/18 clean** |
+| After, `gpt-oss-20b`, second round × 3 agents | **8/8 clean** |
+| After, production model config | **3/4** — Travel at 521 words |
+
+### Two things worth knowing before trusting any of this
+
+**A model override silently invalidated three runs of Writing results.**
+`--model` overrides *every* agent, including Writing's own
+`qwen/qwen3.8-27b`. Writing "failed" repeatedly on a model it never uses; on its
+production configuration it passes 2/2 plus the unknown-facts case. Check what an
+agent actually runs on before believing a verdict about it.
+
+**The judge is only as good as the judge model.** With `qwen3.8-27b` judging,
+`currency` and `grounding` fired repeatedly on hedged figures, column headers,
+and examples the reply itself labelled "Example" or "if". Both dimensions have
+been rewritten to list what passes. Use the strongest model available as judge,
+and read the quoted evidence rather than the score.
+
+### Still failing
+
+**Travel, on the production model: 521 words against a 450 ceiling**, and on one
+sample it invented a budget and attributed it to the user ("You're comfortable
+with a moderate budget"). Improved from the previous round but not closed, and
+the daily budget ran out before another pass. This is the one agent that still
+needs work.
+
+---
+
+## Results (earlier rounds)
 
 Every stored run re-graded with the **final** rubric, so this compares like with like:
 

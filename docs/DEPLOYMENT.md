@@ -4,7 +4,16 @@ This prepares an invite-only deployment, not public signup. No hosting account o
 
 ## Usage-limit migration
 
-Before starting this version, run `alembic upgrade head` using the existing deployment migration procedure. Revision 0002 adds `usage_buckets`; the schema now has ten application tables. Configure `ACCOUNT_REQUESTS_PER_MINUTE` and `ACCOUNT_DAILY_TOKEN_BUDGET` for the size of the invite list; see [usage-limits.md](usage-limits.md). The prior container/backup verification was on revision 0001 (nine tables). The new migration has been rehearsed on SQLite and an isolated PostgreSQL 16 container, including downgrade/re-upgrade, concurrent quota admission, and persistence across separate processes. The full production container stack and backup round-trip have not been rerun with revision 0002.
+Before starting this version, run `alembic upgrade head` using the existing deployment migration procedure. Revision 0002 adds `usage_buckets`; the schema now has ten application tables. Configure `ACCOUNT_REQUESTS_PER_MINUTE` and `ACCOUNT_DAILY_TOKEN_BUDGET` for the size of the invite list; see [usage-limits.md](usage-limits.md). The prior container/backup verification was on revision 0001 (nine tables). The new migration has been rehearsed on SQLite and an isolated PostgreSQL 16 container, including downgrade/re-upgrade, concurrent quota admission, and persistence across separate processes.
+
+**Rerun with revision 0002 (2026-09-10):** the container stack and the full
+backup round-trip have now been verified on the ten-table schema. `usage_buckets`
+is created by `alembic upgrade head` against PostgreSQL 16, and a populated-database
+recovery rehearsal (`restore-check.ps1 -RehearseOverwrite`) passed with usage-ledger
+rows present — every public table's contents matched the archive after restore and
+the deliberately inserted sentinel row was gone. Note that `window` is a reserved
+word in PostgreSQL: hand-written SQL against `usage_buckets` must quote it
+(`"window"`). SQLAlchemy quotes it for you; a psql one-liner will not.
 
 ## Configuration
 
@@ -31,11 +40,22 @@ Never set `AUTH_REQUIRED=false` on the `backend` **service**, and never leave a
 provisioning container running. If a step fails, `docker compose down` and start
 the sequence again rather than relaxing the service configuration.
 
+**Build before you migrate.** `docker compose run backend alembic upgrade head`
+runs the migrations *inside the image*, not the ones in your working tree. A
+stale image migrates to its own idea of head and reports success — this was
+observed with revision 0002: `alembic heads` said `0001 (head)` from an image
+built before 0002 existed, so `usage_buckets` was silently never created and
+account limits would have failed in production against an apparently healthy
+deployment. The `--build` in the first line below is not optional.
+
 Run these commands from the repository root after setting the environment file:
 
 ```sh
+docker compose --env-file deploy/.env -f deploy/compose.yml build backend
 docker compose --env-file deploy/.env -f deploy/compose.yml up -d db
 docker compose --env-file deploy/.env -f deploy/compose.yml run --rm -e ENVIRONMENT=development -e AUTH_REQUIRED=false backend alembic upgrade head
+# Confirm the schema is where you expect before going further:
+docker compose --env-file deploy/.env -f deploy/compose.yml run --rm -e ENVIRONMENT=development -e AUTH_REQUIRED=false backend alembic current
 docker compose --env-file deploy/.env -f deploy/compose.yml run --name modeer-provision -e ENVIRONMENT=development -e AUTH_REQUIRED=false backend python provision_user.py --email person@example.com --name Person --output /tmp/invite.json
 docker cp modeer-provision:/tmp/invite.json ./invite.json
 docker rm modeer-provision

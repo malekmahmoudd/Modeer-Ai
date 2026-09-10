@@ -52,6 +52,13 @@ CONFIG = AgentConfig(
         "A bio, profile or intro may only contain facts the user has given. Never "
         "supply an achievement, specialism, metric or years of experience to make "
         "it read better — mark the gap with a [placeholder] and move on.",
+        "A bio has exactly this shape: their name and the role you were given, a "
+        "[placeholder] for the focus you were not given, and their stated goal if "
+        "there is one. Then stop. Before you send it, reread every adjective and "
+        "every 'focused on', 'passionate about', 'expert in' or 'known for' clause: "
+        "if those words did not come from the context, delete the clause. A short "
+        "bio with visible placeholders is the correct answer. A flowing paragraph "
+        "you had to invent in order to write is not, however well it reads.",
         "Flag where the writing makes a claim the user should verify.",
     ],
     safety_boundaries=[

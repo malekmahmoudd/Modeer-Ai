@@ -33,6 +33,7 @@
     ./backup.ps1 -KeepDays 30 -OffHost E:\offsite\modeer
 #>
 param(
+    [string]$ComposeFile = "$PSScriptRoot/compose.yml",
     [string]$Directory = "$PSScriptRoot/backups",
     [int]$KeepDays = 30,
     [string]$OffHost = $env:MODEER_BACKUP_OFFHOST,
@@ -41,7 +42,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$compose = @('compose', '--project-directory', $PSScriptRoot, '-f', "$PSScriptRoot/compose.yml")
+$compose = @('compose', '--project-directory', (Split-Path (Resolve-Path $ComposeFile)), '-f', $ComposeFile)
 # Windows PowerShell turns a native command's stderr into a terminating error
 # under ErrorActionPreference='Stop', even on exit code 0 -- a single psql
 # NOTICE would abort a backup that was working. Exit codes are checked instead.
@@ -82,7 +83,6 @@ if ($PassphraseFile -and (Test-Path $PassphraseFile)) {
     # openssl runs in a container so the host needs no crypto tooling. The
     # archive is plain `openssl enc`, so a human can decrypt it during a
     # real recovery with standard tools and none of this script.
-    # PowerShell has no "<" redirection, so the passphrase is piped to stdin.
     # The passphrase file is mounted and read by openssl itself, never piped:
     # PowerShell appends a carriage return to piped stdin, which silently became
     # part of the passphrase and made archives decryptable only from PowerShell.
