@@ -41,7 +41,9 @@
       ],
       "expect": {
         "mentions_any": ["Manchester", "slow", "one city", "cafe"],
-        "rubric": ["personalization", "usefulness"]
+        "rubric": ["personalization", "usefulness"],
+        "max_words": 450,
+        "must_avoid": ["day trip", "day-trip"]
       }
     },
     {

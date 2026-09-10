@@ -39,7 +39,8 @@
       ],
       "expect": {
         "mentions_any": ["thermodynamics", "mechanical", "final"],
-        "rubric": ["personalization", "usefulness", "relevance"]
+        "rubric": ["personalization", "usefulness", "relevance"],
+        "max_words": 450
       }
     },
     {

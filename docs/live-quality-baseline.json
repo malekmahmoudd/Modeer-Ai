@@ -1,0 +1,827 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "judge_model": "openai/gpt-oss-120b",
+  "results": [
+    {
+      "agent": "modeer",
+      "case": "modeer-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "seconds": 1.97,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 238,
+        "violations": []
+      },
+      "output": "**Focus for the coming week**\n\n1. **Programming exam prep (high\u2011priority, 10\u2011day deadline)**\n   - **Monday\u202f\u2013\u202fWednesday:**\u202fAllocate 2\u20113\u202fhours each day to core topics you find toughest. Do practice problems right after reviewing each concept to reinforce learning.\n   - **Thursday:**\u202fTake a full\u2011length practice test under timed conditions. Review errors and note any gaps.\n   - **Friday\u202f\u2013\u202fSaturday:**\u202fTarget those gaps with focused drills (e.g., specific algorithms or language syntax). Keep sessions to 1\u20112\u202fhours to avoid burnout.\n   - **Sunday:**\u202fLight review of key formulas/notes and a brief \u201cmental reset\u201d to stay fresh for the final stretch.\n\n2. **Internship CV (medium\u2011priority)**\n   - **Monday:**\u202fDraft the \u201cExperience\u201d section using bullet points that quantify your contributions (e.g., \u201cImplemented feature X, reducing processing time by\u202fY%\u201d).\n   - **Wednesday:**\u202fPolish the \u201cSkills\u201d and \u201cEducation\u201d sections; align terminology with the internship description.\n   - **Friday:**\u202fDo a quick peer/mentor review (or use a CV\u2011review tool) and incorporate feedback.\n   - **Saturday:**\u202fFinalize formatting, proofread for consistency, and export to PDF.\n\n3. **Micro\u2011tasks & wellbeing**\n   - Set a **30\u2011minute \u201creset\u201d** after each study block to stretch, hydrate, or take a short walk.\n   - Reserve **1\u2011hour on Sunday** for a brief planning session for the next week (exam final review + any follow\u2011up CV tweaks).\n\n**Next step:**\u202fBlock these time slots in your calendar (or a simple notebook) and let me know if you need a more detailed daily schedule or help refining any CV bullet points.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "study",
+      "case": "study-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Give me a study plan for the next two weeks.",
+      "context": [
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "mechanical engineering"
+        },
+        {
+          "category": "goals",
+          "key": "preparing_for",
+          "value": "thermodynamics final on the 20th"
+        }
+      ],
+      "seconds": 3.81,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'thermodynamics' / 'mechanical' / 'final'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": false,
+        "words": 735,
+        "violations": [
+          {
+            "code": "too_long",
+            "detail": "735 words against a 450-word ceiling",
+            "evidence": ""
+          }
+        ]
+      },
+      "output": "**Goal:** Be ready to tackle every major thermodynamics topic before your final on the 20th\u202f(about 10\u202fdays away).  \n\n**Assumptions** (feel free to correct):\n- You\u2019ve already attended lectures and have a textbook/notes covering the standard syllabus (properties of pure substances, first/second law, cycles, entropy, ideal/real gases, mixture properties, and basic refrigeration/combustion concepts).  \n- You can study ~2\u20133\u202fhours on weekdays and 4\u20135\u202fhours on weekends.  \n- You prefer active\u2011recall practice over passive rereading.\n\n---\n\n### Week\u202f1 (Days\u202f1\u20117)\n\n| Day | Focus | Activities (\u22482\u202fh) | Quick\u2011check |\n|-----|-------|-------------------|-------------|\n| 1 | **Properties & Phase\u2011change** | \u2022 Review tables & Mollier charts.<br>\u2022 Summarize key equations (e.g., \\(v = \\frac{RT}{P}\\) for ideal gas, steam\u2011table interpolation).<br>\u2022 Do 5\u202finterpolation problems. | Write the steps you used to find enthalpy at 150\u202f\u00b0C, 0.5\u202fMPa. |\n| 2 | **First Law \u2013 Closed Systems** | \u2022 Derive the energy balance from first principles.<br>\u2022 Solve 3\u202fsteady\u2011flow work problems (turbine, compressor). | Explain why shaft work appears with a negative sign for a turbine. |\n| 3 | **First Law \u2013 Open Systems** | \u2022 Work through a control\u2011volume example (steady\u2011flow heat exchanger).<br>\u2022 Create a one\u2011page \u201ccheat sheet\u201d of the mass\u2011energy balance terms. | List the four terms in the steady\u2011flow energy equation and give a real\u2011world example for each. |\n| 4 | **Second Law \u2013 Entropy** | \u2022 Derive \\(dS = \\frac{\\delta Q_{rev}}{T}\\).<br>\u2022 Solve 4 entropy\u2011generation problems (adiabatic throttling, heat transfer across a finite \u0394T). | Compute the entropy change for 1\u202fkg of water vapor condensing at 100\u202f\u00b0C. |\n| 5 | **Entropy & Irreversibility** | \u2022 Compare reversible vs. irreversible cycles.<br>\u2022 Practice Carnot efficiency calculations and identify sources of loss. | What is the maximum possible efficiency of a heat engine operating between 500\u202fK and 300\u202fK? |\n| 6 | **Ideal & Real Gas Models** | \u2022 Review PV\u2011T relationships, compressibility factor \\(Z\\).<br>\u2022 Solve 3\u202fproblems using the van der Waals equation. | Predict whether \\(Z>1\\) or \\(Z<1\\) for nitrogen at 200\u202fbar and 300\u202fK, and why. |\n| 7 **(Weekend)** | **Integrated Review** | \u2022 Mixed\u2011topic quiz (15\u202fquestions, timed).<br>\u2022 Identify any weak spots; add them to a \u201creview list.\u201d | Score \u2265\u202f80\u202f%? Note which questions were hardest. |\n\n---\n\n### Week\u202f2 (Days\u202f8\u201114)\n\n| Day | Focus | Activities (\u22483\u202fh) | Quick\u2011check |\n|-----|-------|-------------------|-------------|\n| 8 | **Power Cycles (Rankine, Brayton)** | \u2022 Derive efficiency formulas.<br>\u2022 Solve a Rankine cycle with superheat and a Brayton cycle with regeneration. | Compute the thermal efficiency of a Brayton cycle with \\(r_p=10\\) and \\(\\gamma=1.4\\). |\n| 9 | **Refrigeration & Heat\u2011Pump Cycles** | \u2022 Work through vapor\u2011compression and absorption cycles.<br>\u2022 Calculate COP for a given evaporator temperature. | What COP corresponds to a refrigerator operating between 273\u202fK and 313\u202fK? |\n| 10 | **Mixtures & Psychrometrics** | \u2022 Review Dalton\u2019s law, humidity ratios.<br>\u2022 Solve 3 problems on air\u2011conditioning loads. | Find the moisture content of air at 30\u202f\u00b0C, 60\u202f% RH. |\n| 11 | **Combustion & Chemical Energy** | \u2022 Balance a simple hydrocarbon combustion reaction.<br>\u2022 Compute heating values using Hess\u2019s law. | Determine the lower heating value of methane from standard enthalpies. |\n| 12 | **Problem\u2011Solving Sprint** | \u2022 20\u2011question mixed\u2011topic set (no notes).<br>\u2022 Time yourself; review every mistake immediately. | How many questions did you get right on the first try? |\n| 13 **(Weekend)** | **Full Mock Exam** | \u2022 Simulate exam conditions: 3\u202fh, 60\u202fquestions covering all topics.<br>\u2022 Grade, then spend 1\u202fh reviewing every error. | Identify the top three concepts that still cause errors. |\n| 14 | **Targeted Review & Relax** | \u2022 Re\u2011study the three weak concepts from Day\u202f13.<br>\u2022 Light active recall (flashcards) for formulas.<br>\u2022 Light physical activity to reset. | Can you explain each weak concept in one sentence without looking at notes? |\n\n---\n\n### How to Use This Plan\n1. **Active recall**: After each study block, close the book and write the solution from memory before checking.  \n2. **Spaced repetition**: Put key formulas on flashcards (physical or app) and review them daily.  \n3. **Teach\u2011back**: Briefly explain a concept to a peer or record yourself; this solidifies understanding.  \n\n---\n\n**Comprehension check:** Which thermodynamics topic do you feel least confident about right now, and what type of practice (problem set, derivation, or conceptual explanation) helps you learn it best?",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": false,
+            "evidence": "\"Be ready to tackle every major thermodynamics topic before your final on the 20th\u202f(about 10\u202fdays away).\""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "The plan includes an unlabelled assumption about the exam being about 10 days away, violating grounding.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "career",
+      "case": "career-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should my next move be?",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "junior data analyst, 2 years in"
+        },
+        {
+          "category": "career",
+          "key": "career_goal",
+          "value": "become a data scientist"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Berlin, no relocation possible"
+        }
+      ],
+      "seconds": 2.97,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'data scientist' / 'analyst' / 'Berlin'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": false,
+        "words": 589,
+        "violations": [
+          {
+            "code": "too_long",
+            "detail": "589 words against a 350-word ceiling",
+            "evidence": ""
+          }
+        ]
+      },
+      "output": "**Recommendation:**\u202fFocus on a structured transition within your current company (or a Berlin\u2011based employer) from junior data analyst to data scientist by building a portfolio of end\u2011to\u2011end ML projects, formalizing your skill gaps, and positioning yourself for an internal data\u2011science role or a targeted external opening.\n\n**Why this beats other routes**\n\n| Option | What you gain | What it costs | Reversibility |\n|--------|---------------|---------------|---------------|\n| **A. Internal move** (apply for a data\u2011science position or a hybrid analyst\u2011scientist role) | Leverages existing network, known performance record, no relocation, minimal salary disruption | Requires demonstrable ML work, possible short\u2011term stretch on current tasks | High \u2013 you can stay in the analyst role if the move stalls |\n| **B. External jump** to a junior data\u2011scientist role in Berlin | Fresh title, potentially higher pay | Competes with many candidates, need strong portfolio, risk of cultural/tech\u2011stack mismatch | Medium \u2013 you can return to analyst work but may need to explain the short stint | \n| **C. Full\u2011time master\u2019s/bootcamp** | Formal credential, deep theory | Time away from work, tuition cost, delayed earnings | Low \u2013 once you\u2019ve invested, you\u2019re committed to the program | \n| **D. Stay as analyst and wait** | Stability, no extra effort now | Slower career progression, may be passed over for data\u2011science roles | High \u2013 you can still pivot later, but opportunity cost grows |\n\nGiven your constraints (Berlin\u2011only, no relocation) and the typical 2\u2011year analyst experience needed to be credible for junior data\u2011science roles, **Option\u202fA** offers the best balance of impact, cost, and flexibility.\n\n---\n\n### Concrete next actions (in order)\n\n1. **Skill audit & gap list (Week\u202f1)**\n   - Identify the top\u20113 ML techniques most used in Berlin data\u2011science job ads (e.g., supervised classification, time\u2011series forecasting, NLP).\n   - Map each to your current proficiency; note gaps (e.g., model deployment, feature engineering, deep learning basics).\n\n2. **Portfolio project sprint (Weeks\u202f2\u20116)**\n   - Choose a business\u2011relevant dataset from your current employer (or a public one if confidentiality blocks it).\n   - Deliver a full pipeline: data cleaning \u2192 exploratory analysis \u2192 model building \u2192 validation \u2192 a simple deployment (e.g., Streamlit app or Docker container).\n   - Document the process on GitHub with a concise README and a 2\u2011page \u201ccase study\u201d PDF you can attach to applications.\n\n3. **Internal positioning (Weeks\u202f7\u20118)**\n   - Request a 15\u2011minute coffee chat with your manager or the data\u2011science lead: share your project, express interest in a hybrid or full data\u2011science role, ask what concrete milestones they\u2019d need to see.\n   - Offer to take on a small, low\u2011risk ML task within your current team to prove capability.\n\n4. **Targeted external applications (Weeks\u202f9\u201112)**\n   - Update your CV: add the project, list specific ML tools (scikit\u2011learn, TensorFlow, PyTorch, MLflow, Docker), and quantify impact (e.g., \u201cprototype reduced manual forecasting effort by 30\u202f% in pilot test\u201d).\n   - Apply to 3\u20135 junior data\u2011scientist openings in Berlin that explicitly mention \u201centry\u2011level\u201d or \u201canalyst\u2011to\u2011scientist\u201d pathways.\n\n5. **Negotiation prep (Week\u202f13)**\n   - Research typical junior data\u2011scientist salaries in Berlin (\u2248\u202f\u20ac55\u201170k) and prepare a brief value\u2011statement linking your analyst results to potential ML contributions.\n   - Practice a concise pitch: \u201cI\u2019ve delivered X insights that saved Y\u202f% cost; my recent ML prototype can further improve Z.\u201d\n\n---\n\n**Assumptions made:** you have access to at least one dataset you can work on, you can allocate ~5\u20118\u202fhours per week to the project, and your manager is open to career\u2011development discussions.\n\n*Is there any constraint (time, budget, current workload) that would change the feasibility of this plan?*",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": false,
+            "evidence": "Research typical junior data\u2011scientist salaries in Berlin (\u2248\u202f\u20ac55\u201170k)"
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "The reply provides a specific current salary range, which the assistant cannot know without up\u2011to\u2011date data.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "research",
+      "case": "research-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Give me a reading-and-analysis plan for my dissertation topic.",
+      "context": [
+        {
+          "category": "education",
+          "key": "level",
+          "value": "PhD candidate"
+        },
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "urban economics"
+        }
+      ],
+      "seconds": 2.17,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'urban' / 'economics' / 'dissertation' / 'PhD'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 427,
+        "violations": []
+      },
+      "output": "**Provisional Reading & Analysis Plan (Two\u2011Month Sprint)**  \n\n| Week | Goal | Core Activities | Typical Output |\n|------|------|-----------------|----------------|\n| **1** | Clarify scope & key questions | \u2022 Write a 1\u2011page problem statement (research gap, hypothesis, relevance to urban economics). <br>\u2022 List 3\u20135 sub\u2011questions that will structure the literature review. | Draft problem statement; sub\u2011question list. |\n| **2** | Map the existing literature | \u2022 Search major databases (Google Scholar, Scopus, EconLit) using keywords derived from sub\u2011questions. <br>\u2022 Export citations to a reference manager (Zotero/Mendeley). <br>\u2022 Create a spreadsheet to log: author, year, methodology, main finding, relevance rating (high/medium/low). | Bibliography spreadsheet (\u224830\u201340 core papers). |\n| **3** | Deep dive into seminal works | \u2022 Read the top 10 high\u2011relevance papers in full. <br>\u2022 Summarize each in a \u00bd\u2011page annotation (research design, data, results, limitations). <br>\u2022 Note any recurring theories or models. | Annotated bibliography (10 entries). |\n| **4** | Identify methodological approaches | \u2022 Catalogue methods used (e.g., hedonic pricing, spatial regression, GIS, natural experiments). <br>\u2022 Evaluate pros/cons for your own data availability. | Method\u2011comparison matrix; shortlist of 2\u20133 approaches to adopt. |\n| **5** | Expand to complementary fields | \u2022 Search for related work in regional science, transportation economics, and public policy that cite your core papers. <br>\u2022 Add ~15\u201320 papers to the spreadsheet, flagging interdisciplinary insights. | Updated bibliography (\u224855\u201360 papers). |\n| **6** | Synthesize themes & gaps | \u2022 Create a thematic map (e.g., \u201chousing affordability,\u201d \u201cspatial spillovers,\u201d \u201cpolicy evaluation\u201d). <br>\u2022 Highlight where evidence is thin or contradictory. | Visual theme map + gap analysis memo (1\u20132 pages). |\n| **7** | Draft literature review outline | \u2022 Organize sections by themes, methods, and chronology. <br>\u2022 Insert placeholder citations from your spreadsheet. | Detailed outline with bullet points for each subsection. |\n| **8** | Write first literature review draft | \u2022 Convert outline into prose (\u22481500\u20132000 words). <br>\u2022 Ensure each claim is backed by at least one citation. <br>\u2022 Flag any statements needing further evidence. | Draft manuscript section ready for supervisor feedback. |\n\n### How to Use This Plan\n1. **Adjust timeline** if your dissertation timeline is longer/shorter; each week can be stretched or compressed.\n2. **Iterate**: after week\u202f4, you may revisit week\u202f2\u20113 if new key papers emerge.\n3. **Track progress** in a simple Kanban board (To\u2011Read, Reading, Summarized, Integrated).\n\n### Next Step for Me\nCould you share the specific dissertation topic or research question you\u2019re pursuing? That will let me tailor the keyword list, seminal works, and methodological suggestions to your field.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "writing",
+      "case": "writing-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Draft a short bio for a conference program.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "staff security engineer at a fintech"
+        },
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "move into security research and speaking"
+        }
+      ],
+      "seconds": 0.91,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'security' / 'engineer' / 'fintech' / 'research'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 85,
+        "violations": []
+      },
+      "output": "Here is a short bio draft based on the information provided.\n\n**Alex [Last Name]** is a Staff Security Engineer at a fintech company. Currently focused on transitioning into security research and speaking, Alex brings deep technical expertise in financial security to the conference.\n\n[Note: Please replace [Last Name] with your actual last name. If you have specific research topics, past talks, or particular fintech security specializations you want to highlight, let me know and I can integrate those details to make the bio more specific.]",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "travel",
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 1.3,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 89,
+        "violations": []
+      },
+      "output": "**Quick question to shape the plan**\n\nTo give you a useful long\u2011weekend itinerary I need a few details:\n\n1. **When would you like to travel?** (e.g., a specific weekend in the next 2\u20133 months)  \n2. **What\u2019s your hard budget ceiling for the whole trip** (including transport, lodging, food & activities)?  \n3. **Do you prefer staying in the UK or venturing abroad** for this break?  \n\nOnce I have those, I\u2019ll draft a slow\u2011travel, caf\u00e9\u2011rich itinerary with a realistic pace, budget split, and a clear \u201cbook now\u201d vs. \u201cdecide later\u201d list.",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": false,
+            "evidence": "Once I have those, I\u2019ll draft a slow\u2011travel, caf\u00e9\u2011rich itinerary..."
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "The assistant did not provide the requested itinerary, only asked for more information.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "shopping",
+      "case": "shopping-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Recommend a phone for me.",
+      "context": [
+        {
+          "category": "preferences",
+          "key": "ecosystem",
+          "value": "already on iPhone and Apple Watch"
+        },
+        {
+          "category": "preferences",
+          "key": "budget",
+          "value": "under 700, keeps phones 4+ years"
+        }
+      ],
+      "seconds": 1.08,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'iPhone' / 'Apple' / '700' / 'long'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 168,
+        "violations": []
+      },
+      "output": "Got it\u2014let\u2019s make sure the phone you pick actually fits how you\u2019ll use it and stays within your\u202f\u00a3700\u202fbudget.\n\n**1. What you\u2019ll use it for (real need)**  \n- Do you need a strong camera for photos/video, or is that low\u2011priority?  \n- How important is battery life for long days away from a charger?  \n- Will you be gaming or using heavy apps (e.g., video editing, AR)?  \n- Do you prefer a larger \u201cphablet\u201d screen or something more compact?  \n- Any must\u2011have features like 5G, MagSafe accessories, or a specific storage size (e.g., 128\u202fGB vs 256\u202fGB)?\n\n**2. Hard constraints**  \n- Budget ceiling:\u202f\u00a3700\u202f(you keep phones\u202f4+\u202fyears, so durability matters).  \n- Ecosystem: already on iPhone & Apple Watch, so staying in iOS makes sense.  \n- Any size/weight limits (e.g., you want it to fit in a small pocket)?\n\nOnce I know those details, I can narrow it down to the best current iPhone model that meets your criteria and suggest a runner\u2011up. Let me know!",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": false,
+            "evidence": "Once I know those details, I can narrow it down to the best current iPhone model that meets your criteria and suggest a runner\u2011up."
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "The assistant did not provide the requested phone recommendation, only asked follow\u2011up questions.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "finance",
+      "case": "finance-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Help me set a savings target.",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "save for a flat deposit in 3 years"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Dublin"
+        }
+      ],
+      "seconds": 2.8,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'deposit' / '3 years' / 'three years' / 'Dublin'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": false,
+        "words": 705,
+        "violations": [
+          {
+            "code": "too_long",
+            "detail": "705 words against a 450-word ceiling",
+            "evidence": ""
+          }
+        ]
+      },
+      "output": "Sure\u202f\u2014 let\u2019s build a simple, realistic savings target for your flat deposit. I\u2019ll walk through the mechanics, a rule\u2011of\u2011thumb check, and a quick \u201cwhat\u2011if\u201d downside test, then give you three concrete steps you can take this week.\n\n---\n\n### 1. Decision & Horizon\n**Goal:** Save enough for a flat deposit in **3\u202fyears** (\u2248\u202f36\u202fmonths).  \n**Key unknowns you\u2019ll need to fill in:**  \n* Desired deposit amount (e.g., \u20ac30\u202fk, \u20ac40\u202fk, etc.)  \n* Your net monthly cash flow (income\u202f\u2013\u202ffixed expenses).  \n* Any existing savings you can count toward the goal.\n\nIf you\u2019re not sure of the exact deposit amount, a common rule of thumb in Dublin is **10\u201120\u202f% of the purchase price**. For a \u20ac300\u202fk flat, that\u2019s \u20ac30\u201160\u202fk. Pick a number that feels comfortable for the type of property you\u2019re aiming at.\n\n---\n\n### 2. The Picture (what you\u2019ll need to know)\n\n| Item | What to gather |\n|------|----------------|\n| **Target deposit** | \u20ac\u202fX (choose a realistic figure) |\n| **Current savings** | \u20ac\u202fY (cash you already have) |\n| **Net monthly cash flow** | Income\u202f\u2013\u202fall recurring outflows (rent, utilities, transport, food, subscriptions, debt payments, etc.) |\n| **Other upcoming cash needs** | Planned big expenses (car, travel, tuition) over the next 3\u202fyears |\n\n---\n\n### 3. Real Constraint\nMost often the bottleneck is **cash\u2011flow**: how much you can consistently set aside each month after covering living costs and a safety buffer.\n\n---\n\n### 4. Mechanics & Rule of Thumb\n\n1. **Calculate the monthly saving needed**  \n   \\[\n   \\text{Monthly target} = \\frac{\\text{(Deposit \u2013 Current Savings)}}{36}\n   \\]\n2. **Check against cash flow**  \n   *If the required monthly saving is \u2264\u202f30\u202f% of your net cash flow, you\u2019re in a comfortable zone.*  \n   *If it\u2019s >\u202f30\u202f%, you\u2019ll need to either increase income, trim expenses, or extend the horizon.*\n\n   *Why 30\u202f%?* Historically, allocating roughly a third of discretionary cash to a major goal balances progress with living comfortably.\n\n3. **Build an emergency buffer first**  \n   Aim for **3\u20116\u202fmonths of essential expenses** in a high\u2011interest\u2011bearing account before locking money into a longer\u2011term vehicle. This protects the plan from setbacks.\n\n4. **Automate the savings**  \n   Set up a standing transfer on payday so the target amount moves to a separate \u201cflat fund\u201d before you can spend it.\n\n---\n\n### 5. Downside Test (bad month)\n\n*Scenario:* You lose \u20ac500 of net cash flow for a month (e.g., a temporary reduction in hours).  \n**Impact:** If you\u2019re saving >\u202f30\u202f% of cash flow, that month you\u2019d fall short by \u20ac150\u2011\u20ac250. Over 36\u202fmonths, a few such months could shave off \u20ac1\u20112\u202fk from the final total.\n\n**Mitigation:**  \n* Keep the emergency buffer untouched.  \n* If a shortfall occurs, make up the difference in a later month (e.g., add an extra \u20ac100\u2011\u20ac150 when income normalises) or extend the timeline by a couple of months.\n\n---\n\n### 6. Framework & Next Steps\n\n1. **Gather the numbers** \u2013 Write down your target deposit, current savings, and net monthly cash flow.  \n2. **Run the simple calculator** \u2013 Plug them into the formula above to see the required monthly saving.  \n3. **Compare to 30\u202f% rule** \u2013 If the required saving is higher, list three ways you could either (a) cut discretionary spending, (b) boost income, or (c) stretch the horizon by 6\u201112\u202fmonths.  \n4. **Set up the buffer** \u2013 Open a high\u2011interest savings account (if you don\u2019t already have one) and fund it with 3\u20116\u202fmonths of essential expenses.  \n5. **Automate** \u2013 Schedule the calculated monthly transfer to a separate \u201cFlat Deposit\u201d sub\u2011account on payday.\n\n---\n\n**Your immediate to\u2011do list (this week):**\n\n1. Write down the three numbers: target deposit, current savings, net monthly cash flow.  \n2. Compute the required monthly saving and see if it\u2019s \u2264\u202f30\u202f% of cash flow.  \n3. If it\u2019s higher, draft a short list of at least three expense\u2011cut or income\u2011boost ideas to close the gap.\n\nOnce you have those figures, let me know and we can fine\u2011tune the plan or explore specific ways to free up cash.  \n\n*Remember: this is general financial education, not personalized investment advice. If you need detailed tax or mortgage advice, a licensed adviser or accountant would be the right next step.*",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": false,
+            "evidence": "For a \u20ac300\u202fk flat, that\u2019s \u20ac30\u201160\u202fk. ... a common rule of thumb in Dublin is **10\u201120\u202f% of the purchase price**."
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "Unsupported claim about a Dublin-specific deposit rule of thumb without labeling it as an assumption.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "fitness",
+      "case": "fitness-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Adjust my training for this week.",
+      "context": [
+        {
+          "category": "routine",
+          "key": "workout_frequency",
+          "value": "4x/week upper-lower, home gym with dumbbells and a pull-up bar"
+        },
+        {
+          "category": "routine",
+          "key": "constraint",
+          "value": "travelling Thu-Fri with no equipment"
+        }
+      ],
+      "seconds": 3.62,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'travel' / 'dumbbell' / 'upper-lower' / 'bodyweight' / 'home'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": false,
+        "words": 540,
+        "violations": [
+          {
+            "code": "too_long",
+            "detail": "540 words against a 450-word ceiling",
+            "evidence": ""
+          }
+        ]
+      },
+      "output": "**Assumptions\u202f(please confirm or correct)**  \n- Goal:\u202fGeneral strength & body\u2011composition improvement.  \n- Current routine:\u202f4\u202fsessions\u202f/\u202fweek (Upper\u202f/\u202fLower split) using dumbbells and a pull\u2011up bar at home.  \n- Constraint:\u202fYou\u2019ll be traveling Thu\u2011Fri with no equipment, so those days need body\u2011weight work only.  \n- No injuries or medical limitations have been mentioned (let me know if anything applies).  \n\n---\n\n### This\u2011Week Adjustment (7\u202fdays)\n\n| Day | Setting | Main Focus | Exercise (sets\u202f\u00d7\u202freps) | Notes |\n|-----|---------|------------|------------------------|-------|\n| **Mon** | Home gym | Upper\u2011body (push\u2011dominant) | 1\ufe0f\u20e3\u202fDumbbell Bench Press\u202f3\u00d78\u201110  <br>2\ufe0f\u20e3\u202fOne\u2011Arm Dumbbell Row\u202f3\u00d78\u201110 each side  <br>3\ufe0f\u20e3\u202fDumbbell Overhead Press\u202f3\u00d78\u201110  <br>4\ufe0f\u20e3\u202fPull\u2011ups (or chin\u2011ups)\u202f3\u00d7max  <br>5\ufe0f\u20e3\u202fDumbbell Lateral Raise\u202f2\u00d712\u201115 | Use a weight that lets you finish the rep range with 1\u20132 reps left in the tank. |\n| **Tue** | Home gym | Lower\u2011body + core | 1\ufe0f\u20e3\u202fGoblet Squat\u202f3\u00d710\u201112  <br>2\ufe0f\u20e3\u202fDumbbell Romanian Deadlift\u202f3\u00d710\u201112  <br>3\ufe0f\u20e3\u202fWalking Lunges\u202f2\u00d712 each leg  <br>4\ufe0f\u20e3\u202fPlank\u202f3\u00d745\u202fs  <br>5\ufe0f\u20e3\u202fRussian Twist (with dumbbell)\u202f2\u00d720 | Keep tempo controlled (2\u20110\u20112). |\n| **Wed** | Home gym | Upper\u2011body (pull\u2011dominant) | 1\ufe0f\u20e3\u202fPull\u2011ups\u202f3\u00d7max  <br>2\ufe0f\u20e3\u202fDumbbell Incline Press (floor\u2011press if no bench)\u202f3\u00d78\u201110  <br>3\ufe0f\u20e3\u202fSingle\u2011Arm Dumbbell Row\u202f3\u00d78\u201110 each side  <br>4\ufe0f\u20e3\u202fDumbbell Biceps Curl\u202f2\u00d712\u201115  <br>5\ufe0f\u20e3\u202fFace Pulls (band if you have one)\u202f2\u00d715 | If pull\u2011ups are too easy, add a backpack with weight. |\n| **Thu** | Travel (no gear) | Full\u2011body bodyweight | 1\ufe0f\u20e3\u202fPush\u2011ups\u202f4\u00d7max  <br>2\ufe0f\u20e3\u202fAir\u2011Squats\u202f4\u00d720  <br>3\ufe0f\u20e3\u202fInverted Rows (under a sturdy table)\u202f3\u00d7max  <br>4\ufe0f\u20e3\u202fWalking Lunges\u202f3\u00d715 each leg  <br>5\ufe0f\u20e3\u202fPlank\u202f3\u00d760\u202fs | Keep rest \u226460\u202fs to maintain intensity. |\n| **Fri** | Travel (no gear) | Mobility & active recovery | 1\ufe0f\u20e3\u202fDynamic Stretch circuit (hip circles, arm swings)\u202f5\u202fmin  <br>2\ufe0f\u20e3\u202fYoga Sun\u2011Salutation flow\u202f10\u202fmin  <br>3\ufe0f\u20e3\u202fBand\u2011assisted (if you have a travel band) Pull\u2011aparts\u202f3\u00d720  <br>4\ufe0f\u20e3\u202fLight jog or brisk walk\u202f15\u201120\u202fmin | Goal is to stay loose and maintain circulation. |\n| **Sat** | Home gym | Lower\u2011body (strength) | 1\ufe0f\u20e3\u202fDumbbell Front Squat\u202f4\u00d76\u20118  <br>2\ufe0f\u20e3\u202fDumbbell Deadlift\u202f4\u00d76\u20118  <br>3\ufe0f\u20e3\u202fBulgarian Split Squat\u202f3\u00d78 each leg  <br>4\ufe0f\u20e3\u202fHanging Knee Raise (use bar)\u202f3\u00d712\u201115 | Load heavier than Tue; aim for 6\u20118 reps with good form. |\n| **Sun** | Rest or light activity | Recovery | Optional light walk, mobility work, foam rolling. | No structured training. |\n\n---\n\n### Progression Rule for This Week\n- **Upper days:** If you can complete the top rep range on all sets with good form, increase the dumbbell weight by ~5\u202f% next week.\n- **Lower days:** Same rule\u2014add ~5\u202f% load when the 8\u2011rep upper bound feels easy.\n- **Bodyweight days:** Add a set or reduce rest if the work feels easy; otherwise keep as is.\n\n### \u201cBusy\u2011Week\u201d Minimum (if you can\u2019t fit a full day)\n- **Mon\u202f&\u202fTue:** Do the full workouts as listed.  \n- **Thu:** 2 rounds of push\u2011ups, air\u2011squats, and plank (\u224815\u202fmin).  \n- **Fri:** 10\u2011min stretch + 10\u2011min walk.  \n- **Sat\u202f&\u202fSun:** Rest.\n\n---\n\n**Next steps** \u2013 Let me know if you have any joint pain, shoulder issues, or other limitations that would affect any of these movements, and I\u2019ll tweak the list accordingly.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "email",
+      "case": "email-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Draft an intro email to a potential mentor in my field.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "second-year product designer at a healthtech startup"
+        }
+      ],
+      "seconds": 1.25,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'product design' / 'healthtech' / 'designer'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 176,
+        "violations": []
+      },
+      "output": "**Subject:** Request for Mentorship \u2013 Product Design in Healthtech  \n\nHi [Mentor\u2019s First Name],\n\nI\u2019m Alex, a second\u2011year product designer at a health\u2011tech startup. I\u2019ve been following your work on\u202f[specific project/publication/initiative] and am especially inspired by\u202f[brief, genuine compliment \u2013 e.g., \u201cyour user\u2011centred approach to chronic\u2011care interfaces\u201d].  \n\nI\u2019m looking to deepen my expertise in\u202f[specific area you want guidance on, e.g., \u201cdesigning data\u2011driven patient dashboards\u201d] and would greatly value the chance to learn from your experience. Would you be open to a short 20\u2011minute call in the next few weeks to discuss potential mentorship or any advice you might have?\n\nThank you for considering this request. I\u2019ll gladly work around your schedule and can send a brief agenda in advance if that helps.\n\nBest regards,  \nAlex  \nProduct Designer,\u202f[Company Name]  \n[Phone\u202f|\u202fLinkedIn\u202f|\u202fPortfolio URL]  \n\n*Tone is professional yet warm, leading with the ask and a clear, respectful request for a brief conversation.*  \n\n*(Please fill in the placeholders\u202f[Mentor\u2019s First Name],\u202f[specific project/publication/initiative],\u202f[specific area you want guidance on],\u202f[Company Name], and your contact links.)*",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "study",
+      "case": "study-unknown-facts",
+      "model": "openai/gpt-oss-120b",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "seconds": 0.58,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 11,
+        "violations": []
+      },
+      "output": "I don\u2019t have that information, so I can\u2019t answer those questions.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "career",
+      "case": "career-unknown-facts",
+      "model": "openai/gpt-oss-120b",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "seconds": 0.78,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 16,
+        "violations": []
+      },
+      "output": "I don\u2019t have that information, so I can\u2019t provide your university, employer, salary, or exam date.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "writing",
+      "case": "writing-unknown-facts",
+      "model": "qwen/qwen3.8-27b",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "seconds": 0.61,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 42,
+        "violations": []
+      },
+      "output": "I do not have any recorded information about your university, employer, salary, or exam date. My personal context and notes for you are currently empty.\n\nIf you would like me to remember these details for future interactions, please share them with me.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

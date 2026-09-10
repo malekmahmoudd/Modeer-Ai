@@ -1,0 +1,131 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "judge_model": "openai/gpt-oss-20b",
+  "results": [
+    {
+      "agent": "modeer",
+      "case": "modeer-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "seconds": 1.27,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 161,
+        "violations": []
+      },
+      "output": "**Focus for the coming week**\n\n1. **Internship CV** \u2013\u202fAllocate 2\u202fhours on Monday and Wednesday to draft each major section (summary, projects, skills). Use Tuesday to polish language and format; Thursday to get feedback from a peer or mentor; Friday to incorporate edits and finalize the PDF.  \n\n2. **Programming exam prep** \u2013\u202fReserve 3\u202fhours each weekday (Tuesday\u2011Saturday) for focused study:  \n   *\u202fDay\u202f2\u202f\u2013\u202fReview lecture notes and identify weak topics.  \n   *\u202fDay\u202f3\u202f\u2013\u202fPractice coding problems on those topics (timed).  \n   *\u202fDay\u202f4\u202f\u2013\u202fWork through past exam questions.  \n   *\u202fDay\u202f5\u202f\u2013\u202fDo a full mock exam under timed conditions.  \n   *\u202fDay\u202f6\u202f\u2013\u202fReview mock results, fill gaps, and repeat key exercises.  \n\n3. **Light review** \u2013\u202fSpend 30\u202fminutes on Sunday revisiting any lingering doubts from the mock and polishing the CV one last time.  \n\n**Next step:** Let me know if you need a detailed daily schedule (time blocks) or any templates for the CV.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "study",
+      "case": "study-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Give me a study plan for the next two weeks.",
+      "context": [
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "mechanical engineering"
+        },
+        {
+          "category": "goals",
+          "key": "preparing_for",
+          "value": "thermodynamics final on the 20th"
+        }
+      ],
+      "seconds": 1.8,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'thermodynamics' / 'mechanical' / 'final'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 333,
+        "violations": []
+      },
+      "output": "**Two\u2011Week Thermodynamics Study Plan (Day\u202f1\u202f\u2013\u202fDay\u202f14)**  \n\n**Week\u202f1**  \n- **Day\u202f1:** Review lecture notes\u202f\u2014\u202ffocus on the first law; write a one\u2011page summary in your own words.  \n- **Day\u202f2:** Work through textbook examples on internal energy and heat transfer; solve 3 problems without looking at solutions.  \n- **Day\u202f3:** Watch a 20\u2011minute video on entropy; create a quick mind map linking entropy, disorder, and reversible processes.  \n- **Day\u202f4:** Practice problem set on entropy changes for ideal gases (5 problems). Check answers and note any steps that felt unclear.  \n- **Day\u202f5:** Review the second law and Carnot cycle; sketch the cycle on paper and label each process with its heat and work interactions.  \n- **Day\u202f6:** Solve a mixed\u2011topic worksheet covering first\u2011 and second\u2011law applications (6 problems). Time yourself (\u224845\u202fmin).  \n- **Day\u202f7:** Rest day \u2013 lightly reread your summaries and mind maps; do a 10\u2011minute recall quiz you create yourself.\n\n**Week\u202f2**  \n- **Day\u202f8:** Study thermodynamic potentials (enthalpy, Helmholtz, Gibbs); write a table comparing definitions, natural variables, and typical uses.  \n- **Day\u202f9:** Apply Gibbs free energy to phase\u2011change problems (4 problems). Identify where assumptions (ideal behavior) break down.  \n- **Day\u202f10:** Review real\u2011gas models (van\u202fder\u202fWaals, compressibility factor); solve 3 calculation problems.  \n- **Day\u202f11:** Do a full\u2011length practice exam (time\u2011restricted, 2\u202fh). Mark questions you\u2019re unsure about.  \n- **Day\u202f12:** Go back to the marked questions; re\u2011solve them with reference to notes; explain each solution aloud as if teaching a peer.  \n- **Day\u202f13:** Quick\u2011fire review: 20 flashcards covering key equations, definitions, and sign conventions; shuffle and test yourself twice.  \n- **Day\u202f14:** Light review of all summaries; set up a \u201ccheat sheet\u201d of the most trouble\u2011making formulas and concepts for final\u2011day quick glance.\n\n*Feel free to shift topics around if a particular chapter needs extra time; the structure keeps a balance of reading, problem solving, and active recall.*  \n\n**Check:** Which thermodynamics topic do you feel least confident about right now?",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

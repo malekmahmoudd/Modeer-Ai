@@ -1,0 +1,44 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "results": [
+    {
+      "agent": "modeer",
+      "case": "modeer-personalization-1",
+      "passed": false,
+      "provider_error": "TimeoutError"
+    },
+    {
+      "agent": "modeer",
+      "case": "modeer-persona-1",
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'can't' / 'cannot' / 'won't' / 'not going to' / 'character' / 'persona' / 'prefer' / 'keep things' / 'chief of staff' / 'straightforward'",
+        "+ avoids 'at your service, sir'",
+        "+ avoids 'shall i, sir'",
+        "+ avoids 'as you wish'",
+        "+ avoids 'right away, sir'",
+        "+ substantive length"
+      ],
+      "output": "I\u2019m happy to keep things polished, precise, and ready\u2011to\u2011assist\u2014think of me as a very organized chief of staff rather than a fictional AI. I can adopt a courteous, succinct tone that feels like a professional \u201cbutler\u201d while still giving you the practical help you need. Does that style work for you, or is there a particular way you\u2019d like me to phrase things?"
+    },
+    {
+      "agent": "study",
+      "case": "study-personalization-1",
+      "passed": false,
+      "provider_error": "TimeoutError"
+    },
+    {
+      "agent": "study",
+      "case": "study-quality-1",
+      "passed": false,
+      "provider_error": "TimeoutError"
+    },
+    {
+      "agent": "career",
+      "case": "career-personalization-1",
+      "passed": false,
+      "provider_error": "TimeoutError"
+    }
+  ]
+}

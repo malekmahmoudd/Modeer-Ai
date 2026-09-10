@@ -1,0 +1,787 @@
+{
+  "provider": "groq",
+  "model": "qwen/qwen3.8-27b",
+  "judge_model": "openai/gpt-oss-20b",
+  "results": [
+    {
+      "agent": "modeer",
+      "case": "modeer-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "seconds": 1.47,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 196,
+        "violations": []
+      },
+      "output": "With your programming exam in 10 days, that is your primary focus this week. You need to secure your technical foundation before shifting energy to other tasks.\n\nHere is a practical structure for the next seven days:\n\n*   **Days 1\u20132: Diagnostic & Core Review.** Identify your weakest topics. Spend time reviewing core concepts and working through basic problems to rebuild confidence in those areas.\n*   **Days 3\u20135: Active Problem Solving.** Shift from passive reading to active coding. Solve medium-difficulty problems under timed conditions to simulate exam pressure and improve your speed.\n*   **Days 6\u20137: Mock Exam & Review.** Take a full-length practice test. Spend the rest of the day reviewing your mistakes and understanding *why* you got them wrong, rather than just memorizing the correct answers.\n\nRegarding your internship CV, it is best to hold off on major revisions until after the exam. However, you can use low-energy moments\u2014like while reviewing flashcards or taking a break\u2014to do light editing or organize your bullet points. This keeps the project moving without distracting you from your main priority.\n\nTo help me tailor this further: what specific programming language or topic do you feel least confident about right now?",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "study",
+      "case": "study-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Give me a study plan for the next two weeks.",
+      "context": [
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "mechanical engineering"
+        },
+        {
+          "category": "goals",
+          "key": "preparing_for",
+          "value": "thermodynamics final on the 20th"
+        }
+      ],
+      "seconds": 1.72,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'thermodynamics' / 'mechanical' / 'final'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 369,
+        "violations": []
+      },
+      "output": "Since your thermodynamics final is on the 20th, this 14-day plan assumes you have roughly two weeks of preparation time. I am structuring this to move from core concepts to problem-solving, ending with exam simulation. If your actual deadline is sooner, compress the later phases.\n\n**Week 1: Foundations & Core Laws**\n*   **Day 1:** Review system definitions, properties (state vs. path), and P-V-T diagrams. Solve 5 basic property lookup problems.\n*   **Day 2:** First Law for closed systems. Work done by boundary movement. Solve 3 worked examples on adiabatic processes.\n*   **Day 3:** First Law for open systems (control volumes). Steady-flow energy equation. Solve 3 turbine/compressor problems.\n*   **Day 4:** Second Law introduction. Entropy definition and properties. Calculate entropy changes for ideal gases.\n*   **Day 5:** Second Law for closed systems. Entropy balance. Solve 3 problems involving heat transfer and entropy generation.\n*   **Day 6:** Second Law for open systems. Exergy and irreversibility. Solve 2 steady-flow entropy balance problems.\n*   **Day 7:** Active recall review. No new material. Redo the hardest 3 problems from Days 2\u20136 without notes.\n\n**Week 2: Cycles, Mixtures & Exam Prep**\n*   **Day 8:** Ideal gas mixtures. Dalton\u2019s law and partial pressures. Solve 4 mixture composition problems.\n*   **Day 9:** Humid air and psychrometrics. Read psychrometric charts. Solve 3 air-conditioning process problems.\n*   **Day 10:** Vapor power cycles (Rankine). Efficiency calculations and superheating effects. Solve 2 cycle analysis problems.\n*   **Day 11:** Gas power cycles (Otto, Diesel, Brayton). Compare efficiencies. Solve 3 cycle comparison problems.\n*   **Day 12:** Refrigeration and heat pumps. COP calculations. Solve 3 refrigeration cycle problems.\n*   **Day 13:** Full past exam or comprehensive problem set under timed conditions. Grade strictly.\n*   **Day 14:** Targeted review. Focus only on errors from Day 13. Review key formulas and common pitfalls. Light review of notes.\n\n**Strategy Note:**\nFocus on the *why* behind the equations. For thermodynamics, understanding energy conservation and entropy direction is more important than memorizing algebra. If you get stuck on a concept, write down the specific variable or step that confuses you.\n\n**Check for understanding:**\nCan you explain the difference between a state function and a path function using a simple mechanical analogy? If not, review Day 1 before moving on.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "career",
+      "case": "career-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "What should my next move be?",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "junior data analyst, 2 years in"
+        },
+        {
+          "category": "career",
+          "key": "career_goal",
+          "value": "become a data scientist"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Berlin, no relocation possible"
+        }
+      ],
+      "seconds": 1.48,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'data scientist' / 'analyst' / 'Berlin'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 349,
+        "violations": []
+      },
+      "output": "**Recommendation:** Do not apply for Data Scientist roles yet. Your next move is to secure a Data Engineer or Applied Data Analyst position within Berlin, focusing on building end-to-end ML pipelines and productionizing models.\n\n**Why this is the right call:**\nYou are currently at the 2-year mark in a junior analyst role. The market in Berlin is highly competitive for entry-level Data Scientist positions, and jumping straight from analysis to modeling without demonstrated production experience is a weak play. By targeting Data Engineering or Advanced Analytics roles, you leverage your existing SQL and data wrangling skills while forcing yourself to learn Python, cloud infrastructure, and model deployment. This creates a credible narrative: \"I analyze data, but I also build the systems that turn data into actionable models.\" It is the most reversible and high-impact step to bridge the gap between your current title and your target role.\n\n**The trade-off:**\nYou will likely accept a lateral move or a modest title bump rather than a significant salary jump right now. You are trading immediate financial gain for a stronger technical portfolio and a clearer career trajectory. This delays your official \"Data Scientist\" title by 12\u201318 months, but it drastically increases your odds of landing a high-quality DS role with a stronger salary package later.\n\n**Next actions:**\n1.  **Audit your CV:** Rewrite your current experience to highlight any Python automation, statistical modeling, or infrastructure work, even if it was minor. Quantify the impact of your analyses.\n2.  **Target specific roles:** Search Berlin job boards for \"Data Engineer,\" \"Analytics Engineer,\" or \"Senior Data Analyst (ML focus).\" Prioritize companies with established data platforms over startups that require you to build everything from scratch.\n3.  **Build one public project:** Deploy a simple end-to-end ML pipeline (e.g., using AWS/GCP and Docker) to demonstrate you can move data from raw source to a live model. This directly addresses the gap between your current role and your target.\n\nWhat is your current comfort level with Python and cloud platforms? This will determine whether you need to prioritize learning before applying or if you can start interviewing immediately.",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": false,
+            "evidence": "**Why this is the right call:"
+          }
+        },
+        "worst_problem": "The reply contains excessive explanatory detail beyond what was requested.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "research",
+      "case": "research-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Give me a reading-and-analysis plan for my dissertation topic.",
+      "context": [
+        {
+          "category": "education",
+          "key": "level",
+          "value": "PhD candidate"
+        },
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "urban economics"
+        }
+      ],
+      "seconds": 2.31,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'urban' / 'economics' / 'dissertation' / 'PhD'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": false,
+        "words": 453,
+        "violations": [
+          {
+            "code": "too_long",
+            "detail": "453 words against a 450-word ceiling",
+            "evidence": ""
+          }
+        ]
+      },
+      "output": "I need your specific dissertation topic to build a tailored plan. Since you didn\u2019t provide it, I have drafted a provisional 14-day plan based on a standard urban economics dissertation structure (e.g., estimating the impact of a specific policy or infrastructure project on local outcomes). Please replace the bracketed placeholders with your actual topic, data, and variables.\n\n**Assumptions:** You have access to standard econometric software and primary data. You are in the literature review/empirical design phase.\n\n**Day 1: Scope & Core Question**\nDefine the precise research question and hypotheses. List the 3\u20135 key variables (dependent, independent, controls).\n\n**Day 2: Theoretical Framework**\nMap the economic theory underpinning your model. Identify the mechanism of action and potential channels of transmission.\n\n**Day 3: Foundational Literature (Core)**\nRead the 3\u20134 seminal papers that established the baseline for your specific topic. Note their identification strategies and key findings.\n\n**Day 4: Foundational Literature (Extensions)**\nRead recent papers (last 5 years) that extended or challenged the seminal work. Note methodological improvements.\n\n**Day 5: Methodology Literature**\nDeep-dive into the specific econometric method you plan to use (e.g., Difference-in-Differences, RDD, IV). Understand assumptions, diagnostics, and common pitfalls.\n\n**Day 6: Data Identification**\nIdentify the specific datasets needed. Verify availability, time periods, and geographic scope. Note any data cleaning requirements.\n\n**Day 7: Data Acquisition & Cleaning**\nDownload data. Perform initial cleaning: handle missing values, outliers, and merge keys. Document data sources.\n\n**Day 8: Descriptive Statistics**\nCalculate means, standard deviations, and distributions for all variables. Create initial visualizations to spot anomalies.\n\n**Day 9: Baseline Model Specification**\nDraft the regression equation. Define functional forms. Justify the choice of fixed effects (time, space, or both).\n\n**Day 10: Identification Strategy**\nFormalize the identification strategy. Specify how you will address endogeneity. Plan for robustness checks (e.g., alternative controls, subsamples).\n\n**Day 11: Pilot Estimation**\nRun the baseline model on a subset of data. Check for convergence, perfect multicollinearity, and unexpected coefficient signs.\n\n**Day 12: Diagnostics & Robustness**\nRun standard diagnostics (heteroskedasticity, autocorrelation). Execute planned robustness checks. Document results.\n\n**Day 13: Interpretation & Synthesis**\nInterpret coefficients in economic terms. Compare results with existing literature. Identify where your findings align or diverge.\n\n**Day 14: Gap Analysis & Next Steps**\nIdentify remaining weaknesses. List specific additional analyses or literature needed before finalizing the empirical chapter.\n\n**Key Checks for Success:**\n*   Is the identification strategy credible?\n*   Are all assumptions of the chosen method met?\n*   Do the results make economic sense?\n\n**What would change this plan?**\n*   If your topic is purely theoretical, replace Days 7\u201312 with model derivation and proof verification.\n*   If you are using qualitative methods, replace Days 7\u201312 with coding framework development and pilot interviews.\n\nPlease provide your specific topic, key variables, and preferred methodology to refine this further.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "writing",
+      "case": "writing-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Draft a short bio for a conference program.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "staff security engineer at a fintech"
+        },
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "move into security research and speaking"
+        }
+      ],
+      "seconds": 0.64,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'security' / 'engineer' / 'fintech' / 'research'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 39,
+        "violations": []
+      },
+      "output": "Alex is a staff security engineer at a fintech company. [Add specific technical focus or recent project here]. Alex is currently expanding their work into security research and public speaking. [Add specific research interest or upcoming talk topic here].",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "travel",
+      "case": "travel-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 2.39,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": false,
+        "words": 278,
+        "violations": [
+          {
+            "code": "ignored_constraint",
+            "detail": "contradicts a stated preference",
+            "evidence": "day trip"
+          }
+        ]
+      },
+      "output": "**Destination: Lyon, France**\nLyon fits your slow-travel style perfectly. It is a single-city base with exceptional cafe culture, no early start required, and a manageable size for a long weekend.\n\n**The Plan**\n\n**Day 1: Arrival & Old Town**\nArrive in the afternoon. Check into the Vieux Lyon district. Spend the evening walking the UNESCO-listed traboules (covered passageways) and having dinner at a bouchon (traditional Lyonnais restaurant).\n\n**Day 2: Markets & Museums**\nMorning: Visit Les Halles de Lyon Paul Bocuse for coffee and pastries. Afternoon: Explore the Mus\u00e9e des Beaux-Arts or the Fondation L\u00e9a Bry. Evening: Dinner in the Presqu\u2019\u00eele neighborhood.\n\n**Day 3: Parks & Departure**\nMorning: Stroll through Parc de la T\u00eate d\u2019Or or the Jardin des Plantes. Afternoon: Final coffee and browse the local bookshops. Depart in the late afternoon/evening.\n\n**Budget Split (Per Person)**\n*   **Transport:** \u00a3150\u2013\u00a3250 (Flights from Manchester to Lyon)\n*   **Lodging:** \u00a3200\u2013\u00a3300 (2 nights, 3-star hotel or apartment)\n*   **Food:** \u00a3100\u2013\u00a3150 (Cafes, bouchons, market snacks)\n*   **Activities:** \u00a320\u2013\u00a330 (Museum entry, minor transit)\n*   **Buffer:** \u00a350\n*   **Total Estimate:** \u00a3520\u2013\u00a3780\n\n**Book Now vs. Decide Later**\n*   **Book Now:** Flights and accommodation. Popular bouchons often require reservations for dinner.\n*   **Decide Later:** Specific museum tickets (usually purchasable on-site), exact cafe stops.\n\n**Assumptions to Confirm**\n*   **Dates:** I have assumed a standard Friday-to-Sunday trip. If you prefer Thursday-to-Saturday, the pace remains the same.\n*   **Season:** This plan works year-round, but verify if you prefer indoor museum focus (winter) or outdoor park time (spring/summer).\n*   **Visa:** As a UK citizen, no visa is required for short stays in France.\n\nDoes this pace feel right, or would you prefer a slightly more active destination like the French Alps base?",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": false,
+            "evidence": "\"Transport: \u00a3150\u2013\u00a3250 (Flights from Manchester to Lyon)\""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "Currency claim about flight and lodging prices.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "shopping",
+      "case": "shopping-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Recommend a phone for me.",
+      "context": [
+        {
+          "category": "preferences",
+          "key": "ecosystem",
+          "value": "already on iPhone and Apple Watch"
+        },
+        {
+          "category": "preferences",
+          "key": "budget",
+          "value": "under 700, keeps phones 4+ years"
+        }
+      ],
+      "seconds": 1.45,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'iPhone' / 'Apple' / '700' / 'long'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 336,
+        "violations": []
+      },
+      "output": "Since you\u2019re already in the Apple ecosystem (iPhone and Watch) and keep devices for four-plus years, an iPhone is the natural fit. It ensures seamless integration with your existing accessories and services, avoiding the friction of switching platforms.\n\n**Recommendation: The current mid-range iPhone model**\nLook for the standard \"S\" or base model in the latest generation (e.g., the current iPhone 15 or 16, depending on what\u2019s on sale). This tier typically offers the best value for long-term use. It has the same core experience as the Pro models but strips out the extra zoom lenses and premium materials you likely won\u2019t use frequently. It\u2019s built to last several years with strong software support, fitting your 4+ year hold time. Typically priced in the mid-range bracket, it stays well under your \u00a3700 ceiling, especially if you catch a minor discount or trade-in offer.\n\n**Runner-up: The previous generation flagship**\nThe model released one year before the current base model. These often drop in price significantly once the new cycle launches, offering top-tier performance and build quality for less money. The trade-off is that you might miss out on the absolute latest camera features or battery life improvements, but for general use, the difference is minimal.\n\n**Key trade-off:**\nThe mid-range current model gives you the newest software support and battery tech, while the previous flagship gives you better hardware (like a higher refresh rate screen or more storage) for a lower price. Given your 4+ year hold, I\u2019d lean toward the mid-range current model for the longer software support window, unless the previous flagship is significantly cheaper and you prefer the higher refresh rate.\n\n**Check before buying:**\n- Confirm current pricing and any trade-in values for your old phone.\n- Ensure the storage tier (128GB vs 256GB) fits your needs; 128GB is often enough for 4 years if you use cloud storage.\n- Verify warranty options, as extended coverage can be worth it for a 4-year hold.\n\nWould you like tips on maximizing trade-in value for your current phone?",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "finance",
+      "case": "finance-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Help me set a savings target.",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "save for a flat deposit in 3 years"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Dublin"
+        }
+      ],
+      "seconds": 2.08,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'deposit' / '3 years' / 'three years' / 'Dublin'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 433,
+        "violations": []
+      },
+      "output": "To set a realistic savings target for your flat deposit in Dublin, we need to bridge the gap between your current cash flow and the property market reality. Since I don\u2019t have your specific income or expense figures, I\u2019ll provide a framework you can apply immediately.\n\n### The Mechanics\nA savings target isn\u2019t just a number; it\u2019s a function of three variables:\n1.  **Target Amount:** The required deposit plus associated costs (legal fees, valuation, stamp duty).\n2.  **Time Horizon:** You have 3 years (36 months).\n3.  **Monthly Contribution:** What you can consistently set aside after fixed costs.\n\n**The Formula:**\n`Monthly Savings = (Total Target Amount) / 36`\n\n### Step 1: Estimate the Total Target\nIn Dublin, deposit requirements vary by lender and property type, but generally:\n*   **First-time buyer:** Often 10% of the purchase price.\n*   **Additional Costs:** Budget for 5\u201310% of the purchase price for legal fees, valuation, and stamp duty (rates vary by value and status).\n\n*Example:* If you aim for a \u20ac300,000 flat:\n*   Deposit (10%): \u20ac30,000\n*   Costs (~7%): \u20ac21,000\n*   **Total Target:** \u20ac51,000\n\n### Step 2: Calculate Your Monthly Target\nUsing the example above:\n`\u20ac51,000 / 36 months = \u20ac1,417 per month`\n\n### Step 3: Stress-Test Your Cash Flow\n1.  **Track Expenses:** For one month, log every expense. Identify fixed costs (rent, utilities, subscriptions) vs. variable costs.\n2.  **Determine Surplus:** `Net Income - Fixed Costs - Variable Costs = Surplus`.\n3.  **Compare:** If your surplus is less than your monthly target, you must either:\n    *   Increase income (overtime, side work).\n    *   Reduce variable costs.\n    *   Adjust the property price target downward.\n\n### Downside Case\n*   **Income Shock:** If you lose your job, can you cover fixed costs for 3\u20136 months without touching your deposit savings? If not, prioritize an emergency fund first.\n*   **Rate Rises:** If interest rates rise, your mortgage repayments will increase. Ensure your post-purchase budget can handle a 1\u20132% rate hike.\n*   **Market Fluctuations:** Property prices may change. A 10% deposit on a rising price means a higher absolute target.\n\n### Next Steps\n1.  **Calculate Your Exact Target:** Choose a realistic property price range in Dublin and calculate the total cost (deposit + fees).\n2.  **Audit Your Cash Flow:** Determine your current monthly surplus.\n3.  **Set the Automatic Transfer:** Set up an automatic transfer to a high-interest savings account on payday for the calculated monthly amount.\n4.  **Review Quarterly:** Check progress every 3 months. If you\u2019re behind, adjust contributions or expenses.\n\n*Note: This is general financial education. For personalized advice on mortgage eligibility or tax implications, consult a licensed financial adviser or accountant in Ireland.*",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "fitness",
+      "case": "fitness-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Adjust my training for this week.",
+      "context": [
+        {
+          "category": "routine",
+          "key": "workout_frequency",
+          "value": "4x/week upper-lower, home gym with dumbbells and a pull-up bar"
+        },
+        {
+          "category": "routine",
+          "key": "constraint",
+          "value": "travelling Thu-Fri with no equipment"
+        }
+      ],
+      "seconds": 2.62,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'travel' / 'dumbbell' / 'upper-lower' / 'bodyweight' / 'home'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 417,
+        "violations": []
+      },
+      "output": "I need a few details to adjust your plan safely and effectively.\n\n**Key questions:**\n1. **Goal:** Are you prioritizing strength, hypertrophy, endurance, or general health this week?\n2. **Limitations:** Any injuries, pain, or medical conditions I should know about? (If not mentioned, I\u2019ll assume none.)\n3. **Energy/Time:** Is your available time or energy different this week? (e.g., shorter sessions, lower intensity?)\n4. **Specific Focus:** Any particular muscle groups or movements you want to emphasize or avoid?\n\n**Provisional Adjustment (Assuming: Hypertrophy goal, no injuries, standard energy, 4x/week upper-lower split with home gym):**\n\n**Week Structure (Mon/Tue/Thu/Sat training, Wed/Fri travel/no equipment):**\n\n*   **Day 1 (Mon): Upper A (Strength Focus)**\n    *   Dumbbell Bench Press: 4x6-8\n    *   Bent-Over Dumbbell Rows: 4x8-10\n    *   Dumbbell Overhead Press: 3x10-12\n    *   Pull-ups (or Band Assisted): 3xMax\n    *   Dumbbell Bicep Curls: 3x12-15\n    *   Tricep Dips: 3x12-15\n\n*   **Day 2 (Tue): Lower A (Quad Focus)**\n    *   Dumbbell Goblet Squats: 4x10-12\n    *   Dumbbell Romanian Deadlifts: 4x10-12\n    *   Dumbbell Lunges: 3x10/leg\n    *   Calf Raises (holding dumbbells): 4x15-20\n    *   Plank: 3x45-60 sec\n\n*   **Day 3 (Wed): Travel (No Equipment)**\n    *   *Active Recovery:* 20-30 min walk or light stretching. No structured workout.\n\n*   **Day 4 (Thu): Upper B (Hypertrophy Focus)**\n    *   Incline Dumbbell Press: 3x12-15\n    *   One-Arm Dumbbell Rows: 3x12-15/leg\n    *   Lateral Raises: 3x15-20\n    *   Face Pulls (if band available) or Reverse Flyes: 3x15-20\n    *   Hammer Curls: 3x12-15\n    *   Overhead Tricep Extension: 3x12-15\n\n*   **Day 5 (Fri): Travel (No Equipment)**\n    *   *Active Recovery:* 20-30 min walk or light stretching. No structured workout.\n\n*   **Day 6 (Sat): Lower B (Glute/Ham Focus)**\n    *   Dumbbell Sumo Squats: 4x12-15\n    *   Dumbbell Step-Ups: 3x12/leg\n    *   Dumbbell Glute Bridges: 4x15-20\n    *   Dumbbell Hamstring Curls (if possible) or Nordic Curls (bodyweight): 3x8-12\n    *   Side-Lying Leg Raises: 3x15/leg\n\n*   **Day 7 (Sun): Rest**\n    *   Full rest or light mobility work.\n\n**Progression Rule:**\n*   Add 1-2 reps per set if all reps are completed with good form.\n*   If you hit the top of the rep range for all sets, increase weight by the smallest increment available.\n*   Deload if fatigue is high: Reduce volume by 50% for one week.\n\n**Busy Week Version (If time/energy is low):**\n*   Do only Day 1 and Day 4 (Upper focus) or Day 2 and Day 6 (Lower focus).\n*   Reduce to 2 sets per exercise.\n*   Skip accessories if short on time.\n\n**Review Point:**\n*   Check in after Day 4: Are you recovering well? Adjust Day 6 intensity if needed.\n\nLet me know your answers to the questions above so I can refine this.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "email",
+      "case": "email-personalization-1",
+      "model": "qwen/qwen3.8-27b",
+      "input": "Draft an intro email to a potential mentor in my field.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "second-year product designer at a healthtech startup"
+        }
+      ],
+      "seconds": 1.23,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'product design' / 'healthtech' / 'designer'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 176,
+        "violations": []
+      },
+      "output": "Subject: Quick question from a fellow healthtech designer\n\nHi [Name],\n\nI\u2019m a second-year product designer at [Your Company Name], and I\u2019ve been following your work on [specific project or article]. I was particularly struck by [specific detail], and it resonated with my current focus on [specific area of your work].\n\nI\u2019d love to learn how you approach [specific challenge or topic]. If you have 15 minutes for a brief chat in the next few weeks, I\u2019d be grateful for your perspective. I\u2019m happy to work around your schedule.\n\nBest,\n\nAlex [Last Name]\n[Link to your portfolio or LinkedIn]\n\n***\n\n**Why this tone:** It is respectful of their time, specific enough to show you did your homework, and low-pressure. It avoids generic flattery and focuses on a concrete, small ask.\n\n**Missing details needed:**\n*   [Name] of the mentor\n*   [Your Company Name]\n*   [Specific project or article] they worked on\n*   [Specific detail] that impressed you\n*   [Specific area of your work] that resonated\n*   [Specific challenge or topic] you want to ask about\n*   [Last Name]",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Subject: Quick question from a fellow healthtech designer\n\nHi [Name],\n\nI\u2019m a second-year product designer at [Your Company Name], and I\u2019ve been following your work on [specific project or article]. I was particularly struck by [specific detail], and it resonated with my current focus on [specific area of your work].\n\nI\u2019d love to learn how you approach [specific challenge or topic]. If you have 15 minutes for a brief chat in the next few weeks, I\u2019d be grateful for your perspective. I\u2019m happy to work around your schedule.\n\nBest,\n\nAlex [Last Name]\n[Link to your portfolio or LinkedIn]"
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "study",
+      "case": "study-unknown-facts",
+      "model": "qwen/qwen3.8-27b",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "seconds": 0.62,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 47,
+        "violations": []
+      },
+      "output": "I don't know your university, employer, salary, or exam date.\n\nMy current notes on you are empty, so I have no record of these details. If you share them with me now, I can use them to tailor my explanations and study plans to your specific context.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "career",
+      "case": "career-unknown-facts",
+      "model": "qwen/qwen3.8-27b",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "seconds": 1.16,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 37,
+        "violations": []
+      },
+      "output": "I don\u2019t have any of those details on file. I have no record of your university, employer, salary, or exam date.\n\nIf you share them, I can weave them into your career strategy, but I won\u2019t guess.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "writing",
+      "case": "writing-unknown-facts",
+      "model": "qwen/qwen3.8-27b",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "seconds": 1.33,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 27,
+        "violations": []
+      },
+      "output": "I do not have any information about your university, employer, salary, or exam date. My personal context notes are currently empty, so I cannot provide those details.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

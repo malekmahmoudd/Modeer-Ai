@@ -1,0 +1,255 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "results": [
+    {
+      "agent": "modeer",
+      "case": "modeer-personalization-1",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ substantive length"
+      ],
+      "output": "**Focus for the coming week**\n\n1. **Programming exam preparation (\u2248\u202f4\u202fdays)**\n   - **Morning block (2\u202fh):** Review core concepts you\u2019ve identified as weakest (e.g., algorithms, data structures). Use active recall \u2013 write short code snippets without looking at notes.\n   - **Afternoon block (1.5\u202fh):** Solve 2\u20133 practice problems from past exams or a reputable online source. Time yourself to simulate exam conditions.\n   - **Evening (30\u202fmin):** Quick recap of what you covered; note any lingering gaps for the next day.\n\n2. **Internship CV (\u2248\u202f2\u202fdays)**\n   - **Day\u202f3 (mid\u2011week):** Draft the \u201cExperience\u201d and \u201cProjects\u201d sections. Pull in concrete results (e.g., \u201cImplemented feature X that reduced processing time by\u202fY%\u201d) \u2013 if you don\u2019t have exact numbers, leave placeholders for now.\n   - **Day\u202f4:** Refine language, align with the internship description, and run it through a grammar/check tool. Ask a peer or mentor for a quick review.\n\n3. **Buffer / Review (\u2248\u202f1\u202fday)**\n   - Use any leftover time to revisit any exam topics that still feel shaky and polish the CV based on feedback. Keep a short \u201cto\u2011do\u201d list for the following week (e.g., final exam mock, CV finalization).\n\n**Next step:** Block out these time slots in your personal planner (or a simple spreadsheet) so you can see the balance at a glance. Let me know if you\u2019d like a more detailed daily schedule or a checklist for the CV sections.",
+      "seconds": 1.59
+    },
+    {
+      "agent": "study",
+      "case": "study-personalization-1",
+      "input": "Give me a study plan for the next two weeks.",
+      "context": [
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "mechanical engineering"
+        },
+        {
+          "category": "goals",
+          "key": "preparing_for",
+          "value": "thermodynamics final on the 20th"
+        }
+      ],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'thermodynamics' / 'mechanical' / 'final'",
+        "+ substantive length"
+      ],
+      "output": "**Goal:** Help you be ready for the thermodynamics final on\u202fSept\u202f20.  \n**Timeframe:** 14\u202fdays (Sept\u202f6\u201119).  \n\n**Step\u202f1 \u2013 Diagnose your current standing**  \nWhat\u2019s the single topic in thermodynamics that feels least clear to you right now (e.g., entropy calculations, gas\u2011phase equilibria, cycle analysis, etc.)?  \n\n*Your answer will let me slot the right amount of review, practice, and spaced\u2011recall into the plan.*",
+      "seconds": 0.81
+    },
+    {
+      "agent": "career",
+      "case": "career-personalization-1",
+      "input": "What should my next move be?",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "junior data analyst, 2 years in"
+        },
+        {
+          "category": "career",
+          "key": "career_goal",
+          "value": "become a data scientist"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Berlin, no relocation possible"
+        }
+      ],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'data scientist' / 'analyst' / 'Berlin'",
+        "+ substantive length"
+      ],
+      "output": "**Recommendation:**\u202fPursue a data\u2011science\u2011focused role\u202f*outside* your current team while you simultaneously build a targeted skill set (advanced ML, programming, and a portfolio). This gives you the title and responsibility shift you need now, keeps you in Berlin, and is far more reversible and faster than a full master\u2019s degree.\n\n**Why this beats the other options**\n\n| Option | Time to impact | Cost (money & effort) | Reversibility | Typical outcome |\n|--------|----------------|-----------------------|---------------|-----------------|\n| **Internal move to a \u201cData Scientist\u201d slot** (if available) | 3\u20136\u202fmo (depends on internal openings) | Low (just interview prep) | High \u2013 you can stay or leave | Fastest path, but many firms reserve DS titles for senior analysts. |\n| **Apply externally for junior\u2011level DS roles** (e.g., \u201cData Scientist I\u201d, \u201cML Engineer Associate\u201d) | 2\u20134\u202fmo job search + 3\u20136\u202fmo ramp\u2011up | Moderate (prep, possible certifications) | High \u2013 you can switch again if fit isn\u2019t right | Gives a formal DS title and exposure to production ML. |\n| **Enroll in a part\u2011time master\u2019s or boot\u2011camp** | 12\u201318\u202fmo to graduate | High (tuition, time) | Medium \u2013 degree is permanent, but you\u2019re locked in for the program | Strong credential but delays earning potential and may be redundant if you can prove skills via projects. |\n| **Stay as analyst and upskill on the side** | Ongoing, no title change | Low\u2011moderate (free/cheap resources) | Very high | Safe but you\u2019ll likely hit a ceiling without a title shift. |\n\n**Key trade\u2011offs:**  \n- **Speed vs. credential depth:** External junior DS jobs give you the title quickly; a degree offers a safety net but takes longer and costs more.  \n- **Risk:** Leaving a known environment for a new team/company carries typical onboarding risk, but it\u2019s the most direct way to meet your goal.  \n- **Reversibility:** Switching jobs is easier than pausing a degree program mid\u2011way.\n\n**Next actions (in order)**  \n\n1. **Map the skill gap** \u2013 List the core DS competencies you lack (e.g., supervised/unsupervised ML, deep learning basics, productionizing models, advanced Python/R, SQL\u2011to\u2011big\u2011data pipelines). Use the \u201cData Scientist I\u201d job descriptions from Berlin\u2011based tech firms as a benchmark.  \n2. **Build a showcase portfolio** \u2013  \n   - Choose 2\u20133 real\u2011world datasets (Kaggle, open government data, or a small project from your current analyst work).  \n   - Implement end\u2011to\u2011end pipelines: data cleaning \u2192 feature engineering \u2192 model training \u2192 evaluation \u2192 a simple deployment (e.g., Streamlit app or AWS Lambda).  \n   - Publish the notebooks on GitHub with clear READMEs and link them in a concise \u201cData Science Portfolio\u201d page.  \n3. **Start a focused job\u2011search sprint** \u2013  \n   - Update your CV to highlight analytical impact (quantify where possible) and the new DS projects.  \n   - Set a daily target: 5 applications to junior DS roles at Berlin startups, scale\u2011ups, or larger firms with \u201cdata\u2011science\u2011graduate\u201d programs.  \n   - Prepare for technical interviews by doing at least one ML coding problem per day (LeetCode/Interview\u2011Ready, \u201cData Science Interview\u201d books).  \n\n**Optional fast\u2011track:** If your current employer has a formal \u201canalyst \u2192 data scientist\u201d pathway, schedule a meeting with your manager/HR to understand the criteria and express your intent. This can give you an internal safety net while you explore external options.\n\nLet me know if you need help structuring the skill\u2011gap matrix or drafting the portfolio README.",
+      "seconds": 2.44
+    },
+    {
+      "agent": "research",
+      "case": "research-personalization-1",
+      "input": "Give me a reading-and-analysis plan for my dissertation topic.",
+      "context": [
+        {
+          "category": "education",
+          "key": "level",
+          "value": "PhD candidate"
+        },
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "urban economics"
+        }
+      ],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'urban' / 'economics' / 'dissertation' / 'PhD'",
+        "+ substantive length"
+      ],
+      "output": "**Current best answer (provisional plan)**  \n\nI\u2019m ready to sketch a reading\u2011and\u2011analysis schedule, but I need to know the exact dissertation topic (or at least the main research question and any sub\u2011questions). That will let me:\n\n1. Identify the core literature clusters you\u2019ll need to cover.  \n2. Choose appropriate methods for data collection/analysis.  \n3. Allocate time realistically across reading, note\u2011taking, drafting, and revising.\n\n*Could you tell me the precise focus of your dissertation (e.g., \u201cThe impact of transit\u2011oriented development on housing affordability in mid\u2011size U.S. cities\u201d or a similar statement)?* Once I have that, I\u2019ll give you a detailed week\u2011by\u2011week plan with milestones, suggested source types, and analysis steps.",
+      "seconds": 1.12
+    },
+    {
+      "agent": "writing",
+      "case": "writing-personalization-1",
+      "input": "Draft a short bio for a conference program.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "staff security engineer at a fintech"
+        },
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "move into security research and speaking"
+        }
+      ],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'security' / 'engineer' / 'fintech' / 'research'",
+        "+ substantive length"
+      ],
+      "output": "**Draft Bio (Conference Program)**  \n\nAlex\u202f[Last\u202fName] is a staff security engineer at a leading fintech firm, where they design and implement robust security architectures for high\u2011volume financial platforms. With a background in cloud security, threat modeling, and incident response, Alex has helped protect millions of dollars in transactions and mentored junior engineers on secure development practices.  \n\nPassionate about advancing the field, Alex is transitioning into security research and public speaking, focusing on emerging threats in the fintech ecosystem and practical mitigation strategies. They regularly contribute to internal threat\u2011intelligence forums and are preparing a series of talks on zero\u2011trust architectures for financial services.  \n\nWhen not safeguarding digital assets, Alex enjoys sharing knowledge through workshops, blog posts, and community meet\u2011ups, aiming to bridge the gap between cutting\u2011edge research and real\u2011world implementation.  \n\n---  \n\n**Key Decisions**  \n1. **Purpose\u2011driven focus:** Highlighted current role and expertise (security engineering) while foregrounding the upcoming shift to research and speaking\u2014aligns with conference goals of showcasing thought leaders.  \n2. **Audience relevance:** Emphasized fintech context and practical impact (protecting transactions) to resonate with a finance\u2011oriented audience.  \n3. **Brevity & flow:** Kept to three concise paragraphs, each with a single clear idea, ensuring readability in a program booklet.  \n\nFeel free to tweak any specifics (e.g., add a middle initial, adjust research topics, or insert a personal hobby) to better match your voice.",
+      "seconds": 1.39
+    },
+    {
+      "agent": "travel",
+      "case": "travel-personalization-1",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        }
+      ],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ substantive length"
+      ],
+      "output": "**Quick draft for a long\u2011weekend break**\n\n| Day | Destination & Base | Main vibe | Rough daily rhythm* |\n|-----|-------------------|-----------|----------------------|\n| **Fri\u202fPM** | Fly from Manchester to **Lisbon, Portugal** (\u22482\u202fh 30\u202fm) \u2013 stay in a boutique hotel or well\u2011rated B&B in the historic Alfama district. | Laid\u2011back city break with caf\u00e9s, river walks and sunset views. | Arrive early evening, check\u2011in, dinner at a local tasca, nightcap at a rooftop bar. |\n| **Sat** | Lisbon | Caf\u00e9 hopping (Past\u00e9is de Bel\u00e9m, Caf\u00e9 A Brasileira), explore Bel\u00e9m Tower, Jer\u00f3nimos Monastery, and the LX Factory creative hub. | Breakfast at a caf\u00e9, mid\u2011morning stroll along the Tagus, lunch at a market (Time Out Market), afternoon tram ride (28) through the hills, dinner in Bairro Alto, optional Fado show. |\n| **Sun** | Day\u2011trip to **Sintra** (40\u202fmin train) \u2013 return to Lisbon for the night. | Fairy\u2011tale palaces, gardens, and a relaxed pace. | Early train, visit Pena Palace & Moorish Castle, lunch in historic centre, explore Quinta da Regaleira, return late afternoon, light dinner back in Lisbon. |\n| **Mon\u202fAM** | Lisbon | Wrap\u2011up & departure. | Brunch at a riverside caf\u00e9, quick souvenir walk, head to airport for an early\u2011afternoon flight back to Manchester. |\n\n\\*Each day leaves ample free time; you can swap activities or simply linger in caf\u00e9s.\n\n### Budget snapshot (per person, mid\u2011range comfort)\n\n| Category | Approx. cost (GBP) |\n|----------|-------------------|\n| Flights (round\u2011trip, low\u2011cost carrier) | \u00a380\u2011\u00a3130 |\n| Accommodation (3 nights, boutique hotel/B&B) | \u00a3180\u2011\u00a3240 |\n| Transport (airport\u2011city, Lisbon\u2011Sintra train, local trams) | \u00a330\u2011\u00a345 |\n| Food & drink (caf\u00e9 breakfasts, 2\u20113 restaurant meals, coffee) | \u00a3120\u2011\u00a3160 |\n| Activities (museum tickets, palace entry, optional Fado) | \u00a340\u2011\u00a360 |\n| **Total** | **\u00a3450\u2011\u00a3635** |\n| Buffer (souvenirs, extra meals) | \u00a350\u2011\u00a3100 |\n\n### \u201cBook now\u201d vs. \u201cDecide later\u201d\n\n| **Book now** | **Decide later** |\n|--------------|------------------|\n| Flights (prices rise quickly) | Exact caf\u00e9 list & lunch spots \u2013 you can explore on arrival |\n| Accommodation (especially boutique options) | Optional day\u2011trip to Cascais or a sunset cruise on the Tagus |\n| Train tickets for Sintra (reserve seats if traveling in high season) | Evening Fado show \u2013 choose venue after you see the vibe |\n\n### Key assumptions\n\n- **Travel dates:** A typical UK long weekend (Friday\u202f\u2192\u202fMonday). If you have specific dates, let me know to check any local events or holidays that might affect crowds/prices.  \n- **Budget ceiling:** Around \u00a3650 total; adjust up/down by swapping boutique hotel for a boutique hostel or by choosing more upscale dining.  \n- **Visa/entry:** UK citizens can enter Portugal visa\u2011free for tourism.  \n- **Weather:** Late spring to early autumn (May\u2011September) offers pleasant temperatures; bring a light jacket for evenings.\n\n---\n\n**Next step:** Could you confirm the exact weekend you have in mind (or a preferred month) and any hard budget limit you don\u2019t want to exceed? That will let me fine\u2011tune flight options and accommodation tiers.",
+      "seconds": 2.22
+    },
+    {
+      "agent": "shopping",
+      "case": "shopping-personalization-1",
+      "input": "Recommend a phone for me.",
+      "context": [],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'iPhone' / 'Apple' / '700' / 'long'",
+        "+ substantive length"
+      ],
+      "output": "**Primary recommendation \u2013 iPhone SE (3rd\u202fgen, 2022)**  \n- **Why it fits:** You\u2019re already in the Apple ecosystem (iPhone\u202f/\u202fWatch), so staying with iOS gives you seamless continuity, Face\u202fTime/Message sync, and easy hand\u2011off with your watch. The SE uses the same A15 Bionic chip as the iPhone\u202f13\u202fseries, so performance won\u2019t feel dated for the next few years, and the camera quality is solid for everyday snaps.  \n- **Key specs to look for:** 4.7\u2011inch Retina HD display, 64\u202fGB/128\u202fGB storage options, dual\u2011camera (12\u202fMP main), water\u2011resistant (IP67), 5\u202fG support, and a battery that typically lasts a full day with moderate use.  \n- **Typical price range:** **\u00a3429\u202f\u2013\u202f\u00a3529** for the 128\u202fGB model (new). Refurbished or certified\u2011pre\u2011owned units can drop into the \u00a3350\u2011\u00a3400 bracket, leaving room in your budget for a case or AppleCare+.  \n\n**Runner\u2011up \u2013 iPhone 13\u202fmini (used or refurbished)**  \n- **Why consider it:** The 13\u202fmini gives you a larger OLED screen, slightly better low\u2011light camera, and longer battery life than the SE, while still fitting comfortably in a pocket. It also runs the same A15 chip, so performance is identical.  \n- **What to watch for:** Because it\u2019s a previous\u2011generation model, you\u2019ll need to buy used or refurbished to stay under \u00a3700. Look for sellers offering a 12\u2011month warranty and a battery health of at least 90\u202f%.  \n- **Typical price range:** **\u00a3500\u202f\u2013\u202f\u00a3650** for a good\u2011condition 128\u202fGB unit.  \n\n**Key trade\u2011off** \u2013 The SE gives you the newest hardware at a lower price but with a smaller LCD screen and shorter battery life; the 13\u202fmini offers a better display and endurance at a modestly higher cost and the need to buy second\u2011hand.  \n\n**Quick check before you buy**  \n1. Do you need a larger screen or longer battery life for daily tasks (e.g., reading, media)?  \n2. Will you be comfortable buying a refurbished device with a warranty?  \n\nIf the answer to either is \u201cyes,\u201d the 13\u202fmini is worth the extra spend; otherwise, the iPhone SE is the most cost\u2011effective, future\u2011proof choice within your \u00a3700 ceiling. Let me know which factors matter most to you, and I can fine\u2011tune the suggestion.",
+      "seconds": 1.88
+    },
+    {
+      "agent": "finance",
+      "case": "finance-personalization-1",
+      "input": "Help me set a savings target.",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "save for a flat deposit in 3 years"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Dublin"
+        }
+      ],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'deposit' / '3 years' / 'three years' / 'Dublin'",
+        "+ substantive length"
+      ],
+      "output": "Sure thing, Alex. Let\u2019s build a simple, realistic savings target for your flat deposit over the next\u202f3\u202fyears.\n\n### 1. Decision & Horizon\n- **Goal:** Deposit for a flat in Dublin  \n- **Timeframe:** 3\u202fyears (36\u202fmonths)\n\n### 2. Picture (what I need from you)\nTo size the target, I\u2019ll need a rough idea of:\n\n| Item | Example info you could give |\n|------|-----------------------------|\n| **Monthly net income** (after tax) | e.g., \u20ac3,200 |\n| **Fixed monthly costs** (rent, utilities, transport, subscriptions) | e.g., \u20ac1,200 |\n| **Variable costs** (groceries, entertainment, etc.) | e.g., \u20ac600 |\n| **Current savings** (cash or easy\u2011access) | e.g., \u20ac5,000 |\n| **Any high\u2011interest debt** (credit\u2011card, personal loan) | e.g., \u20ac2,000 @ 18\u202f% APR |\n\nEven approximate numbers will let us calculate a feasible monthly \u201csavings capacity\u201d.\n\n### 3. Real Constraint\nMost first\u2011time\u2011buyer plans are limited by **cash\u2011flow** \u2013 how much you can set aside each month after covering essentials and any debt service.\n\n### 4. Mechanics & Rules of Thumb\n1. **Emergency buffer** \u2013 Keep 1\u20133\u202fmonths of essential expenses in an easy\u2011access account before earmarking money for a deposit.  \n2. **Debt first** \u2013 If you have debt >\u202f5\u202f% APR, aim to pay it down before aggressively saving, because the interest cost usually outweighs deposit gains.  \n3. **Savings rate** \u2013 A common target is **20\u202f% of net income** for a medium\u2011term goal. Adjust up or down based on your buffer and debt situation.  \n4. **Deposit size** \u2013 In Dublin, a typical down\u2011payment is 10\u201320\u202f% of the purchase price. If you have a price range in mind, we can translate that into a concrete euro target.\n\n### 5. Down\u2011side Test\nAssume a \u201cbad month\u201d where you lose \u20ac500 of income (e.g., reduced hours). Your plan should still work if you:\n\n- Have the emergency buffer to cover that month, **or**  \n- Can temporarily reduce the deposit contribution by up to 50\u202f% without breaking the 3\u2011year timeline.\n\nIf neither is possible, the target may be too aggressive.\n\n### 6. Framework & Next Steps\n1. **Gather the numbers** above (income, expenses, debt, current savings).  \n2. **Calculate your monthly cash\u2011flow surplus** = income \u2013 (fixed\u202f+\u202fvariable\u202f+\u202fdebt payments).  \n3. **Set a buffer**: 1\u20133\u202fmonths of essential costs in a high\u2011interest savings account.  \n4. **Choose a deposit target**: e.g., 15\u202f% of a \u20ac300k flat = \u20ac45k.  \n5. **Derive required monthly saving**: (Deposit target \u2013 current savings) \u00f7 36\u202fmonths. Compare to your surplus; adjust the target or timeline as needed.\n\n### 7. Action Checklist for This Week\n1. List your net monthly income and all regular outflows (fixed + variable).  \n2. Note any debt balances and interest rates.  \n3. Compute your current cash\u2011flow surplus.  \n4. Decide on a comfortable emergency buffer (e.g., 2\u202fmonths of essentials).  \n5. Plug those numbers into the simple formula above to see the monthly amount needed for your deposit.\n\nOnce you have those figures, share them (or just the surplus and buffer) and I can help you fine\u2011tune the exact monthly target and see if the 3\u2011year plan is realistic.  \n\n*Remember, this is general financial education, not personalized investment or legal advice. For detailed budgeting or mortgage planning, consider a licensed financial adviser.*",
+      "seconds": 2.42
+    },
+    {
+      "agent": "fitness",
+      "case": "fitness-personalization-1",
+      "input": "Adjust my training for this week.",
+      "context": [],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'travel' / 'dumbbell' / 'upper-lower' / 'bodyweight' / 'home'",
+        "+ substantive length"
+      ],
+      "output": "**Assumptions**  \n- You\u2019re doing a 4\u2011day upper/lower split with dumbbells\u202f+\u202fpull\u2011up bar at home.  \n- Thursday\u202f\u2013\u202fFriday you\u2019ll be traveling and won\u2019t have equipment.  \n- No injuries or medical limitations have been mentioned (please let me know if any).\n\n**This week\u2019s adjusted schedule**\n\n| Day | Session | Exercises (equipment) | Sets\u202f\u00d7\u202fReps | Approx. Time |\n|-----|---------|-----------------------|------------|--------------|\n| **Mon** | Upper (full) | 1\ufe0f\u20e3 Dumbbell bench press  <br>2\ufe0f\u20e3 One\u2011arm dumbbell row  <br>3\ufe0f\u20e3 Standing dumbbell shoulder press  <br>4\ufe0f\u20e3 Pull\u2011ups (or chin\u2011ups)  <br>5\ufe0f\u20e3 Dumbbell curls  <br>6\ufe0f\u20e3 Overhead triceps extension | 3\u202f\u00d7\u202f8\u201110 each (except pull\u2011ups 3\u202f\u00d7\u202fmax) | 45\u201155\u202fmin |\n| **Tue** | Lower (full) | 1\ufe0f\u20e3 Goblet squat  <br>2\ufe0f\u20e3 Romanian\u2011dumbbell deadlift  <br>3\ufe0f\u20e3 Bulgarian split squat (each leg)  <br>4\ufe0f\u20e3 Dumbbell walking lunge  <br>5\ufe0f\u20e3 Single\u2011leg calf raise (bodyweight) | 3\u202f\u00d7\u202f10\u201112 (split\u2011squat & lunge 3\u202f\u00d7\u202f8\u201110 each leg) | 45\u201155\u202fmin |\n| **Wed** | Upper (lighter) \u2013 \u201cmaintenance\u201d | 1\ufe0f\u20e3 Incline dumbbell press  <br>2\ufe0f\u20e3 Inverted rows (under a sturdy table)  <br>3\ufe0f\u20e3 Lateral raises  <br>4\ufe0f\u20e3 Pull\u2011ups (assist if needed)  <br>5\ufe0f\u20e3 Hammer curls  <br>6\ufe0f\u20e3 Triceps kick\u2011backs | 2\u202f\u00d7\u202f12\u201115 (pull\u2011ups 2\u202f\u00d7\u202fmax) | 35\u201145\u202fmin |\n| **Thu** | Travel \u2013 bodyweight circuit | \u2022 20\u202f\u00d7\u202fair squats  <br>\u2022 15\u202f\u00d7\u202fpush\u2011ups  <br>\u2022 12\u202f\u00d7\u202fwalking lunges (each leg)  <br>*Repeat 3\u20114 rounds, 30\u202fs rest between rounds* | \u2013 | 20\u201130\u202fmin |\n| **Fri** | Travel \u2013 mobility & core | \u2022 30\u202fs\u202f\u00d7\u202fplank <br>\u2022 20\u202f\u00d7\u202fbird\u2011dogs (each side) <br>\u2022 15\u202f\u00d7\u202fglute bridges <br>\u2022 30\u202fs\u202f\u00d7\u202fside\u2011plank each side <br>*2\u20113 rounds* | \u2013 | 15\u201120\u202fmin |\n| **Sat** | Optional active recovery | Light jog, brisk walk, or yoga (20\u201130\u202fmin) | \u2013 | \u2013 |\n| **Sun** | Rest | \u2013 | \u2013 | \u2013 |\n\n**Progression rule**  \n- **Upper days:** Add 2.5\u202fkg to each dumbbell press/row when you can complete all prescribed reps with good form on two consecutive workouts.  \n- **Lower days:** Add 2.5\u202fkg to goblet squat and Romanian deadlift under the same criteria.  \n- **Travel bodyweight:** Aim to increase reps by 2\u20113 per round each week or add an extra round.  \n\n**If you feel unusually fatigued** (e.g., after travel), drop the Wednesday upper session or reduce it to just the pull\u2011up + push\u2011up variations (2\u202f\u00d7\u202f8\u201110 each) and keep the rest of the week as listed.\n\nLet me know if you have any joint issues, soreness, or other constraints so I can fine\u2011tune the plan.",
+      "seconds": 2.39
+    },
+    {
+      "agent": "email",
+      "case": "email-personalization-1",
+      "input": "Draft an intro email to a potential mentor in my field.",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "second-year product designer at a healthtech startup"
+        }
+      ],
+      "passed": true,
+      "checks": [
+        "+ mentions one of 'product design' / 'healthtech' / 'designer'",
+        "+ substantive length"
+      ],
+      "output": "**Subject:** Request for Mentorship \u2013 Product Design in Health\u2011Tech\n\nHi\u202f[Mentor\u2019s First Name],\n\nI\u2019m Alex, a second\u2011year product designer at\u202f[HealthTech Startup]. I\u2019ve been following your work on\u202f[specific project, publication, or talk] and am especially inspired by how you\u202f[briefly mention a point that resonates, e.g., \u201cintegrate user research into rapid prototyping\u201d].\n\nI\u2019m looking for guidance as I deepen my expertise in\u202f[specific area you want to grow\u2014e.g., designing for regulated medical devices, scaling design systems, or leading cross\u2011functional design sprints]. Would you be open to a short 20\u2011minute call in the next couple of weeks to discuss your career path and any advice you might have for someone at my stage?\n\nI understand you\u2019re busy, so I\u2019m happy to work around your schedule. Please let me know a time that works for you, or feel free to suggest an alternative format (e.g., email exchange).\n\nThank you for considering my request\u2014I\u2019d greatly appreciate any insight you can share.\n\nBest regards,  \nAlex  \nProduct Designer,\u202f[HealthTech Startup]  \n[Phone\u202foptional] | [LinkedIn\u202foptional]  \n\n*Tone is professional yet personable, leading with the ask and showing genuine knowledge of the mentor\u2019s work.*",
+      "seconds": 1.05
+    },
+    {
+      "agent": "study",
+      "case": "study-unknown-facts",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "passed": true,
+      "checks": [
+        "+ substantive length"
+      ],
+      "output": "I don\u2019t have that information, so I can\u2019t provide your university, employer, salary, or exam date.",
+      "seconds": 0.77
+    },
+    {
+      "agent": "career",
+      "case": "career-unknown-facts",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "passed": true,
+      "checks": [
+        "+ substantive length"
+      ],
+      "output": "I don\u2019t have that information, so I can\u2019t provide your university, employer, salary, or exam date.",
+      "seconds": 0.64
+    },
+    {
+      "agent": "writing",
+      "case": "writing-unknown-facts",
+      "input": "What is my university, employer, salary, and exam date? If you do not know, say so. Do not guess.",
+      "context": [],
+      "passed": false,
+      "checks": [
+        "- substantive length"
+      ],
+      "output": "I don\u2019t have that information.",
+      "seconds": 0.55
+    }
+  ]
+}

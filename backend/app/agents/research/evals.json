@@ -39,7 +39,8 @@
       ],
       "expect": {
         "mentions_any": ["urban", "economics", "dissertation", "PhD"],
-        "rubric": ["personalization", "usefulness"]
+        "rubric": ["personalization", "usefulness"],
+        "max_words": 450
       }
     },
     {

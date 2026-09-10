@@ -14,6 +14,7 @@ for a qualitative pass:
     python -m app.agents.evals study career   # selected agents
     python -m app.agents.evals --json         # machine-readable
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,20 +27,13 @@ from types import SimpleNamespace
 
 from app.agents.context import build_context
 from app.agents.registry import all_agents, require_agent
+from app.agents.rubric import RUBRIC_DIMENSIONS, review
 from app.llm.base import LLMProvider
 from app.llm.provider import resolve_model
 
-_DIR = Path(__file__).parent
+__all__ = ["RUBRIC_DIMENSIONS", "AgentEvalReport", "CaseResult", "load_cases", "run_agent"]
 
-RUBRIC_DIMENSIONS = [
-    "relevance",
-    "specialization",
-    "usefulness",
-    "clarity",
-    "personalization",
-    "scope_discipline",
-    "safety",
-]
+_DIR = Path(__file__).parent
 
 
 @dataclass(slots=True)
@@ -132,16 +126,27 @@ def _score(case: dict, output: str) -> tuple[bool, list[str]]:
         ok = ok and hit
 
     if expect.get("nonempty", True):
-        hit = len(output.strip()) > 40
-        checks.append(f"{'+' if hit else '-'} substantive length")
+        hit = bool(output.strip())
+        checks.append(f"{'+' if hit else '-'} nonempty response")
         ok = ok and hit
 
     return ok, checks
 
 
 async def run_agent(
-    slug: str, provider: LLMProvider, *, delay: float = 0.0
+    slug: str,
+    provider: LLMProvider,
+    *,
+    delay: float = 0.0,
+    strict: bool = False,
 ) -> AgentEvalReport:
+    """Run one agent's fixtures.
+
+    ``strict`` adds the deterministic quality checks from :mod:`app.agents.rubric`
+    on top of the keyword scoring. It is off by default because the mock provider
+    returns a canned preview rather than a real answer, so those checks only mean
+    something against a live model.
+    """
     agent = require_agent(slug)
     cases = load_cases(slug)
     report = AgentEvalReport(agent_id=slug, total=len(cases), passed=0)
@@ -158,6 +163,7 @@ async def run_agent(
             history=[],
             user_message=case["input"],
         )
+        provider_failed = False
         try:
             result = await provider.complete(
                 system=packet.system,
@@ -168,8 +174,16 @@ async def run_agent(
             )
             text = result.text
         except Exception as exc:  # noqa: BLE001 - record and keep going
-            text = f"[provider error: {type(exc).__name__}: {exc}]"
+            provider_failed = True
+            text = f"[provider error: {type(exc).__name__}]"
         passed, checks = _score(case, text)
+        if strict and not provider_failed:
+            verdict = review(case, text)
+            checks.extend(str(v) for v in verdict.violations)
+            passed = passed and verdict.passed
+        if provider_failed:
+            passed = False
+            checks.append("- provider request failed")
         report.results.append(
             CaseResult(
                 id=case["id"],
@@ -184,9 +198,9 @@ async def run_agent(
 
 
 async def run_all(
-    slugs: list[str], provider: LLMProvider, *, delay: float = 0.0
+    slugs: list[str], provider: LLMProvider, *, delay: float = 0.0, strict: bool = False
 ) -> list[AgentEvalReport]:
-    return [await run_agent(s, provider, delay=delay) for s in slugs]
+    return [await run_agent(s, provider, delay=delay, strict=strict) for s in slugs]
 
 
 def _cli() -> int:
@@ -194,11 +208,20 @@ def _cli() -> int:
     parser.add_argument("agents", nargs="*", help="agent slugs (default: all)")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     parser.add_argument(
-        "--delay", type=float, default=0.0,
+        "--delay",
+        type=float,
+        default=0.0,
         help="seconds between cases (throttle rate-limited providers)",
     )
     parser.add_argument(
-        "--show", action="store_true", help="print each response preview",
+        "--show",
+        action="store_true",
+        help="print each response preview",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="also apply the quality rubric (meaningful only against a real provider)",
     )
     args = parser.parse_args()
 
@@ -206,7 +229,7 @@ def _cli() -> int:
 
     provider = get_llm_provider()
     slugs = args.agents or [a.id for a in all_agents()]
-    reports = asyncio.run(run_all(slugs, provider, delay=args.delay))
+    reports = asyncio.run(run_all(slugs, provider, delay=args.delay, strict=args.strict))
 
     if args.json:
         payload = [
@@ -216,8 +239,7 @@ def _cli() -> int:
                 "passed": r.passed,
                 "total": r.total,
                 "cases": [
-                    {"id": c.id, "category": c.category, "passed": c.passed,
-                     "checks": c.checks}
+                    {"id": c.id, "category": c.category, "passed": c.passed, "checks": c.checks}
                     for c in r.results
                 ],
             }
@@ -238,8 +260,9 @@ def _cli() -> int:
                         print(f"         {chk}")
                 if args.show:
                     print(f"         > {c.output_preview}")
-        print(f"\nTOTAL  {total_p}/{total_c}  ({total_p / total_c:.0%})"
-              if total_c else "\nNo cases.")
+        print(
+            f"\nTOTAL  {total_p}/{total_c}  ({total_p / total_c:.0%})" if total_c else "\nNo cases."
+        )
     return 0
 
 

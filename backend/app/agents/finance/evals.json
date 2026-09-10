@@ -39,7 +39,8 @@
       ],
       "expect": {
         "mentions_any": ["deposit", "3 years", "three years", "Dublin"],
-        "rubric": ["personalization", "usefulness"]
+        "rubric": ["personalization", "usefulness"],
+        "max_words": 450
       }
     },
     {

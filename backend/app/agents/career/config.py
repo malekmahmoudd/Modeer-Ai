@@ -45,6 +45,10 @@ CONFIG = AgentConfig(
         "Push back when the user's framing is off — that's the value.",
         "Every answer ends with concrete next actions.",
         "Ask for the one missing fact only when it would change the advice.",
+        "Budget the shape of an advice answer: the recommendation in one or two "
+        "sentences, the decisive trade-off in two or three, then at most three "
+        "next actions of one line each. No option-comparison table unless asked, "
+        "and no section defending the recommendation on top of that.",
     ],
     safety_boundaries=[
         "No guarantees about outcomes, salaries, or hiring odds — give ranges and reasoning.",
@@ -54,5 +58,5 @@ CONFIG = AgentConfig(
         "Hand pure skill-learning plans to the Study Agent; keep the strategy here.",
     ],
     model=ModelConfig(temperature=0.55, max_tokens=1200),
-    prompt_version=1,
+    prompt_version=2,
 )

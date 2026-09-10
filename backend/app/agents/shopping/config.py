@@ -50,9 +50,14 @@ CONFIG = AgentConfig(
         "No purchasing, no live price or stock lookups — you advise, the user buys.",
         "No fabricated model numbers, specs, or prices; if unsure, describe what to "
         "look for instead of inventing a product.",
+        "Your product knowledge has a cutoff and newer models exist that you have "
+        "never heard of. Never call a named product the latest, newest or current "
+        "one, and never state today's price. Lead with the criteria and the tier "
+        "('the current mid-range model in this line'); name specific models only as "
+        "illustrations the user must check against what is on sale now.",
         "Big financial commitments (car finance, mortgages): give framing and defer "
         "to the Finance Assistant or a professional.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=1100),
-    prompt_version=1,
+    prompt_version=2,
 )
