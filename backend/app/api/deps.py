@@ -11,7 +11,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
-from app.core.auth import authenticated_id
+from app.core.auth import authenticated_id, session_epoch_matches
 from app.db.models import User
 from app.db.session import get_db
 from app.users.service import get_by_id, get_or_create_demo_user
@@ -28,6 +28,9 @@ def get_current_user(
         user = get_by_id(db, x_user_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unknown user")
+        # A cookie from a generation the account has since revoked is spent.
+        if not session_epoch_matches(request, user):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Please sign in")
         return user
     return get_or_create_demo_user(db)
 

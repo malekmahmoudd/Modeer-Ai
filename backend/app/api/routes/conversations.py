@@ -38,3 +38,14 @@ def get_conversation(
     if convo is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return convo
+
+
+@router.delete("/{conversation_id}", status_code=204)
+def delete_conversation(conversation_id: str, user: CurrentUser, db: DbSession):
+    """Erase one conversation and its messages.
+
+    Scoped through the user's own id, so a conversation belonging to someone
+    else is indistinguishable from one that does not exist.
+    """
+    if not convo_service.delete_conversation(db, user.id, conversation_id):
+        raise HTTPException(status_code=404, detail="Conversation not found")

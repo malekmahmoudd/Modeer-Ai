@@ -81,3 +81,17 @@ def add_message(
         convo.title = (content.strip().splitlines()[0] or "New conversation")[:80]
     db.flush()
     return msg
+
+
+def delete_conversation(db: Session, user_id: str, conversation_id: str) -> bool:
+    """Delete a conversation the user owns. Messages cascade. False if not theirs."""
+    convo = db.scalar(
+        select(Conversation).where(
+            Conversation.id == conversation_id, Conversation.user_id == user_id
+        )
+    )
+    if convo is None:
+        return False
+    db.delete(convo)
+    db.flush()
+    return True

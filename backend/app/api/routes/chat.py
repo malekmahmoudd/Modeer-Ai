@@ -4,13 +4,14 @@ import json
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from app.agents.registry import get_agent
 from app.agents.runtime import AgentRuntime
 from app.conversations import service as convo_service
 from app.conversations.schemas import ChatRequest
+from app.core.auth import session_epoch_matches
 from app.core.usage import account_scope, limited_caller
 from app.db.session import SessionLocal
 from app.users.service import get_by_id, get_or_create_demo_user
@@ -20,11 +21,13 @@ router = APIRouter(prefix="/agents", tags=["chat"])
 CallerId = Annotated[str | None, Depends(limited_caller)]
 
 
-def _resolve_user(db, x_user_id: str | None):
+def _resolve_user(db, x_user_id: str | None, request: Request | None = None):
     if x_user_id:
         user = get_by_id(db, x_user_id)
         if user is None:
             raise HTTPException(status_code=404, detail="Unknown user")
+        if request is not None and not session_epoch_matches(request, user):
+            raise HTTPException(status_code=401, detail="Please sign in")
         return user
     return get_or_create_demo_user(db)
 
@@ -34,6 +37,7 @@ async def chat_stream(
     agent_id: str,
     body: ChatRequest,
     x_user_id: CallerId,
+    request: Request,
 ):
     agent = get_agent(agent_id)
     if agent is None:
@@ -43,7 +47,7 @@ async def chat_stream(
         scope_token = account_scope.set(x_user_id or "local-demo")
         db = SessionLocal()
         try:
-            user = _resolve_user(db, x_user_id)
+            user = _resolve_user(db, x_user_id, request)
             try:
                 convo = convo_service.get_or_create(db, user.id, agent_id, body.conversation_id)
             except (KeyError, ValueError) as exc:
@@ -79,6 +83,7 @@ async def chat_sync(
     agent_id: str,
     body: ChatRequest,
     x_user_id: CallerId,
+    request: Request,
 ) -> dict:
     """Non-streaming convenience endpoint (used by tests and as a fallback)."""
     agent = get_agent(agent_id)
@@ -87,7 +92,7 @@ async def chat_sync(
 
     db = SessionLocal()
     try:
-        user = _resolve_user(db, x_user_id)
+        user = _resolve_user(db, x_user_id, request)
         try:
             convo = convo_service.get_or_create(db, user.id, agent_id, body.conversation_id)
         except (KeyError, ValueError) as exc:

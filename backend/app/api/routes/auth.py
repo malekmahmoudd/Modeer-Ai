@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
-from app.api.deps import DbSession
+from app.api.deps import CurrentUser, DbSession
 from app.core.auth import COOKIE, key_user, sign_session
 from app.core.config import settings
 from app.users.service import get_by_id
@@ -25,11 +25,12 @@ def login(body: Login, request: Request, response: Response, db: DbSession):
     if request.headers.get("origin", "").rstrip("/") != settings.frontend_url.rstrip("/"):
         raise HTTPException(403, "Request origin is not allowed")
     user_id = key_user(body.access_key)
-    if not user_id or not get_by_id(db, user_id):
+    account = get_by_id(db, user_id) if user_id else None
+    if not user_id or account is None:
         raise HTTPException(401, "Invalid access key")
     response.set_cookie(
         COOKIE,
-        sign_session(user_id),
+        sign_session(user_id, account.session_epoch or 0),
         max_age=settings.session_seconds,
         httponly=True,
         secure=settings.environment == "production",
@@ -44,3 +45,21 @@ def login(body: Login, request: Request, response: Response, db: DbSession):
 def logout(response: Response):
     response.delete_cookie(COOKIE, path="/api")
     return {"signed_in": False}
+
+
+@router.post("/sign-out-everywhere")
+def sign_out_everywhere(user: CurrentUser, db: DbSession, response: Response):
+    """End every session for this account, on every device.
+
+    Bumps the account's session generation, which the signature covers, so
+    cookies already issued stop verifying. Rotating the shared signing secret
+    would do the same thing to everyone at once; this affects one account.
+
+    Use it when a device is lost. If the access KEY itself has leaked, this is
+    not enough — the key still works. Rotate it with
+    ``python provision_user.py --rotate``.
+    """
+    user.session_epoch = (user.session_epoch or 0) + 1
+    db.commit()
+    response.delete_cookie(COOKIE, path="/api")
+    return {"signed_in": False, "sessions_revoked": True}

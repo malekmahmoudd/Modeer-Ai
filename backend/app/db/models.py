@@ -31,6 +31,12 @@ class User(UUIDMixin, TimestampMixin, Base):
     display_name: Mapped[str] = mapped_column(String(120), default="You")
     onboarded: Mapped[bool] = mapped_column(Boolean, default=False)
     profile: Mapped[dict] = mapped_column(JSON, default=dict)
+    #: Session generation. Bumping it invalidates this account's cookies
+    #: everywhere without touching anyone else's — the shared signing secret
+    #: cannot do that, since rotating it signs out every account at once.
+    session_epoch: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
 
     conversations: Mapped[list[Conversation]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

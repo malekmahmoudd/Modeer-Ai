@@ -9,11 +9,12 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.agents.registry import get_agent, require_agent
 from app.agents.runtime import AgentRuntime
+from app.core.auth import session_epoch_matches
 from app.core.usage import BudgetExceeded, limited_caller
 from app.db.models import Conversation
 from app.db.session import SessionLocal
@@ -47,6 +48,7 @@ class AskTeamResponse(BaseModel):
 async def ask_team(
     body: AskTeamRequest,
     x_user_id: CallerId,
+    request: Request,
 ):
     for slug in body.agent_ids:
         if get_agent(slug) is None:
@@ -55,6 +57,8 @@ async def ask_team(
     db = SessionLocal()
     try:
         user = get_by_id(db, x_user_id) if x_user_id else get_or_create_demo_user(db)
+        if user is not None and x_user_id and not session_epoch_matches(request, user):
+            raise HTTPException(status_code=401, detail="Please sign in")
         if user is None:
             raise HTTPException(status_code=404, detail="Unknown user")
         db.commit()

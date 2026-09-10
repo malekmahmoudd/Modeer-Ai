@@ -213,3 +213,59 @@ def test_login_rejects_a_valid_key_for_a_deleted_account(client, make_user, monk
         headers={"Origin": settings.frontend_url},
     )
     assert response.status_code == 401
+
+
+def test_signing_out_everywhere_revokes_only_this_account(client, make_user, monkeypatch, db):
+    """A lost device must not force everyone else to sign in again."""
+    alice, bob = make_user("Alice"), make_user("Bob")
+    enable(monkeypatch, [(alice, "a" * 40), (bob, "b" * 40)])
+    origin = {"Origin": settings.frontend_url}
+
+    client.post("/api/auth/login", json={"access_key": "a" * 40}, headers=origin)
+    alice_cookie = dict(client.cookies)
+    assert client.get("/api/goals").status_code == 200
+
+    client.post("/api/auth/logout")
+    client.post("/api/auth/login", json={"access_key": "b" * 40}, headers=origin)
+    bob_cookie = dict(client.cookies)
+
+    # Alice signs out everywhere from one device.
+    client.cookies.clear()
+    client.cookies.update(alice_cookie)
+    assert client.post("/api/auth/sign-out-everywhere", headers=origin).status_code == 200
+
+    # Her other device's cookie is spent...
+    client.cookies.clear()
+    client.cookies.update(alice_cookie)
+    assert client.get("/api/goals").status_code == 401
+    assert (
+        client.post("/api/agents/study/chat", json={"message": "hi"}, headers=origin).status_code
+        == 401
+    )
+    assert (
+        client.post(
+            "/api/team/ask",
+            json={"question": "hi", "agent_ids": ["study"]},
+            headers=origin,
+        ).status_code
+        == 401
+    )
+
+    # ...and Bob is untouched.
+    client.cookies.clear()
+    client.cookies.update(bob_cookie)
+    assert client.get("/api/goals").status_code == 200
+
+
+def test_signing_in_again_after_revocation_works(client, make_user, monkeypatch):
+    alice = make_user("Alice")
+    enable(monkeypatch, [(alice, "a" * 40)])
+    origin = {"Origin": settings.frontend_url}
+    client.post("/api/auth/login", json={"access_key": "a" * 40}, headers=origin)
+    client.post("/api/auth/sign-out-everywhere", headers=origin)
+    client.cookies.clear()
+    assert (
+        client.post("/api/auth/login", json={"access_key": "a" * 40}, headers=origin).status_code
+        == 200
+    )
+    assert client.get("/api/goals").status_code == 200
