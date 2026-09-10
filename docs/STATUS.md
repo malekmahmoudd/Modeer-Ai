@@ -1,6 +1,45 @@
 # Project status — Modeer Personal AI Team MVP
 
-_Last updated: 2026-09-10 · phase: hardening for a private, invite-only deployment_
+_Last updated: 2026-09-10 · phase: production-readiness for a private, invite-only deployment_
+
+---
+
+## Production-readiness pass — 2026-09-10 (latest)
+
+A review for "could this be announced as a product" found gaps that had never
+been on the task list, because they only matter once someone other than the
+author has a login. Those are now closed.
+
+| Area | State |
+|---|---|
+| Data export — whole account as JSON, messages included | ✅ `GET /api/users/me/export` |
+| Account deletion, including the usage ledger that has no foreign key | ✅ `POST /api/users/me/delete` |
+| Single conversation deletion | ✅ `DELETE /api/conversations/{id}` |
+| Privacy notice, served by the app and readable before signing up | ✅ `GET /api/legal/privacy` |
+| Sign out every device, without signing out everyone else | ✅ `POST /api/auth/sign-out-everywhere` |
+| Access-key recovery after loss or leak | ✅ `provision_user.py --rotate` |
+| Access log, incident ids, error counters, readiness endpoint | ✅ `GET /api/health/detail` |
+| Linux backup + restore-verify scripts, and cron entries for them | ✅ `deploy/*.sh`, `docs/OPERATIONS.md` |
+| Recovery point / recovery time stated | ✅ 24h / 1–2h — `docs/OPERATIONS.md` |
+| Travel verbosity and invented budgets | ✅ 3/3 clean, 235–305 words |
+
+Backend tests: **130**. Revision **0003** adds the session generation.
+
+### Open
+
+1. **Hosting and domain**, and therefore real-domain TLS. The owner is handling
+   this; everything else is finished first by agreement.
+2. **A confirming quality run on `openai/gpt-oss-120b`.** Its 200,000/day budget
+   was spent repeatedly. Note that `tools.provider_doctor` cannot tell you
+   whether a long run will finish — the headers carry the per-minute budget
+   only, and the daily one is invisible until exceeded.
+3. **The shell backup scripts' encryption and off-host steps have not run on a
+   real Linux host** — only their dump/copy/verify steps, from inside a
+   container where the bind mount cannot work. Run both by hand once on the host
+   before trusting the cron entry.
+4. **No high availability.** Single host, single database, no replica. Losing
+   the off-host archive and the host together is not survivable. Stated rather
+   than solved: a warm standby is a different architecture.
 
 ---
 
