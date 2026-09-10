@@ -55,7 +55,7 @@ export function Composer({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
+          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
             e.preventDefault();
             if (canSend) onSend();
           }
@@ -71,7 +71,7 @@ export function Composer({
         className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-ink transition disabled:opacity-40"
         style={{
           background: canSend ? "var(--pink)" : "var(--paper-lo)",
-          color: canSend ? "#fff" : "var(--ink-faint)",
+          color: canSend ? "var(--ink)" : "var(--ink-faint)",
         }}
       >
         {streaming ? <Spinner className="!h-4 !w-4 !border-white !border-t-transparent" /> : <Icon name="arrow-up" size={20} strokeWidth={2.8} />}

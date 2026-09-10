@@ -2,9 +2,7 @@
  * Character asset map — keyed by agent slug.
  *
  * The AI team is represented by original human characters drawn in one comic
- * ink style. Today they are generated from `PortraitSpec` by the SVG engine in
- * `components/art/Portrait.tsx` (see the note there — these are PROVISIONAL,
- * drawn in code because this environment has no image generator).
+ * ink style. All ten characters use generated WebP artwork. SVG definitions remain as fallbacks.
  *
  * To swap in finished artwork later, set `image` on an entry:
  *
@@ -47,6 +45,7 @@ export interface CharacterAsset {
   alt: string;
   /** Optional finished-artwork override; when set, the SVG engine is bypassed. */
   image?: string;
+  imagePosition?: string;
   art: PortraitSpec;
 }
 
@@ -70,6 +69,8 @@ const HAIR = {
 
 export const CHARACTERS: Record<string, CharacterAsset> = {
   modeer: {
+    image: "/art/sunshine/modeer-hero.webp",
+    imagePosition: "78% 25%",
     alt: "Modeer — a person with dark tousled hair and a warm, attentive smile",
     art: {
       uid: "modeer",
@@ -93,6 +94,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   study: {
+    image: "/art/sunshine/study.webp",
     alt: "The Study specialist — a person with dark hair in a bun, bright and encouraging, among books",
     art: {
       uid: "study",
@@ -115,6 +117,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   career: {
+    image: "/art/sunshine/career.webp",
     alt: "The Career specialist — a person with a short fade and glasses in a smart jacket, city behind",
     art: {
       uid: "career",
@@ -139,6 +142,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   research: {
+    image: "/art/sunshine/research.webp",
     alt: "The Research specialist — a person with voluminous curly hair, thoughtful, beside a bookshelf",
     art: {
       uid: "research",
@@ -161,6 +165,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   writing: {
+    image: "/art/sunshine/writing.webp",
     alt: "The Writing specialist — a person with glasses and a side parting at a desk of notes",
     art: {
       uid: "writing",
@@ -184,7 +189,8 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   travel: {
-    alt: "The Travel specialist — a person with long wavy hair beside a map and a paper plane",
+    image: "/art/sunshine/travel.webp",
+    alt: "The Travel specialist — a person with long wavy hair at a cafe table with a map and camera",
     art: {
       uid: "travel",
       skin: SKIN.tan[0],
@@ -206,6 +212,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   shopping: {
+    image: "/art/sunshine/shopping.webp",
     alt: "The Shopping specialist — a person with cropped hair beside a set of shopping bags",
     art: {
       uid: "shopping",
@@ -228,7 +235,8 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   finance: {
-    alt: "The Finance specialist — a person with a neat bob beside stacked coins and a rising line",
+    image: "/art/sunshine/finance.webp",
+    alt: "The Finance specialist — a person with a neat bob with a calculator and budgeting notebook",
     art: {
       uid: "finance",
       skin: SKIN.light[0],
@@ -250,6 +258,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   fitness: {
+    image: "/art/sunshine/fitness.webp",
     alt: "The Fitness specialist — a person with a high ponytail beside dumbbells and a weight plate",
     art: {
       uid: "fitness",
@@ -272,7 +281,8 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   email: {
-    alt: "The Email specialist — a person with short coils beside envelopes in flight",
+    image: "/art/sunshine/email.webp",
+    alt: "The Email specialist — a person with short coils at a laptop holding an envelope",
     art: {
       uid: "email",
       skin: SKIN.deep[0],

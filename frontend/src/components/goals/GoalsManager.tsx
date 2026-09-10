@@ -53,14 +53,15 @@ export function GoalsManager() {
   }
 
   return (
-    <div className="anim-fade max-w-3xl">
+    <div className="anim-fade journal-page goals-page">
       <PageHeader
-        eyebrow="Goals"
-        title="Goals & priorities"
+        eyebrow="Your next chapter"
+        title="Make room for what matters."
         lede="Modeer and your team use these to shape advice and your daily briefing. Keep it short — a handful of things that actually matter."
       />
 
-      <form onSubmit={add} className="mb-9">
+      <div className="goal-summary" aria-label="Goal progress"><span><strong>{active.length}</strong> in progress</span><span><strong>{done.length}</strong> completed</span><p className="hand">One step at a time.</p></div>
+      <form onSubmit={add} className="goal-form mb-9">
         <div className="flex flex-col gap-2.5 sm:flex-row">
           <label htmlFor="goal-title" className="sr-only">
             What do you want to achieve?
@@ -156,7 +157,7 @@ function GoalItem({
   const isTop = goal.priority <= 1 && !done;
 
   return (
-    <div className="flex items-center gap-3 border-2 border-ink bg-paper-hi px-3 py-2.5 shadow-pop-xs">
+    <div className="goal-card flex items-center gap-3 border-2 border-ink bg-paper-hi px-3 py-2.5 shadow-pop-xs">
       <button
         onClick={() => onPatch(goal.id, { status: done ? "active" : "done" })}
         aria-pressed={done}

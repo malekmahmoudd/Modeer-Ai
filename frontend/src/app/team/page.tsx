@@ -14,7 +14,7 @@ export default function TeamPage() {
   const modeer = byId("modeer");
 
   return (
-    <div className="anim-fade">
+    <div className="anim-fade team-page">
       <PageHeader
         eyebrow="Your AI team"
         title="Choose who to talk to"
@@ -27,7 +27,7 @@ export default function TeamPage() {
       {modeer && (
         <Link
           href="/agents/modeer"
-          className="group relative mb-10 grid grid-cols-[minmax(0,1fr)_128px] items-stretch overflow-hidden border-2 border-ink bg-sun shadow-pop transition-transform duration-150 hover:-translate-y-[3px] sm:grid-cols-[minmax(0,1fr)_210px]"
+          className="team-feature group relative mb-10 grid grid-cols-[minmax(0,1fr)_128px] items-stretch overflow-hidden border-2 border-ink bg-sun shadow-pop transition-transform duration-150 hover:-translate-y-[3px] sm:grid-cols-[minmax(0,1fr)_210px]"
         >
           <div className="p-5 sm:p-7">
             <span className="tab-label">Personal assistant</span>
@@ -59,7 +59,7 @@ export default function TeamPage() {
           <Scribble className="hidden max-w-[170px] text-right lg:block">
             Nine minds,
             <br />
-            one memory.
+            Shared purpose.
           </Scribble>
         }
       />

@@ -35,6 +35,7 @@ export function AgentPortrait({
         alt={decorative ? "" : alt}
         aria-hidden={decorative || undefined}
         className={className}
+        style={{ objectFit: fit, objectPosition: character.imagePosition ?? (framing === "head" ? "50% 25%" : "50% 38%"), ...(framing === "head" ? { transform: "scale(1.8)", transformOrigin: character.imagePosition ?? "50% 25%" } : {}) }}
       />
     );
   }

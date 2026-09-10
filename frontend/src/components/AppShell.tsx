@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { Brand } from "@/components/Brand";
 import { Icon } from "@/components/ui/Icon";
-import { useApi } from "@/lib/api";
+import { apiFetch, useApi } from "@/lib/api";
 import { firstName } from "@/lib/format";
 import type { UserProfile } from "@/types";
 
@@ -26,12 +26,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: user } = useApi<UserProfile>("/users/me");
   const name = firstName(user?.display_name);
+  const { data: auth } = useApi<{ required: boolean }>("/auth/status");
+  if (pathname === "/login") return <main>{children}</main>;
 
   // The agent workspace owns its own full-height layout.
   const inWorkspace = pathname.startsWith("/agents/");
+  const atHome = pathname === "/";
 
   return (
-    <div className="flex min-h-dvh flex-col bg-paper">
+    <div className={`flex min-h-dvh flex-col bg-paper ${atHome ? "sunshine-shell" : ""}`}>
       {/* ---------- top navigation ---------- */}
       <header className="sticky top-0 z-40 border-b-2 border-ink bg-paper">
         <div className="mx-auto flex h-[var(--nav-h)] w-full max-w-page items-center gap-6 px-4 sm:px-7">
@@ -60,6 +63,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            {auth?.required && <button className="text-xs underline" onClick={async () => { await apiFetch("/auth/logout", { method: "POST" }); window.location.assign("/login"); }}>Sign out</button>}
             {name && (
               <span className="hidden items-center gap-2 sm:flex">
                 <span className="text-[13px] font-semibold text-ink-soft">{name}</span>
@@ -81,7 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className={
           inWorkspace
             ? "flex min-h-0 flex-1 flex-col"
-            : "mx-auto w-full max-w-page flex-1 px-4 pb-28 pt-7 sm:px-7 sm:pt-10 md:pb-16"
+            : atHome ? "sunshine-main" : "mx-auto w-full max-w-page flex-1 px-4 pb-28 pt-7 sm:px-7 sm:pt-10 md:pb-16"
         }
       >
         {children}

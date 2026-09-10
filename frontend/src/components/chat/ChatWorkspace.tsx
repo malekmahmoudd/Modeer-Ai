@@ -44,6 +44,26 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const seededRef = useRef(false);
+  const followReply = useRef(true);
+  const historyRef = useRef<HTMLDivElement>(null);
+  const liveConversation = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!historyOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const panel = historyRef.current;
+    panel?.querySelector<HTMLElement>("button")?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setHistoryOpen(false);
+      if (e.key !== "Tab" || !panel) return;
+      const items = Array.from(panel.querySelectorAll<HTMLElement>("button:not(:disabled), a[href]"));
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("keydown", onKey); previous?.focus(); };
+  }, [historyOpen]);
 
   useEffect(() => {
     setConversationId(null);
@@ -51,6 +71,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     setSavedFacts([]);
     setErr(null);
     seededRef.current = false;
+    liveConversation.current = null;
   }, [agentId]);
 
   useEffect(() => {
@@ -69,7 +90,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   }, []);
 
   useEffect(() => {
-    if (!conversationId) return;
+    if (!conversationId || liveConversation.current === conversationId) return;
     let on = true;
     apiFetch<ConversationDetail>(`/conversations/${conversationId}`)
       .then((c) => {
@@ -83,12 +104,13 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     };
   }, [conversationId, scrollDown]);
 
-  const { send, streaming, streamingText } = useChatStream(agentId, {
+  const { send, streaming, replyComplete, streamingText } = useChatStream(agentId, {
     onStart: (cid) => {
+      liveConversation.current = cid;
       setConversationId(cid);
       scrollDown();
     },
-    onDelta: () => scrollDown(),
+    onDelta: () => { if (followReply.current) scrollDown(false); },
     onEnd: ({ content, context, contextUsed }) => {
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== "streaming"),
@@ -101,7 +123,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
         },
       ]);
       refetchConvos();
-      scrollDown();
+      if (followReply.current) scrollDown(false);
     },
     onMemory: ({ candidates, newlyOnboarded }) => {
       const stored = candidates.filter((c) => c.stored);
@@ -114,24 +136,11 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     },
   });
 
-  useEffect(() => {
-    if (!streaming) return;
-    setMessages((prev) => [
-      ...prev.filter((m) => m.id !== "streaming"),
-      {
-        id: "streaming",
-        role: "assistant",
-        content: streamingText,
-        created_at: new Date().toISOString(),
-        meta: {},
-      },
-    ]);
-  }, [streamingText, streaming]);
-
   const submit = useCallback(
     async (text: string) => {
       const t = text.trim();
       if (!t || streaming) return;
+      followReply.current = true;
       setErr(null);
       setSavedFacts([]);
       setInput("");
@@ -187,9 +196,9 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-var(--nav-h))] flex-col bg-paper-hi">
+    <div className="comic-workspace flex h-[calc(100dvh-var(--nav-h))] flex-col bg-paper-hi">
       {/* ---------- identity header ---------- */}
-      <header className="shrink-0 border-b-2 border-ink bg-paper">
+      <header className="workspace-identity shrink-0 border-b-2 border-ink bg-paper">
         <div className="mx-auto flex w-full max-w-page items-center gap-3 px-3 py-2.5 sm:px-7">
           <button
             onClick={() => router.push("/team")}
@@ -218,6 +227,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
 
           {convos.length > 0 && (
             <button
+              disabled={streaming}
               onClick={() => setHistoryOpen(true)}
               className="btn-icon shrink-0"
               aria-label={`Conversation history (${convos.length})`}
@@ -227,6 +237,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
             </button>
           )}
           <button
+            disabled={streaming}
             onClick={newConversation}
             className="btn-icon shrink-0"
             aria-label="Start a new conversation"
@@ -238,7 +249,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       </header>
 
       {/* ---------- transcript ---------- */}
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-7">
+      <div ref={scrollRef} onScroll={() => { const el = scrollRef.current; if (el) followReply.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; }} className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-7">
         <div className="mx-auto flex min-h-full w-full max-w-read flex-col py-6">
           {justOnboarded && (
             <div className="anim-in mb-6 flex flex-wrap items-center gap-3 border-2 border-ink bg-sun px-4 py-3 shadow-pop-sm">
@@ -253,8 +264,8 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
           )}
 
           {!hasMessages && !streaming ? (
-            <div className="anim-fade flex flex-1 flex-col items-center justify-center px-2 py-6 text-center">
-              <div className="relative h-[168px] w-[150px] overflow-hidden border-2 border-ink shadow-pop">
+            <div className="workspace-welcome anim-fade flex flex-1 flex-col items-center justify-center px-2 py-6 text-center">
+              <div className="welcome-portrait relative h-[168px] w-[150px] overflow-hidden border-2 border-ink shadow-pop">
                 <AgentPortrait
                   slug={agent.id}
                   decorative
@@ -272,7 +283,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                 </p>
               )}
               {starters.length > 0 && (
-                <ul className="mt-7 flex max-w-[34rem] flex-wrap justify-center gap-2.5">
+                <ul className="welcome-starters mt-7 flex max-w-[34rem] flex-wrap justify-center gap-2.5">
                   {starters.map((s) => (
                     <li key={s}>
                       <button onClick={() => submit(s)} className="chip shadow-pop-xs">
@@ -293,13 +304,14 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                   streaming={m.id === "streaming" && streaming}
                 />
               ))}
+              {streaming && !replyComplete && <MessageBubble message={{ id: "streaming", role: "assistant", content: streamingText, created_at: "", meta: {} }} agent={agent} streaming />}
             </div>
           )}
         </div>
       </div>
 
       {/* ---------- composer ---------- */}
-      <div className="shrink-0 border-t-2 border-ink bg-paper px-4 pb-[calc(70px+env(safe-area-inset-bottom))] pt-3 sm:px-7 md:pb-4">
+      <div className="workspace-composer shrink-0 border-t-2 border-ink bg-paper px-4 pb-[calc(70px+env(safe-area-inset-bottom))] pt-3 sm:px-7 md:pb-4">
         <div className="mx-auto w-full max-w-read">
           {savedFacts.length > 0 && (
             <div className="anim-in mb-2.5 flex items-start gap-2 border-2 border-ink bg-sun px-3 py-2 text-[13px] font-semibold text-ink">
@@ -348,6 +360,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
           role="presentation"
         >
           <div
+            ref={historyRef}
             role="dialog"
             aria-modal="true"
             aria-label="Conversations"
@@ -377,6 +390,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                   <li key={c.id}>
                     <button
                       onClick={() => {
+                        liveConversation.current = null;
                         setConversationId(c.id);
                         setHistoryOpen(false);
                       }}

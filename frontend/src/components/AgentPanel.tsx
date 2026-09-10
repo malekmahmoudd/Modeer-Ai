@@ -12,21 +12,23 @@ export function AgentPanel({
   agent,
   index = 0,
   size = "md",
+  featured = false,
 }: {
   agent: Agent;
   index?: number;
   size?: "md" | "lg";
+  featured?: boolean;
 }) {
   const tabPink = index % 2 === 1;
 
   return (
     <Link
       href={`/agents/${agent.id}`}
-      className="group relative block overflow-hidden border-2 border-ink bg-paper-hi shadow-pop transition-transform duration-150 hover:-translate-y-[3px] focus-visible:-translate-y-[3px]"
+      className={featured ? "group sunshine-team-panel" : "group relative block overflow-hidden border-2 border-ink bg-paper-hi shadow-pop transition-transform duration-150 hover:-translate-y-[3px] focus-visible:-translate-y-[3px]"}
     >
       {/* artwork */}
       <div
-        className={`relative overflow-hidden ${
+        className={featured ? "sunshine-panel-image" : `relative overflow-hidden ${
           size === "lg" ? "aspect-[4/5]" : "aspect-[5/6] sm:aspect-[4/5]"
         }`}
       >
@@ -40,14 +42,14 @@ export function AgentPanel({
         {/* slanted name tab — text upright */}
         <span
           className="name-tab absolute left-0 top-3 text-[14px] sm:text-[15px]"
-          style={{ background: tabPink ? "var(--pink)" : "var(--sun)", color: tabPink ? "#fff" : "var(--ink)" }}
+          style={{ background: tabPink ? "var(--pink)" : "var(--sun)", color: "var(--ink)" }}
         >
           {agent.name.replace(/ (Agent|Assistant)$/, "")}
         </span>
       </div>
 
       {/* caption bar */}
-      <div className="border-t-2 border-ink bg-paper-hi px-3 py-2.5">
+      <div className={featured ? "sunshine-panel-caption" : "border-t-2 border-ink bg-paper-hi px-3 py-2.5"}>
         <p className="text-[13px] font-bold leading-tight text-ink">{agent.tagline}</p>
       </div>
     </Link>

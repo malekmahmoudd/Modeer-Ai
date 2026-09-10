@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AgentBadge } from "@/components/art/AgentPortrait";
 import { MemoryRow } from "@/components/memory/MemoryRow";
@@ -112,14 +112,22 @@ export function MemoryManager() {
   const [agentId, setAgentId] = useState("");
   const [agentMem, setAgentMem] = useState<AgentMemory[]>([]);
   const [agentLoading, setAgentLoading] = useState(false);
+  const [agentError, setAgentError] = useState<string | null>(null);
+  const memoryRequest = useRef(0);
 
   const loadAgent = useCallback(async (slug: string) => {
     if (!slug) return;
+    const request = ++memoryRequest.current;
     setAgentLoading(true);
+    setAgentError(null);
+    setAgentMem([]);
     try {
-      setAgentMem(await apiFetch<AgentMemory[]>(`/memory/agent/${slug}`));
+      const rows = await apiFetch<AgentMemory[]>(`/memory/agent/${slug}`);
+      if (request === memoryRequest.current) setAgentMem(rows);
+    } catch (error) {
+      if (request === memoryRequest.current) setAgentError(error instanceof Error ? error.message : "Could not load notes.");
     } finally {
-      setAgentLoading(false);
+      if (request === memoryRequest.current) setAgentLoading(false);
     }
   }, []);
 
@@ -131,15 +139,15 @@ export function MemoryManager() {
   const activeAgent = specialists.find((a) => a.id === agentId);
 
   return (
-    <div className="anim-fade max-w-3xl">
+    <div className="anim-fade journal-page memory-page">
       <PageHeader
-        eyebrow="Memory"
-        title="What my AI team knows about me"
+        eyebrow="Your memory book"
+        title="A little more you."
         lede="Everything here is yours — inspect, edit or delete anything. Modeer never saves sensitive details (health, finances, IDs) on its own."
       />
 
       {/* ---------- shared ---------- */}
-      <section className="mb-14">
+      <section className="memory-shared">
         <SectionHead title="Shared with your team" />
         <p className="-mt-2 mb-5 text-[14px] font-semibold text-ink-soft">
           Every specialist can see these.
@@ -159,7 +167,7 @@ export function MemoryManager() {
         )}
 
         {sharedGroups.map(([category, rows]) => (
-          <div key={category} className="mb-4 border-2 border-ink bg-paper-hi shadow-pop-xs">
+          <div key={category} className="memory-category mb-4 border-2 border-ink bg-paper-hi shadow-pop-xs">
             <p className="border-b-2 border-ink bg-sun px-3 py-1.5 text-[11.5px] font-black uppercase tracking-[0.13em] text-ink">
               {categoryLabel(category)}
             </p>
@@ -199,7 +207,7 @@ export function MemoryManager() {
       </section>
 
       {/* ---------- specialist ---------- */}
-      <section>
+      <section className="memory-private">
         <SectionHead title="Known by one specialist" />
         <p className="-mt-2 mb-5 text-[14px] font-semibold text-ink-soft">
           Private notes a specialist keeps — only that agent sees them.
@@ -235,7 +243,8 @@ export function MemoryManager() {
           <>
             {agentLoading && <Spinner />}
 
-            {!agentLoading && agentMem.length === 0 && (
+            {agentError && <p role="alert">{agentError}</p>}
+            {!agentLoading && !agentError && agentMem.length === 0 && (
               <EmptyState title="No notes yet">
                 As you chat with {activeAgent.name}, useful specialist details land here.
               </EmptyState>

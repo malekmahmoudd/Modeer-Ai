@@ -26,10 +26,10 @@ export default function HomePage() {
   if (user && !user.onboarded) return <MeetModeer />;
 
   return (
-    <div className="anim-fade">
+    <div className="anim-fade sunshine-home">
       <ModeerHero />
 
-      <section className="pt-8 sm:pt-10">
+      <section className="sunshine-team-section">
         <SectionHead
           title="Your team"
           aside={
@@ -40,11 +40,11 @@ export default function HomePage() {
             </Scribble>
           }
         />
-        <AgentGrid specialistsOnly />
+        <AgentGrid specialistsOnly featured />
 
         <div className="mt-5 flex justify-center md:justify-start">
-          <Link href="/team" className="btn btn-sun">
-            Meet the whole team
+          <Link href="/team" className="sunshine-all-team">
+            Meet the whole team <span aria-hidden="true">↗</span>
           </Link>
         </div>
       </section>
