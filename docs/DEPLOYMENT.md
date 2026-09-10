@@ -2,6 +2,10 @@
 
 This prepares an invite-only deployment, not public signup. No hosting account or domain has been selected and nothing has been published.
 
+## Usage-limit migration
+
+Before starting this version, run `alembic upgrade head` using the existing deployment migration procedure. Revision 0002 adds `usage_buckets`; the schema now has ten application tables. Configure `ACCOUNT_REQUESTS_PER_MINUTE` and `ACCOUNT_DAILY_TOKEN_BUDGET` for the size of the invite list; see [usage-limits.md](usage-limits.md). The prior container/backup verification was on revision 0001 (nine tables). The new migration has been rehearsed on SQLite and an isolated PostgreSQL 16 container, including downgrade/re-upgrade, concurrent quota admission, and persistence across separate processes. The full production container stack and backup round-trip have not been rerun with revision 0002.
+
 ## Configuration
 
 Copy deploy/.env.example to deploy/.env. Generate a URL-safe random hex database password, a separate random AUTH_SECRET of at least 32 characters, and set DOMAIN and the provider key. Never commit this file. The production backend refuses to start with demo authentication, debugging, an HTTP frontend origin, a missing signing secret, or malformed access-key hashes.

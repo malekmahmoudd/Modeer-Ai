@@ -1,0 +1,13 @@
+# Account usage limits
+
+`ACCOUNT_REQUESTS_PER_MINUTE` defaults to 6. Chat, streaming chat and Ask My Team share one fixed, UTC-aligned minute window per authenticated account. Invalid requests can count too. A rejected request returns 429 and Retry-After. A fixed window can admit twice the allowance across its boundary; this is not a rolling-window limiter.
+
+`ACCOUNT_DAILY_TOKEN_BUDGET` defaults to 60000 and resets at midnight UTC. It is an application allowance, not the provider's rolling quota and not an exact token meter. Each provider call is charged the UTF-8 byte length of its full system prompt and messages, plus 32 units per message, 256 framing units, and its maximum output tokens. This intentionally overestimates typical input usage because streaming providers expose text without reliable usage totals. No refund is issued, including on cancellation, provider failures or short replies. This favors protecting a free quota over utilization. Provider limits still apply; total user allowances must be sized for the number of invitees and models. This does not guarantee the provider's shared daily budget cannot be exhausted.
+
+The wrapper charges every specialist, team synthesis, and memory-extraction call before contacting the provider. If extraction cannot fit, existing rule extraction runs instead. Team consultation can stop after some specialists have completed; their conversations and usage remain saved. Daily exhaustion during an open stream appears as an SSE error with status 429; it cannot change HTTP headers already sent.
+
+Counters are stored in `usage_buckets` with atomic conditional updates and dialect-specific conflict handling. Multiple workers share the database; restarting a server does not reset usage. Only account ID, window, kind and amount are stored. Stale windows are pruned when that account next uses the relevant counter. Authenticated mode ignores X-User-Id for quota identity. Local demo mode uses the local demo scope (or the explicitly selected development user).
+
+Run `alembic upgrade head` before deploying this version: revision 0002 adds the ledger table. SQLite development startup also creates it. Do not delete counters to work around provider throttling. Back up the ledger with the rest of the database; a restore restores its counters as of backup time.
+
+CLI quality evaluation has no signed-in account and is intentionally outside account quotas. Check provider budget before running it. Current regression coverage includes concurrent admission, UTC rollover, authenticated identity, all three routes, streamed scope lifetime, failed-call charging, team fan-out, and memory-extraction charging.

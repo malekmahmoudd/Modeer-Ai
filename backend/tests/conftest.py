@@ -22,6 +22,7 @@ from app.main import app  # noqa: E402
 from app.users.service import get_or_create_demo_user  # noqa: E402
 
 _WIPE_TABLES = [
+    "usage_buckets",
     "briefings",
     "goals",
     "agent_memories",
@@ -51,7 +52,11 @@ def _database():
 
 
 @pytest.fixture(autouse=True)
-def _clean_between_tests():
+def _clean_between_tests(monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "account_requests_per_minute", 1000)
+    monkeypatch.setattr(settings, "account_daily_token_budget", 10000000)
     yield
     with engine.begin() as conn:
         for table in _WIPE_TABLES:

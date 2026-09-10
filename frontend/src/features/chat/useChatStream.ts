@@ -53,7 +53,11 @@ export function useChatStream(agentId: string, opts: Options = {}) {
           signal: controller.signal,
         });
         if (res.status === 401) { window.location.assign("/login"); return; }
-        if (!res.ok || !res.body) throw new Error(`Stream failed (${res.status})`);
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(typeof body?.detail === "string" ? body.detail : `Stream failed (${res.status})`);
+        }
+        if (!res.body) throw new Error("The connection could not be opened. Please try again.");
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();

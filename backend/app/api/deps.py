@@ -1,8 +1,7 @@
 """Shared FastAPI dependencies.
 
-Auth is intentionally minimal for the MVP: a single local user. Pass an
-``X-User-Id`` header to act as a specific user (used by tests to prove
-isolation); otherwise the stable demo user is used.
+Invite-only mode resolves the signed session and ignores identity headers.
+Development demo mode may select a user with X-User-Id for local isolation tests.
 """
 
 from __future__ import annotations

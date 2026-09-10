@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     session_seconds: int = Field(default=604800, ge=60, le=2592000)
     llm_timeout_seconds: float = Field(default=35, ge=1, le=120)
     llm_reasoning_effort: str = "low"
+    account_requests_per_minute: int = Field(default=6, ge=1)
+    account_daily_token_budget: int = Field(default=60000, ge=1)
+    # Conservative UTF-8 input units plus maximum output tokens, UTC day.
     memory_timeout_seconds: float = Field(default=8, ge=1, le=30)
 
     @model_validator(mode="after")

@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 
 from app.agents.registry import get_agent, require_agent
 from app.agents.runtime import AgentRuntime
-from app.core.auth import caller_id
+from app.core.usage import BudgetExceeded, limited_caller
 from app.db.models import Conversation
 from app.db.session import SessionLocal
 from app.llm.base import LLMMessage
@@ -23,7 +23,7 @@ from app.users.service import get_by_id, get_or_create_demo_user
 
 router = APIRouter(prefix="/team", tags=["team"])
 
-CallerId = Annotated[str | None, Depends(caller_id)]
+CallerId = Annotated[str | None, Depends(limited_caller)]
 
 
 class AskTeamRequest(BaseModel):
@@ -71,12 +71,18 @@ async def ask_team(
                 if event.type == "end":
                     answer = event.data["content"]
                 elif event.type == "error":
+                    if event.data.get("status") == 429:
+                        raise HTTPException(429, event.data["error"])
                     answer = f"(unavailable: {event.data['error']})"
             takes.append(SpecialistTake(agent_id=slug, name=agent.name, answer=answer))
         db.commit()
 
         synthesis = await _synthesise(user, body.question, takes)
         return AskTeamResponse(question=body.question, takes=takes, synthesis=synthesis)
+    except BudgetExceeded as exc:
+        raise HTTPException(
+            429, str(exc), headers={"Retry-After": str(int(exc.retry_after))}
+        ) from exc
     finally:
         db.close()
 

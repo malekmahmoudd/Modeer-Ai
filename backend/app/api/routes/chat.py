@@ -11,13 +11,13 @@ from app.agents.registry import get_agent
 from app.agents.runtime import AgentRuntime
 from app.conversations import service as convo_service
 from app.conversations.schemas import ChatRequest
-from app.core.auth import caller_id
+from app.core.usage import account_scope, limited_caller
 from app.db.session import SessionLocal
 from app.users.service import get_by_id, get_or_create_demo_user
 
 router = APIRouter(prefix="/agents", tags=["chat"])
 
-CallerId = Annotated[str | None, Depends(caller_id)]
+CallerId = Annotated[str | None, Depends(limited_caller)]
 
 
 def _resolve_user(db, x_user_id: str | None):
@@ -40,6 +40,7 @@ async def chat_stream(
         raise HTTPException(status_code=404, detail="Unknown agent")
 
     async def event_source():
+        scope_token = account_scope.set(x_user_id or "local-demo")
         db = SessionLocal()
         try:
             user = _resolve_user(db, x_user_id)
@@ -64,6 +65,7 @@ async def chat_stream(
             )
         finally:
             db.close()
+            account_scope.reset(scope_token)
 
     return StreamingResponse(
         event_source(),
@@ -116,7 +118,9 @@ async def chat_sync(
                     newly_onboarded=event.data.get("newly_onboarded", False),
                 )
             elif event.type == "error":
-                raise HTTPException(status_code=502, detail=event.data["error"])
+                raise HTTPException(
+                    status_code=event.data.get("status", 502), detail=event.data["error"]
+                )
         return collected
     finally:
         db.close()

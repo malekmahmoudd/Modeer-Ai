@@ -26,6 +26,7 @@ from app.agents.context import build_context
 from app.agents.schema import AgentConfig
 from app.conversations import service as convo_service
 from app.core.config import settings
+from app.core.usage import BudgetExceeded
 from app.db.models import Conversation, User
 from app.goals import service as goal_service
 from app.llm.base import LLMProvider
@@ -106,7 +107,10 @@ class AgentRuntime:
                 if isinstance(exc, ProviderError)
                 else "The reply was interrupted. Please try again."
             )
-            yield RuntimeEvent("error", {"error": message})
+            yield RuntimeEvent(
+                "error",
+                {"error": message, "status": 429 if isinstance(exc, BudgetExceeded) else 502},
+            )
             return
 
         answer = "".join(parts).strip() or "(no response)"

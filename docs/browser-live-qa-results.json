@@ -1,0 +1,18 @@
+{
+  "provider": "configured live Groq",
+  "results": [
+    {
+      "check": "mobile live onboarding reply and memory event",
+      "passed": true
+    },
+    {
+      "check": "live extracted location visible in Memory",
+      "passed": true
+    },
+    {
+      "check": "live specialist recalls both saved facts",
+      "passed": true,
+      "response": "You live in Alexandria, Egypt and are studying computer science."
+    }
+  ]
+}

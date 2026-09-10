@@ -1,0 +1,19 @@
+{
+  "provider": "mock",
+  "checks": [
+    "browser login and session",
+    "onboarding completed through chat",
+    "chat facts visible in Memory",
+    "specialist follow-up receives saved context",
+    "history drawer opens and closes",
+    "no horizontal overflow at 1440px",
+    "no horizontal overflow at 768px",
+    "no horizontal overflow at 390px",
+    "mobile offline failure and successful retry",
+    "rate-limit explanation displayed",
+    "incomplete stream surfaces an error",
+    "navigate away during pending reply, return and send again",
+    "no uncaught browser errors"
+  ],
+  "errors": []
+}

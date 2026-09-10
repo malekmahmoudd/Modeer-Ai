@@ -4,8 +4,18 @@ Written for an assistant picking this up with no prior conversation. Read this
 top to bottom before changing anything; it records constraints and failure modes
 that are not visible from the code alone.
 
+## Update: account limits and browser QA (2026-09-10)
+
+Read `docs/STATUS.md`, `docs/usage-limits.md`, and `docs/browser-qa.md` first.
+The historical pass below is retained as context. Task 1 is now implemented;
+browser automation is available and has been exercised in the current environment.
+Backend tests now total 112. Revision 0002 adds a tenth table for usage counters.
+The old statements that there is no rate limiting, or that browser QA needs the
+user, are superseded. Public hosting, baseline-model repeated quality evaluation,
+and populated-database recovery remain open. Do not merge main without the user.
+
 Companion docs, in the order they become useful:
-`docs/STATUS.md` §1 (state of the project) · `docs/agent-quality.md` (how agents
+`docs/STATUS.md` (current state of the project) · `docs/agent-quality.md` (how agents
 are graded) · `docs/DEPLOYMENT.md` (runbook) · `README.md` (architecture).
 
 ---
