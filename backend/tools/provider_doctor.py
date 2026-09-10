@@ -32,12 +32,34 @@ def _headers() -> dict[str, str]:
     return {"Authorization": f"Bearer {settings.llm_api_key}"}
 
 
+#: The headers carry the per-MINUTE budget only. The per-day budget is invisible
+#: until a 429 reports it in the body, so a healthy-looking header says nothing
+#: about whether a long run can finish. This tool reported a green light on a day
+#: whose 200k budget was already spent, and a 13-case run died after one case.
+DAILY_BUDGET_WARNING = (
+    "Headers show the PER-MINUTE budget only. The per-day budget is not "
+    "reported until it is exceeded, so this cannot tell you whether a long "
+    "run will finish. A full quality run costs roughly 30-40k tokens; the free "
+    "tier allows 200k per model per day."
+)
+
+
 def _limits(response: httpx.Response) -> dict[str, str]:
     return {
         key: value
         for key, value in response.headers.items()
         if "ratelimit" in key.lower() or key.lower() == "retry-after"
     }
+
+
+def _daily_budget_note(response: httpx.Response, body: dict) -> str:
+    """Report the daily budget when the provider finally admits to one."""
+    if response.status_code != 429:
+        return DAILY_BUDGET_WARNING
+    message = ((body.get("error") or {}).get("message") or "").strip()
+    if "per day" in message.lower() or "TPD" in message:
+        return f"DAILY BUDGET EXHAUSTED — {message}"
+    return f"Rate limited (per-minute) — {message}"
 
 
 async def list_models() -> None:
@@ -97,7 +119,8 @@ async def ping(agent_slug: str | None) -> None:
                 "agent": agent_slug,
                 "status": response.status_code,
                 "seconds": round(time.monotonic() - started, 2),
-                "limits": _limits(response),
+                "per_minute_limits": _limits(response),
+                "daily_budget": _daily_budget_note(response, body),
                 "usage": body.get("usage"),
                 "finish_reason": choice.get("finish_reason"),
                 "error": body.get("error"),
