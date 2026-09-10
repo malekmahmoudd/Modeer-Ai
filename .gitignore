@@ -42,3 +42,6 @@ pgdata/
 
 # Local QA screenshots (visual review artifacts)
 qa-screenshots/
+# Private backups and generated invitation credentials
+backups/
+invite.json
