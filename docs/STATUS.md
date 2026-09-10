@@ -42,22 +42,34 @@ done, what is verified, and what is still open. Current account-limit and browse
 
 ### Still open
 
-1. **11 of 13 cases unconfirmed on `openai/gpt-oss-120b`.** Its 200,000
-   tokens-per-day budget was spent, so the complete after-run is on
-   `qwen/qwen3.8-27b`. A later `gpt-oss-120b` attempt got 2 cases through before
-   the cap returned; both passed, including Study — 735 words with an invented
-   countdown before, 333 words and no calendar claim after. Re-run
-   `python quality_check.py` on a mostly idle day.
-2. **Eval variance is large and unmeasured.** One sample per agent at temperature
-   0.3–0.6: across three runs Career failed on length then passed, Research came
-   in under the ceiling then three words over. Sampling each case several times is
-   the highest-value next step for the eval itself.
-3. **The LLM judge is an aid, not a gate.** `openai/gpt-oss-20b` produces regular
-   false positives. Read the stored responses.
-4. **TLS for a real domain is untested.** The local run used `DOMAIN=localhost`,
+1. ~~11 of 13 cases unconfirmed on `openai/gpt-oss-120b`.~~ **Done, and it
+   changed the picture** — see `docs/agent-quality.md`. The baseline run
+   completed 12 of 13 cases and scored **7/12**, not the 12/13 measured on
+   `qwen3.8-27b`; the qwen number was flattering because the prompts had been
+   tuned against it. The exposed defects are fixed and re-verified clean on
+   `gpt-oss-20b` (18/18, then 8/8). **A confirming pass of those fixes on
+   `gpt-oss-120b` is still outstanding** — the daily budget ran out.
+2. ~~Eval variance is large and unmeasured.~~ **Done.** `quality_check.py` takes
+   `--samples`, `--resume` and an evaluation-only `--model`, and reports per-case
+   pass rates that separate provider outages from real quality failures.
+3. **Travel is the one agent still failing.** On the production model it ran to
+   521 words against a 450 ceiling, and on one sample invented a budget and
+   attributed it to the user ("You're comfortable with a moderate budget").
+   Improved from the previous round, not closed.
+4. **The LLM judge is only as good as the judge model.** With `qwen3.8-27b`
+   judging, `currency` and `grounding` fired on column headers, hedged figures,
+   and examples the reply itself labelled "Example". Both dimensions have been
+   rewritten to list what passes. Use the strongest available model, and read the
+   quoted evidence rather than the score.
+5. **`--model` overrides every agent, including Writing's own `qwen3.8-27b`.**
+   Writing "failed" three runs on a model it never uses; on its production
+   configuration it passes 2/2. Check what an agent actually runs on before
+   believing a verdict about it.
+6. **TLS for a real domain is untested.** The local run used `DOMAIN=localhost`,
    which makes Caddy use its internal CA; Let's Encrypt needs a public hostname,
-   so certificate issuance can only be proven on the real host. Restoring *over*
-   a populated database has also not been rehearsed — only into an empty one.
+   so certificate issuance can only be proven on the real host. Restoring over a
+   **populated** database is now rehearsed and passing, including the usage
+   ledger.
 5. **Public hosting and operational activation remain open.** Choose a host/domain, verify public HTTPS, schedule backups and monitoring, and decide how to merge the hardening branch.
 
 ## Account limits and browser pass — 2026-09-10
