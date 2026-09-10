@@ -1,0 +1,83 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "samples": 1,
+  "summary": {
+    "modeer-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 1,
+      "judge_passes": 1,
+      "evaluated": 1,
+      "passes": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "judge_model": "qwen/qwen3.8-27b",
+  "results": [
+    {
+      "agent": "modeer",
+      "sample": 1,
+      "prompt_version": 1,
+      "case": "modeer-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "seconds": 1.39,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 158,
+        "violations": []
+      },
+      "output": "Focus this week on two high\u2011impact blocks:\n\n1. **Internship CV** \u2013\u202fFinish a polished version.  \n   \u2022\u202fDay\u202f1\u20112: Draft all sections (education, projects, skills, experience).  \n   \u2022\u202fDay\u202f3: Refine wording, add measurable results, and tailor the summary to the target role.  \n   \u2022\u202fDay\u202f4: Peer\u2011review or get feedback (ask a mentor, friend, or use the CV\u2011Specialist).  \n   \u2022\u202fDay\u202f5: Incorporate feedback, format cleanly, and export PDF.\n\n2. **Programming exam preparation** \u2013\u202fBuild solid coverage before the exam in 10\u202fdays.  \n   \u2022\u202fDay\u202f1\u20112: Review lecture notes / syllabus, list topics, and rank by weight.  \n   \u2022\u202fDay\u202f3\u20115: Do focused practice on the top\u2011ranked topics (solve 5\u20137 problems each day).  \n   \u2022\u202fDay\u202f6\u20117: Take a timed mock test, identify weak spots, and review those areas.\n\n**Next step:**\u202fBlock two 2\u2011hour windows each day\u2014one for the CV (morning) and one for exam prep (afternoon). Let me know if you have other commitments this week so I can adjust the schedule.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

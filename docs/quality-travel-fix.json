@@ -1,0 +1,219 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-20b",
+  "samples": 3,
+  "summary": {
+    "travel-personalization-1": {
+      "attempts": 3,
+      "responses": 3,
+      "provider_errors": 0,
+      "deterministic_passes": 3,
+      "judge_available": 3,
+      "judge_passes": 3,
+      "evaluated": 3,
+      "passes": 3,
+      "pass_rate": 1.0
+    }
+  },
+  "judge_model": "qwen/qwen3.8-27b",
+  "results": [
+    {
+      "agent": "travel",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 1.48,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 305,
+        "violations": []
+      },
+      "output": "**Long\u2011weekend break \u2013 4\u2011day plan (Manchester \u2192 Lisbon)**  \n\n*Why Lisbon fits:* warm weather, relaxed caf\u00e9s, no early flights from Manchester (most flights depart after 10\u202fam), and a city you can enjoy at a leisurely pace.  \n\n| Day | Anchor activity | Notes |\n|-----|-----------------|-------|\n| Day\u202f1 | Arrive in Lisbon (late\u2011afternoon flight) | Check into a 2\u2011star boutique hotel in Baixa. Evening stroll to Pra\u00e7a do Com\u00e9rcio, light dinner at a local caf\u00e9. |\n| Day\u202f2 | Explore Alfama & Miradouros | Morning coffee at **Pastelaria Batalha**. Walk to S\u00e3o Jorge Castle, then to Miradouro da Senhora do Monte for sunset. Dinner at a traditional tasca. |\n| Day\u202f3 | Bel\u00e9m & river walk | Breakfast at **Past\u00e9is de Bel\u00e9m**. Visit Jer\u00f3nimos Monastery and Tower of Bel\u00e9m. Lunch at **Past\u00e9is de Bel\u00e9m** caf\u00e9. Return to city centre, free time for caf\u00e9s or a tram ride. |\n| Day\u202f4 | Departure | Morning free for last\u2011minute coffee at **Caf\u00e9 A Brasileira**. Transfer to airport by 10\u202fam to catch the 12:30\u202fpm flight back to Manchester. |\n\n**Budget split (approx. \u00a3350\u2011\u00a3450 per person)**  \n- Flights: \u00a3120\u2011\u00a3180 (return)  \n- Hotel (3 nights, 2\u2011star): \u00a390\u2011\u00a3120  \n- Food & caf\u00e9s: \u00a360\u2011\u00a380  \n- Sightseeing (entry fees, tram): \u00a320\u2011\u00a330  \n- Transport (airport transfers, local bus): \u00a320\u2011\u00a330  \n- Buffer: \u00a330\u2011\u00a350  \n\n**Book now**  \n- Return flight from Manchester to Lisbon (check price/availability).  \n- Hotel (confirm cancellation policy).  \n\n**Decide later**  \n- Specific caf\u00e9s or restaurants (most are walk\u2011in).  \n- Optional guided tour of Bel\u00e9m (if you want a guide).  \n\n**Assumptions / checks**  \n- Lisbon weather is mild in late spring/early summer; check forecast.  \n- UK\u2011EU travel rules apply; ensure passport and any visa requirements are up to date.  \n- Flight times: most Manchester\u2011Lisbon departures are after 10\u202fam, matching your no\u2011early\u2011flight preference.  \n\nEnjoy a relaxed, caf\u00e9\u2011filled weekend in Lisbon!",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": "Lisbon weather is mild in late spring/early summer; check forecast."
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Long\u2011weekend break \u2013 4\u2011day plan (Manchester \u2192 Lisbon)"
+          },
+          "currency": {
+            "pass": true,
+            "evidence": "Budget split (approx. \u00a3350\u2011\u00a3450 per person)"
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "no early flights from Manchester (most flights depart after 10 am)"
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": "check price/availability"
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "travel",
+      "sample": 2,
+      "prompt_version": 2,
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 0.92,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 235,
+        "violations": []
+      },
+      "output": "**Long\u2011Weekend Break \u2013 3\u202fdays in Bath, UK**\n\n*Why Bath fits*: 1\u2011day train from Manchester (\u22482\u202fh), historic city, plenty of caf\u00e9s and relaxed pace, no need for early flights.\n\n| Day | Anchor Activity | Notes |\n|-----|-----------------|-------|\n| 1 | Arrive by late\u2011morning train, check into a boutique hotel or B&B. | Drop bags, walk to the Royal Crescent, enjoy a coffee at a nearby caf\u00e9. |\n| 2 | Morning: Bath Abbey & Roman Baths. | Lunch at a caf\u00e9 on the Market Place. Afternoon: stroll along the Pulteney Bridge, relax in the Thermae Bath Spa (book in advance). |\n| 3 | Breakfast at a local caf\u00e9, then a gentle walk to the Bath Skyline for views. | Return to hotel, pack, depart by early\u2011afternoon train to Manchester. |\n\n**Budget Snapshot (per person)**  \n- Train (return): \u00a340\u2013\u00a370 (book early for best rates) \u2013 *Book now*  \n- Accommodation (2 nights, mid\u2011range): \u00a3120\u2013\u00a3180 \u2013 *Decide later*  \n- Food & caf\u00e9s: \u00a360\u2013\u00a380 \u2013 *Decide later*  \n- Activities (Roman Baths, Thermae): \u00a330\u2013\u00a350 \u2013 *Decide later*  \n- Miscellaneous (souvenirs, transport within Bath): \u00a320\u2013\u00a330 \u2013 *Decide later*  \n\n**Next Actions**  \n1. Check train schedules from Manchester to Bath and book the preferred return time.  \n2. Reserve a room in a centrally located hotel or B&B.  \n3. Book a slot at Thermae Bath Spa if you want to include the spa experience.  \n\nEnjoy a relaxed, caf\u00e9\u2011filled weekend in Bath!",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Long\u2011Weekend Break \u2013 3 days in Bath, UK"
+          },
+          "currency": {
+            "pass": true,
+            "evidence": "Train (return): \u00a340\u2013\u00a370 (book early for best rates)"
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "1\u2011day train from Manchester (\u22482 h), historic city, plenty of caf\u00e9s and relaxed pace, no need for early flights."
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": "Check train schedules from Manchester to Bath and book the preferred return time."
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "agent": "travel",
+      "sample": 3,
+      "prompt_version": 2,
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 1.25,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 293,
+        "violations": []
+      },
+      "output": "**Long\u2011weekend break: Edinburgh, Scotland**  \n*Why it fits*: One city, plenty of caf\u00e9s and relaxed caf\u00e9s, no need for early flights (Manchester to Edinburgh is a short 1\u2011hour flight or 4\u2011hour train).  \n\n---\n\n### Day\u202f1  \n- **Morning**: Arrive by late\u2011morning flight or early\u2011afternoon train; check into a centrally located boutique hotel or a well\u2011rated Airbnb.  \n- **Afternoon**: Stroll through the Royal Mile, stop at a caf\u00e9 like *The Elephant House* for coffee and light lunch.  \n- **Evening**: Dinner at a local bistro (e.g., *The Gardener's Cottage*).  \n\n### Day\u202f2  \n- **Morning**: Visit Edinburgh Castle (book tickets online to avoid queues).  \n- **Afternoon**: Wander up Arthur\u2019s Seat for panoramic views, then relax in a caf\u00e9 on Calton Hill.  \n- **Evening**: Explore the Grassmarket area, grab a pint at *The Royal Oak* and enjoy live music.  \n\n### Day\u202f3  \n- **Morning**: Explore the National Museum of Scotland; free entry, plenty of caf\u00e9s inside.  \n- **Afternoon**: Walk through Princes Street Gardens, stop at a caf\u00e9 on the corner of Princes Street.  \n- **Evening**: Early dinner at a traditional Scottish restaurant, then head back to Manchester.\n\n---\n\n#### Budget split (approx. \u00a3350\u2013\u00a3450 per person, excluding flights):\n- **Transport (flight/train + local)**: \u00a380\u2013\u00a3120  \n- **Accommodation**: \u00a3120\u2013\u00a3180  \n- **Food & drinks**: \u00a380\u2013\u00a3100  \n- **Activities & tickets**: \u00a340\u2013\u00a360  \n- **Buffer**: \u00a320\u2013\u00a330  \n\n#### Book\u2011now vs. Decide\u2011later  \n- **Book now**: Flight/train tickets, Edinburgh Castle tickets, accommodation.  \n- **Decide later**: Dinner reservations, caf\u00e9 spots (most are walk\u2011in), optional museum passes.\n\n#### Assumptions & checks  \n- Check current travel restrictions and COVID\u201119 rules for Scotland.  \n- Verify opening times for Edinburgh Castle and the National Museum (they may close on certain days).  \n- Confirm train/flight schedules; book as soon as possible to lock in the best prices.\n\nEnjoy a relaxed, caf\u00e9\u2011filled weekend in Edinburgh!",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "Long\u2011weekend break: Edinburgh, Scotland"
+          },
+          "currency": {
+            "pass": true,
+            "evidence": "Budget split (approx. \u00a3350\u2013\u00a3450 per person, excluding flights)"
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "One city, plenty of caf\u00e9s and relaxed caf\u00e9s, no need for early flights"
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

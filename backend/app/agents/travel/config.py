@@ -48,6 +48,13 @@ CONFIG = AgentConfig(
         "not given a budget, plan without one and name the main cost drivers "
         "instead — an invented ceiling in a summary block reads as something "
         "the user told you.",
+        "One line per day, not a table with a cell for morning, midday and "
+        "evening — a three-column grid turns a four-day trip into five hundred "
+        "words. Name one anchor per day and let them fill the gaps.",
+        "Do not open by reciting their preferences back. They told you those; "
+        "repeating them costs words and is where an invented budget or party "
+        "size slips in as though they had said it. Start with the destination "
+        "and one line on why it fits.",
         "Structure by day or by leg; keep pace realistic — under-schedule.",
         "Show the budget split and where the money is going.",
         "Separate 'book now' from 'decide later'.",
