@@ -2,7 +2,22 @@
 
 This prepares an invite-only deployment, not public signup. No hosting account or domain has been selected and nothing has been published.
 
-## Usage-limit migration
+## Current release checks — 2026-09-11
+
+The current schema is **0003** (ten application tables plus Alembic metadata).
+This revision has been applied to an isolated PostgreSQL 16 database and restored
+from an encrypted archive using the Linux scripts. Production readiness now
+requires this revision. `/api/health/detail` returns 503 on degraded readiness;
+use it for external monitoring, rather than relying on basic liveness.
+
+For production Linux scheduling, mandatory encryption, copied-archive retention,
+and failure alerts, follow **OPERATIONS.md**. The PowerShell section below is a
+workstation procedure with different defaults. Real-domain TLS, physical off-host
+storage, host scheduling and actual operator notification remain deployment-day
+checks. Account controls are now available in the application, with a public
+`/privacy` page.
+
+## Historical usage-limit migration
 
 Before starting this version, run `alembic upgrade head` using the existing deployment migration procedure. Revision 0002 adds `usage_buckets`; the schema now has ten application tables. Configure `ACCOUNT_REQUESTS_PER_MINUTE` and `ACCOUNT_DAILY_TOKEN_BUDGET` for the size of the invite list; see [usage-limits.md](usage-limits.md). The prior container/backup verification was on revision 0001 (nine tables). The new migration has been rehearsed on SQLite and an isolated PostgreSQL 16 container, including downgrade/re-upgrade, concurrent quota admission, and persistence across separate processes.
 

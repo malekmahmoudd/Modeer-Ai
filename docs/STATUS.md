@@ -1,10 +1,30 @@
 # Project status — Modeer Personal AI Team MVP
 
-_Last updated: 2026-09-10 · phase: production-readiness for a private, invite-only deployment_
+_Last updated: 2026-09-11 · phase: production-readiness for a private, invite-only deployment_
+
+
+## Current launch-fix pass — 2026-09-11
+
+**Not approved for public production.** Read `launch-fixes.md` for current
+verification and remaining gates. Account controls and privacy are now in the
+frontend; export handles briefing dates; private exception values are removed
+from logs; monitoring observes provider failures and recovery; encrypted Linux
+backup/restore and failure notifications have been exercised. Shared preferences
+now reach specialists through the same filter used by evaluations.
+
+Backend: **154 tests passed**, lint clean. Frontend: production build, typecheck
+and lint passed. Nine account browser checks passed with an authenticated mock
+backend. Eight Linux operations checks passed using disposable PostgreSQL 16.
+These are local checks, not verification of the future host or public domain.
+
+Repeated quality evaluation found answer-quality failures, not just provider
+availability problems: configured 120b scored 25/39 with the corrected grader;
+the 20b candidate scored 31/39, with 6 failures and 2 unavailable grades. See the current reports and `launch-fixes.md`; older
+single-run or keyword-only successes are not a launch sign-off.
 
 ---
 
-## Production-readiness pass — 2026-09-10 (latest)
+## Production-readiness pass — 2026-09-10 (historical)
 
 A review for "could this be announced as a product" found gaps that had never
 been on the task list, because they only matter once someone other than the

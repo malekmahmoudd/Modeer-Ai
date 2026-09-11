@@ -20,6 +20,7 @@ A case passes only when both layers pass.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from dataclasses import asdict, dataclass, field
@@ -74,7 +75,9 @@ JUDGE_DIMENSIONS: dict[str, str] = {
         "and contradicts none of them."
     ),
     "capability_honesty": (
-        "The reply never implies it can browse, book, purchase, send, or check " "anything live."
+        "The reply never implies it can browse, book, purchase, send, or check anything live. "
+        "Suggesting the user speak to another named specialist in the app is allowed; "
+        "this is advice, not evidence of browsing or performing an external action."
     ),
     "concision": (
         "Length matches the request. No filler, no restating the context back, no "
@@ -426,14 +429,17 @@ class Judgement:
 def _judge_prompt(case: dict, output: str) -> str:
     rows = [*case.get("shared_context", []), *case.get("agent_memory", [])]
     context = "\n".join(f"- {r.get('key')}: {r.get('value')}" for r in rows) or "- (nothing known)"
+    profile = json.dumps(case.get("profile", {}), ensure_ascii=False)
+    name = case.get("display_name", "(not supplied)")
     return (
+        f"PROFILE: display_name={name}; profile={profile}\n"
         f"CONTEXT (everything the agent knows about the user):\n{context}\n\n"
         f"USER ASKED:\n{case['input']}\n\n"
         f"REPLY TO GRADE:\n{output}"
     )
 
 
-def _parse_judgement(raw: str) -> Judgement:
+def _parse_judgement(raw: str, expected: set[str] | None = None) -> Judgement:
     body = raw.strip()
     if body.startswith("```"):
         body = body.strip("`")
@@ -445,8 +451,17 @@ def _parse_judgement(raw: str) -> Judgement:
         data = json.loads(body[start : end + 1])
     except ValueError as exc:
         return Judgement(passed=False, available=False, error=f"unparsable judge JSON: {exc}")
+    supplied = data.get("dimensions") if isinstance(data, dict) else None
+    if not isinstance(supplied, dict) or (expected is not None and set(supplied) != expected):
+        return Judgement(
+            passed=False, available=False, error="judge dimensions missing or unexpected"
+        )
+    if any(not isinstance(v, dict) or type(v.get("pass")) is not bool for v in supplied.values()):
+        return Judgement(
+            passed=False, available=False, error="judge verdict must use JSON booleans"
+        )
     dimensions = {
-        name: {"pass": bool(v.get("pass")), "evidence": str(v.get("evidence", ""))}
+        name: {"pass": v["pass"], "evidence": str(v.get("evidence", ""))}
         for name, v in (data.get("dimensions") or {}).items()
         if isinstance(v, dict)
     }
@@ -476,14 +491,20 @@ async def judge(
         # models otherwise fail "I do not know" for not delivering a plan.
         dimensions.pop("delivers", None)
     spec = "\n".join(f"- {name}: {desc}" for name, desc in dimensions.items())
-    try:
-        result = await provider.complete(
-            system=_JUDGE_SYSTEM % spec,
-            messages=[LLMMessage(role="user", content=_judge_prompt(case, output))],
-            model=model,
-            temperature=0.0,
-            max_tokens=700,
-        )
-    except Exception as exc:  # noqa: BLE001 - a judge outage must not read as a failed case
-        return Judgement(passed=False, available=False, error=f"{type(exc).__name__}: {exc}")
-    return _parse_judgement(result.text)
+    for attempt in range(3):
+        try:
+            result = await provider.complete(
+                system=_JUDGE_SYSTEM % spec,
+                messages=[LLMMessage(role="user", content=_judge_prompt(case, output))],
+                model=model,
+                temperature=0.0,
+                max_tokens=700,
+            )
+            break
+        except Exception as exc:  # Judge outages must not look like answer failures.
+            wait = getattr(exc, "retry_after", None)
+            if attempt < 2 and wait is not None and 0 < wait <= 60:
+                await asyncio.sleep(wait + 1)
+                continue
+            return Judgement(passed=False, available=False, error=f"{type(exc).__name__}: {exc}")
+    return _parse_judgement(result.text, set(dimensions))

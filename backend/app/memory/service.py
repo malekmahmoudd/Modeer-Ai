@@ -1,13 +1,15 @@
 """Memory persistence: two layers, strict user isolation.
 
-  * SharedMemory  -> visible to every agent for that user
-  * AgentMemory   -> visible only to the owning specialist (namespace = slug)
+* SharedMemory  -> visible to every agent for that user
+* AgentMemory   -> visible only to the owning specialist (namespace = slug)
 """
+
 from __future__ import annotations
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.agents.context import filter_shared_context
 from app.agents.schema import AgentConfig
 from app.db.models import AgentMemory, SharedMemory
 from app.memory.extraction import Candidate
@@ -20,6 +22,7 @@ from app.memory.schemas import (
 
 # --- shared ---------------------------------------------------------------
 
+
 def list_shared(db: Session, user_id: str) -> list[SharedMemory]:
     stmt = (
         select(SharedMemory)
@@ -29,13 +32,9 @@ def list_shared(db: Session, user_id: str) -> list[SharedMemory]:
     return list(db.scalars(stmt))
 
 
-def upsert_shared(
-    db: Session, user_id: str, data: SharedMemoryCreate
-) -> SharedMemory:
+def upsert_shared(db: Session, user_id: str, data: SharedMemoryCreate) -> SharedMemory:
     existing = db.scalar(
-        select(SharedMemory).where(
-            SharedMemory.user_id == user_id, SharedMemory.key == data.key
-        )
+        select(SharedMemory).where(SharedMemory.user_id == user_id, SharedMemory.key == data.key)
     )
     if existing:
         existing.value = data.value
@@ -66,9 +65,7 @@ def update_shared(
     db: Session, user_id: str, memory_id: str, data: SharedMemoryUpdate
 ) -> SharedMemory | None:
     row = db.scalar(
-        select(SharedMemory).where(
-            SharedMemory.id == memory_id, SharedMemory.user_id == user_id
-        )
+        select(SharedMemory).where(SharedMemory.id == memory_id, SharedMemory.user_id == user_id)
     )
     if row is None:
         return None
@@ -80,9 +77,7 @@ def update_shared(
 
 def delete_shared(db: Session, user_id: str, memory_id: str) -> bool:
     row = db.scalar(
-        select(SharedMemory).where(
-            SharedMemory.id == memory_id, SharedMemory.user_id == user_id
-        )
+        select(SharedMemory).where(SharedMemory.id == memory_id, SharedMemory.user_id == user_id)
     )
     if row is None:
         return False
@@ -93,6 +88,7 @@ def delete_shared(db: Session, user_id: str, memory_id: str) -> bool:
 
 # --- agent -------------------------------------------------------------
 
+
 def list_agent(db: Session, user_id: str, agent_id: str) -> list[AgentMemory]:
     stmt = (
         select(AgentMemory)
@@ -102,9 +98,7 @@ def list_agent(db: Session, user_id: str, agent_id: str) -> list[AgentMemory]:
     return list(db.scalars(stmt))
 
 
-def upsert_agent(
-    db: Session, user_id: str, data: AgentMemoryCreate
-) -> AgentMemory:
+def upsert_agent(db: Session, user_id: str, data: AgentMemoryCreate) -> AgentMemory:
     existing = db.scalar(
         select(AgentMemory).where(
             AgentMemory.user_id == user_id,
@@ -140,9 +134,7 @@ def update_agent(
     db: Session, user_id: str, memory_id: str, data: AgentMemoryUpdate
 ) -> AgentMemory | None:
     row = db.scalar(
-        select(AgentMemory).where(
-            AgentMemory.id == memory_id, AgentMemory.user_id == user_id
-        )
+        select(AgentMemory).where(AgentMemory.id == memory_id, AgentMemory.user_id == user_id)
     )
     if row is None:
         return None
@@ -154,9 +146,7 @@ def update_agent(
 
 def delete_agent(db: Session, user_id: str, memory_id: str) -> bool:
     row = db.scalar(
-        select(AgentMemory).where(
-            AgentMemory.id == memory_id, AgentMemory.user_id == user_id
-        )
+        select(AgentMemory).where(AgentMemory.id == memory_id, AgentMemory.user_id == user_id)
     )
     if row is None:
         return False
@@ -167,15 +157,11 @@ def delete_agent(db: Session, user_id: str, memory_id: str) -> bool:
 
 # --- context assembly / candidate application ------------------------------
 
+
 def context_for_agent(
     db: Session, user_id: str, agent: AgentConfig
 ) -> tuple[list[SharedMemory], list[AgentMemory]]:
-    shared = list_shared(db, user_id)
-    wanted = set(agent.shared_context_fields or [])
-    if wanted:
-        shared = [
-            m for m in shared if m.category in wanted or m.key in wanted or m.pinned
-        ]
+    shared = filter_shared_context(agent, list_shared(db, user_id))
     agent_mem = list_agent(db, user_id, agent.namespace)
     return shared, agent_mem
 

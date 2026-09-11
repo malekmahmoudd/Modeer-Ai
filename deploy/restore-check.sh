@@ -11,26 +11,22 @@
 # is how people discover at recovery time that they have been archiving
 # nothing for six months.
 #
-# RUN THIS ON THE HOST, NOT INSIDE A CONTAINER. The encryption step mounts the
-# backup directory into a helper container, and "docker run -v" paths are
-# resolved by the HOST daemon. From inside a container the path is the
-# container's, the host has no such directory, and openssl silently finds an
-# empty mount. A cron entry on the host is the intended arrangement.
+# Decryption uses host openssl; Docker is used only for the database.
 set -eu
+umask 077
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 COMPOSE_FILE="${MODEER_COMPOSE_FILE:-$DIR/compose.yml}"
 BACKUP_DIR="${MODEER_BACKUP_DIR:-$DIR/backups}"
 PASSPHRASE_FILE="${MODEER_BACKUP_PASSPHRASE_FILE:-}"
-OPENSSL_IMAGE="${MODEER_OPENSSL_IMAGE:-alpine/openssl:3.5.8}"
 ARCHIVE="${1:-}"
 
 compose() {
-  docker compose --project-directory "$DIR" -f "$COMPOSE_FILE" "$@"
+  docker compose --project-directory "$(dirname "$COMPOSE_FILE")" -f "$COMPOSE_FILE" "$@"
 }
 
 if [ -z "$ARCHIVE" ]; then
-  ARCHIVE="$(ls -1t "$BACKUP_DIR"/modeer-*.dump* 2>/dev/null | head -n 1 || true)"
+  ARCHIVE="$(ls -1t "$BACKUP_DIR"/modeer-*.dump.enc 2>/dev/null | head -n 1 || true)"
 fi
 [ -n "$ARCHIVE" ] && [ -f "$ARCHIVE" ] || { echo "no archive found in $BACKUP_DIR" >&2; exit 1; }
 echo "Checking: $ARCHIVE"
@@ -49,19 +45,15 @@ cleanup() {
   return 0
 }
 trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
 
 case "$ARCHIVE" in
   *.enc)
     [ -n "$PASSPHRASE_FILE" ] && [ -f "$PASSPHRASE_FILE" ] || {
       echo "encrypted archive needs MODEER_BACKUP_PASSPHRASE_FILE" >&2; exit 1; }
     TEMPORARY="$(mktemp)"
-    ARCHIVE_DIR="$(cd "$(dirname "$ARCHIVE")" && pwd)"
-    PASS_DIR="$(cd "$(dirname "$PASSPHRASE_FILE")" && pwd)"
-    docker run --rm \
-      -v "$ARCHIVE_DIR:/backup" -v "$(dirname "$TEMPORARY"):/out" -v "$PASS_DIR:/pass:ro" \
-      "$OPENSSL_IMAGE" enc -d -aes-256-cbc -pbkdf2 -iter 240000 \
-      -pass "file:/pass/$(basename "$PASSPHRASE_FILE")" \
-      -in "/backup/$(basename "$ARCHIVE")" -out "/out/$(basename "$TEMPORARY")"
+    openssl enc -d -aes-256-cbc -pbkdf2 -iter 240000 \
+      -pass "file:$PASSPHRASE_FILE" -in "$ARCHIVE" -out "$TEMPORARY"
     PLAIN="$TEMPORARY"
     ;;
 esac

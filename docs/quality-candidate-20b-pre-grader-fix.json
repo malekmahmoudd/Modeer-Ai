@@ -1,0 +1,238 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-20b",
+  "samples": 3,
+  "summary": {
+    "modeer-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 1,
+      "judge_passes": 0,
+      "evaluated": 1,
+      "passes": 0,
+      "pass_rate": 0.0
+    },
+    "study-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 1,
+      "judge_passes": 0,
+      "evaluated": 1,
+      "passes": 0,
+      "pass_rate": 0.0
+    },
+    "career-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 1,
+      "judge_passes": 1,
+      "evaluated": 1,
+      "passes": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "judge_model": "qwen/qwen3.8-27b",
+  "results": [
+    {
+      "agent": "modeer",
+      "sample": 1,
+      "prompt_version": 1,
+      "case": "modeer-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "seconds": 1.08,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 192,
+        "violations": []
+      },
+      "output": "**This week\u2019s focus**\n\n1. **Finish the internship CV** \u2013 complete the draft, then polish it.  \n   * Day\u202f1\u20132: write the core sections (contact, objective, education, internship experience, projects, skills).  \n   * Day\u202f3: review formatting, add quantifiable achievements, tailor language to the roles you\u2019re targeting.  \n   * Day\u202f4: proofread, get a peer or mentor\u2019s quick feedback, incorporate edits.  \n   * Day\u202f5: finalize and export a clean PDF.\n\n2. **Prepare for the programming exam** \u2013 block focused study time.  \n   * Day\u202f1\u20132: review key concepts that will appear on the test (data structures, algorithms, language syntax).  \n   * Day\u202f3: solve practice problems, focusing on weak areas.  \n   * Day\u202f4: take a timed mock test to gauge pacing.  \n   * Day\u202f5: review mistakes, clarify doubts, and set a short\u2011term revision schedule for the next week.\n\n**Next steps**  \n- Allocate 2\u20133\u202fhours each day for the CV and 2\u20133\u202fhours for exam prep.  \n- Schedule a quick check\u2011in with a mentor or peer after Day\u202f4 to confirm the CV is ready.  \n- If you hit a blocker on the CV or exam material, let me know and I can point you to the right specialist.",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": false,
+            "evidence": "let me know and I can point you to the right specialist."
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "The reply implies the agent can perform a live search or referral by offering to 'point you to the right specialist'.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "study",
+      "sample": 1,
+      "prompt_version": 1,
+      "case": "study-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "Give me a study plan for the next two weeks.",
+      "context": [
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "mechanical engineering"
+        },
+        {
+          "category": "goals",
+          "key": "preparing_for",
+          "value": "thermodynamics final on the 20th"
+        }
+      ],
+      "seconds": 1.3,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'thermodynamics' / 'mechanical' / 'final'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 377,
+        "violations": []
+      },
+      "output": "**Two\u2011Week Thermodynamics Study Plan (Day\u202f1\u202f\u2013\u202fDay\u202f14)**  \n\n| Day | Focus | Key Tasks |\n|-----|-------|-----------|\n| 1 | Core concepts review | \u2022 Read chapter on state functions & properties. <br>\u2022 Summarize definitions of internal energy, enthalpy, Gibbs free energy. |\n| 2 | First law applications | \u2022 Solve 3 problems on energy balances for closed systems. <br>\u2022 Sketch a flow diagram for a simple heat exchanger. |\n| 3 | Second law fundamentals | \u2022 Review entropy definition and Clausius inequality. <br>\u2022 Work through 2 Carnot cycle calculations. |\n| 4 | Real\u2011gas behavior | \u2022 Study van der Waals equation limits. <br>\u2022 Compare isotherms with ideal gas on a graph. |\n| 5 | Thermodynamic cycles | \u2022 Analyze Rankine cycle steps. <br>\u2022 Calculate efficiency for given turbine/boiler data. |\n| 6 | Heat transfer basics | \u2022 Review conduction, convection, radiation equations. <br>\u2022 Solve a steady\u2011state conduction problem. |\n| 7 | Mid\u2011week self\u2011check | \u2022 Take a 30\u2011minute timed quiz covering days\u202f1\u20116. <br>\u2022 Note any wrong answers for review. |\n| 8 | Advanced cycle analysis | \u2022 Study Brayton cycle and regenerative cycles. <br>\u2022 Compute net work and efficiency. |\n| 9 | Entropy generation | \u2022 Calculate entropy change for irreversible processes. <br>\u2022 Compare with reversible case. |\n|10 | Mixed\u2011mode problems | \u2022 Tackle 4 integrated problems (combining cycles, heat transfer, entropy). |\n|11 | Practice exam | \u2022 Complete a full practice exam (same format as the final). <br>\u2022 Time yourself and record results. |\n|12 | Review weak areas | \u2022 Re\u2011work any questions from day\u202f11 you got wrong. <br>\u2022 Re\u2011watch a short lecture on the toughest topic. |\n|13 | Flashcards & recall | \u2022 Create or review flashcards for key equations and definitions. <br>\u2022 Do a 15\u2011minute active recall session. |\n|14 | Final prep & relaxation | \u2022 Skim summaries, focus on intuition for each law. <br>\u2022 Light review; rest and plan exam day logistics. |\n\n**Next actions for you:**  \n1. Gather your textbook, lecture notes, and any past quizzes.  \n2. Set a daily alarm or reminder for the tasks above.  \n3. After day\u202f7, adjust the plan if you find a topic needs more time.  \n\nGood luck, Alex!",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": false,
+            "evidence": "Good luck, Alex!"
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": "**Two\u2011Week Thermodynamics Study Plan (Day 1 \u2013 Day 14)**"
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "The reply addresses the user by the name 'Alex', which is not present in the provided context.",
+        "error": ""
+      },
+      "passed": false
+    },
+    {
+      "agent": "career",
+      "sample": 1,
+      "prompt_version": 2,
+      "case": "career-personalization-1",
+      "model": "openai/gpt-oss-20b",
+      "input": "What should my next move be?",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "junior data analyst, 2 years in"
+        },
+        {
+          "category": "career",
+          "key": "career_goal",
+          "value": "become a data scientist"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Berlin, no relocation possible"
+        }
+      ],
+      "seconds": 0.89,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'data scientist' / 'analyst' / 'Berlin'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 217,
+        "violations": []
+      },
+      "output": "**Recommendation**  \nApply for a 3\u2011month data\u2011science internship (or a junior\u2011DS role with a learning component) in Berlin while completing a focused ML certification. This gives you hands\u2011on projects, a portfolio, and a clear path to a full\u2011time data\u2011scientist title.\n\n**Trade\u2011offs**  \n- *Cost*: You\u2019ll need to invest ~4\u20136\u202fweeks of self\u2011study (Coursera/edX, Kaggle) and may have to accept a lower hourly rate or a temporary role that isn\u2019t a full\u2011time data\u2011science title.  \n- *Benefit*: Real\u2011world projects, a portfolio that shows end\u2011to\u2011end pipelines, and a network of mentors that can vouch for you when you move to a full\u2011time DS role.  \n- *Reversibility*: You can leave the internship after 3\u202fmonths if you secure a better offer, or pivot to another role if the fit isn\u2019t right.\n\n**Next actions**  \n1. **Day\u202f1\u20137**: Enroll in a 12\u2011week \u201cApplied Machine Learning\u201d track on a platform that offers project certificates.  \n2. **Day\u202f8\u201314**: Build a portfolio repo with at least two end\u2011to\u2011end projects (e.g., predictive model + dashboard).  \n3. **Day\u202f15\u201321**: Search Berlin job boards for \u201cData Scientist Intern\u201d or \u201cJunior ML Engineer\u201d roles; tailor your CV to highlight the new projects and any relevant analytics experience.  \n\nOnce you land an internship, use the next 3\u202fmonths to deepen your ML skills, network with senior DSs, and prepare for a full\u2011time transition.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": "in Berlin"
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

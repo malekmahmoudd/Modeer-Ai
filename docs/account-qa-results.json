@@ -1,0 +1,15 @@
+{
+  "provider": "mock",
+  "checks": [
+    "privacy readable before login",
+    "conversation deletion can be cancelled",
+    "conversation deletion removes transcript",
+    "account export with briefing downloads valid JSON",
+    "export failure is visible and recoverable",
+    "account fits mobile tablet and desktop",
+    "sign-out-everywhere revokes second browser session",
+    "account deletion requires exact confirmation and prevents re-login",
+    "no uncaught browser errors"
+  ],
+  "errors": []
+}

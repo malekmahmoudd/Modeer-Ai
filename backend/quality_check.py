@@ -136,6 +136,11 @@ async def main() -> int:
 
     if args.samples < 1 or args.pace < 0:
         parser.error("samples must be positive and pace nonnegative")
+    print(
+        f"Provider: {settings.llm_provider}; default model: {args.model or settings.llm_model}; "
+        f"judge: {args.judge_model}",
+        flush=True,
+    )
     cases = [
         (slug, case, sample)
         for sample in range(1, args.samples + 1)
@@ -179,6 +184,8 @@ async def main() -> int:
             "agent": slug,
             "sample": sample,
             "prompt_version": agent.prompt_version,
+            "profile": case.get("profile", {}),
+            "display_name": _fake_user(case.get("profile")).display_name,
             "case": case["id"],
             "model": resolve_model(agent.model.model),
             "input": case["input"],
@@ -193,7 +200,10 @@ async def main() -> int:
 
         if not args.no_judge and text and not error:
             await asyncio.sleep(args.pace / 2)
-            judgement = await judge(case, text, provider=get_llm_provider(), model=args.judge_model)
+            judge_case = {**case, "display_name": _fake_user(case.get("profile")).display_name}
+            judgement = await judge(
+                judge_case, text, provider=get_llm_provider(), model=args.judge_model
+            )
             row["judge"] = judgement.as_dict()
             judged_ok = judgement.passed if judgement.available else None
         else:
@@ -219,7 +229,9 @@ async def main() -> int:
 def resume_rows(path: Path, args, cases) -> list[dict]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if (
-        data["model"] != (args.model or settings.llm_model)
+        data.get("provider") != settings.llm_provider
+        or data.get("judge_version") != 2
+        or data["model"] != (args.model or settings.llm_model)
         or data["judge_model"] != (None if args.no_judge else args.judge_model)
         or data.get("samples", 1) != args.samples
     ):
@@ -276,6 +288,7 @@ def _write(path: Path, args, results: list[dict]) -> None:
                 "samples": args.samples,
                 "summary": summarize(results),
                 "judge_model": None if args.no_judge else args.judge_model,
+                "judge_version": 2,
                 "results": results,
             },
             indent=2,

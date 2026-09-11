@@ -21,7 +21,8 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import select
 
 from app.api.deps import CurrentUser, DbSession
-from app.core.alerts import Severity, notify
+from app.api.routes.health import _erroring
+from app.core.alerts import _deliver
 from app.core.alerts import enabled as alerts_enabled
 from app.core.config import settings
 from app.core.observability import health
@@ -75,7 +76,7 @@ def metrics(user: CurrentUser, db: DbSession) -> dict:
 
 
 @router.post("/test-alert")
-def test_alert(user: CurrentUser) -> dict:
+async def test_alert(user: CurrentUser) -> dict:
     """Send a real alert down the configured channels.
 
     Worth doing on the day you set it up. An alerting path nobody has ever
@@ -84,13 +85,8 @@ def test_alert(user: CurrentUser) -> dict:
     _require_admin(user)
     if not alerts_enabled():
         raise HTTPException(status_code=400, detail="No alert channel is configured")
-    # Bypasses the throttle by using a unique key, so a second test still sends.
-    notify(
-        "Test alert",
-        "If you are reading this, alerting works.",
-        Severity.INFO,
-        key=f"test-{time.time()}",
-    )
+    if not await _deliver("Modeer test alert: the configured endpoint accepted this test."):
+        raise HTTPException(status_code=502, detail="No alert channel accepted the test")
     return {"sent": True}
 
 
@@ -107,7 +103,7 @@ def dashboard(user: CurrentUser, db: DbSession) -> HTMLResponse:
     provider = snapshot["provider"]
     last_error = snapshot["last_error"]
 
-    degraded = snapshot["unhandled_errors"] > 0 or provider["quota_exhausted_at"]
+    degraded = _erroring(snapshot)
     status_text = "DEGRADED" if degraded else "OK"
     status_class = "bad" if degraded else "good"
 
@@ -144,11 +140,11 @@ def dashboard(user: CurrentUser, db: DbSession) -> HTMLResponse:
     )
 
     quota_block = (
-        f"<p class='bad'><b>Provider daily quota was exhausted</b> at "
-        f"{esc(provider['quota_exhausted_at'])}. Replies fail for everyone until it "
-        f"refills.</p>"
-        if provider["quota_exhausted_at"]
-        else "<p class='muted'>Provider quota has not been exhausted since start.</p>"
+        "<p class='bad'>Provider quota currently blocks: "
+        + esc(", ".join(provider["blocked_models"]))
+        + ".</p>"
+        if provider["blocked_models"]
+        else "<p class='muted'>No active provider quota block recorded.</p>"
     )
 
     alert_block = (

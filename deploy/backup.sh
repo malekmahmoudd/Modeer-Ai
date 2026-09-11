@@ -1,84 +1,53 @@
 #!/usr/bin/env sh
-# Back up the Modeer database on a Linux host: dump, verify, encrypt, prune,
-# copy off-host.
-#
-# The PowerShell scripts beside this one are for a Windows workstation. The
-# production host is Linux, so a backup that only runs on the developer's
-# laptop is not a backup of production. This is the one cron actually runs.
-#
-#   MODEER_BACKUP_PASSPHRASE_FILE=/etc/modeer/backup.key \
-#   MODEER_BACKUP_OFFHOST=/mnt/offsite/modeer \
-#   ./backup.sh
-#
-# Exit codes: 0 success, non-zero means NO usable backup was produced. Cron
-# mails the output on failure, so every failure path prints why.
-#
-# RUN THIS ON THE HOST, NOT INSIDE A CONTAINER. The encryption step mounts the
-# backup directory into a helper container, and "docker run -v" paths are
-# resolved by the HOST daemon. From inside a container the path is the
-# container's, the host has no such directory, and openssl silently finds an
-# empty mount. A cron entry on the host is the intended arrangement.
+# Linux host backup. Requires Docker Compose, openssl, flock and standard coreutils.
+# Encryption and an existing off-host destination are mandatory; fail before dumping.
 set -eu
-
+umask 077
 DIR="$(cd "$(dirname "$0")" && pwd)"
 COMPOSE_FILE="${MODEER_COMPOSE_FILE:-$DIR/compose.yml}"
 BACKUP_DIR="${MODEER_BACKUP_DIR:-$DIR/backups}"
 KEEP_DAYS="${MODEER_BACKUP_KEEP_DAYS:-30}"
 PASSPHRASE_FILE="${MODEER_BACKUP_PASSPHRASE_FILE:-}"
 OFFHOST="${MODEER_BACKUP_OFFHOST:-}"
-OPENSSL_IMAGE="${MODEER_OPENSSL_IMAGE:-alpine/openssl:3.5.8}"
-
-compose() {
-  docker compose --project-directory "$DIR" -f "$COMPOSE_FILE" "$@"
-}
-
+fail() { echo "$1" >&2; exit 1; }
+case "$KEEP_DAYS" in ''|*[!0-9]*) fail "Retention must be a positive number of days" ;; esac
+[ "$KEEP_DAYS" -gt 0 ] || fail "Retention must be positive"
+[ -n "$PASSPHRASE_FILE" ] && [ -s "$PASSPHRASE_FILE" ] || fail "Missing or empty encryption key file"
+[ -n "$OFFHOST" ] && [ -d "$OFFHOST" ] && [ -w "$OFFHOST" ] || fail "Off-host destination must already exist and be writable"
+command -v openssl >/dev/null || fail "Install openssl on the backup host"
+command -v flock >/dev/null || fail "Install flock on the backup host"
 mkdir -p "$BACKUP_DIR"
-STAMP="$(date -u +%Y%m%d-%H%M%S)"
-NAME="modeer-$STAMP.dump"
+BACKUP_DIR="$(cd "$BACKUP_DIR" && pwd -P)"
+OFFHOST="$(cd "$OFFHOST" && pwd -P)"
+[ "$BACKUP_DIR" != "$OFFHOST" ] || fail "Off-host destination must differ from local backup directory"
+# Prevent overlap; kernel releases the lock even after a crash.
+exec 9>"$BACKUP_DIR/.backup.lock"
+flock -n 9 || fail "Another backup is already running"
+compose() { docker compose --project-directory "$(dirname "$COMPOSE_FILE")" -f "$COMPOSE_FILE" "$@"; }
+NAME="modeer-$(date -u +%Y%m%d-%H%M%S)-$$.dump"
 DEST="$BACKUP_DIR/$NAME"
-
-# Write the archive inside the container, then copy it out: piping pg_dump
-# through the shell risks a mangled binary stream.
-compose exec -T db pg_dump -U modeer -Fc -f /tmp/modeer-backup.dump modeer
+REMOTE_TMP="$OFFHOST/$NAME.enc.partial"
+CONTAINER_ARCHIVE="/tmp/$NAME"
+cleanup() {
+  rm -f "$DEST" "$DEST.enc.partial" "$REMOTE_TMP"
+  compose exec -T db rm -f "$CONTAINER_ARCHIVE" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+compose exec -T db pg_dump -U modeer -Fc -f "$CONTAINER_ARCHIVE" modeer
 CONTAINER="$(compose ps -q db)"
-[ -n "$CONTAINER" ] || { echo "database container is not running" >&2; exit 1; }
-docker cp "$CONTAINER:/tmp/modeer-backup.dump" "$DEST"
-
-# Prove it is an archive, not merely a non-empty file.
-compose exec -T db pg_restore --list /tmp/modeer-backup.dump >/dev/null
-compose exec -T db rm -f /tmp/modeer-backup.dump
-
-ARTIFACT="$DEST"
-
-if [ -n "$PASSPHRASE_FILE" ] && [ -f "$PASSPHRASE_FILE" ]; then
-  PASS_DIR="$(cd "$(dirname "$PASSPHRASE_FILE")" && pwd)"
-  PASS_NAME="$(basename "$PASSPHRASE_FILE")"
-  # The passphrase file is mounted and read by openssl itself, never piped:
-  # a shell that appends a newline silently changes the passphrase and
-  # produces archives only this script can open.
-  docker run --rm \
-    -v "$BACKUP_DIR:/backup" -v "$PASS_DIR:/pass:ro" "$OPENSSL_IMAGE" \
-    enc -aes-256-cbc -pbkdf2 -iter 240000 -salt \
-    -pass "file:/pass/$PASS_NAME" -in "/backup/$NAME" -out "/backup/$NAME.enc"
-  rm -f "$DEST"
-  ARTIFACT="$DEST.enc"
-  echo "Encrypted: $ARTIFACT"
-else
-  echo "WARNING: backup is NOT encrypted (set MODEER_BACKUP_PASSPHRASE_FILE)." >&2
-  echo "It contains every stored personal memory." >&2
-fi
-
-if [ -n "$OFFHOST" ]; then
-  mkdir -p "$OFFHOST"
-  cp "$ARTIFACT" "$OFFHOST/"
-  echo "Copied off-host: $OFFHOST"
-else
-  echo "WARNING: no off-host copy (set MODEER_BACKUP_OFFHOST)." >&2
-  echo "A backup on the same disk as the database is not a backup." >&2
-fi
-
-if [ "$KEEP_DAYS" -gt 0 ]; then
-  find "$BACKUP_DIR" -name 'modeer-*.dump*' -type f -mtime "+$KEEP_DAYS" -print -delete
-fi
-
-echo "Backup saved: $ARTIFACT"
+[ -n "$CONTAINER" ] || fail "Database container is not running"
+compose exec -T db pg_restore --list "$CONTAINER_ARCHIVE" >/dev/null
+docker cp "$CONTAINER:$CONTAINER_ARCHIVE" "$DEST"
+openssl enc -aes-256-cbc -pbkdf2 -iter 240000 -salt -pass "file:$PASSPHRASE_FILE" -in "$DEST" -out "$DEST.enc.partial"
+mv "$DEST.enc.partial" "$DEST.enc"
+cp "$DEST.enc" "$REMOTE_TMP"
+cmp "$DEST.enc" "$REMOTE_TMP" || fail "Off-host copy differs"
+mv "$REMOTE_TMP" "$OFFHOST/$NAME.enc"
+# Preserve archive timestamps on both destinations; retention is not restarted by copying.
+touch -r "$DEST.enc" "$OFFHOST/$NAME.enc"
+MINUTES=$((KEEP_DAYS * 1440))
+for directory in "$BACKUP_DIR" "$OFFHOST"; do
+  find "$directory" -maxdepth 1 -type f -name 'modeer-*.dump*' -mmin "+$MINUTES" -print -delete
+done
+echo "BACKUP PASSED: encrypted, verified copy at $OFFHOST/$NAME.enc"

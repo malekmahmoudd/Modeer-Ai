@@ -24,10 +24,11 @@ function isActive(pathname: string, href: string) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { data: user } = useApi<UserProfile>("/users/me");
+  const publicPage = pathname === "/login" || pathname === "/privacy";
+  const { data: user } = useApi<UserProfile>(publicPage ? null : "/users/me");
   const name = firstName(user?.display_name);
   const { data: auth } = useApi<{ required: boolean }>("/auth/status");
-  if (pathname === "/login") return <main>{children}</main>;
+  if (publicPage) return <main>{children}</main>;
 
   // The agent workspace owns its own full-height layout.
   const inWorkspace = pathname.startsWith("/agents/");
@@ -63,6 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            <Link href="/account" className="grid min-h-11 place-items-center px-2 text-sm font-bold underline decoration-pink decoration-2 underline-offset-4">Account</Link>
             {auth?.required && <button className="text-xs underline" onClick={async () => { await apiFetch("/auth/logout", { method: "POST" }); window.location.assign("/login"); }}>Sign out</button>}
             {name && (
               <span className="hidden items-center gap-2 sm:flex">

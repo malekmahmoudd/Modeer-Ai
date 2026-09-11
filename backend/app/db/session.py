@@ -1,4 +1,5 @@
 """Engine / session factory and FastAPI dependency."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -14,12 +15,11 @@ engine = create_engine(
     settings.database_url,
     connect_args=_connect_args,
     pool_pre_ping=True,
+    hide_parameters=True,
     future=True,
 )
 
-SessionLocal = sessionmaker(
-    bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
-)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 
 def get_db() -> Iterator[Session]:

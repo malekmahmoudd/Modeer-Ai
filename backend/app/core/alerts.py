@@ -85,24 +85,34 @@ def _format(event: str, detail: str, severity: Severity) -> str:
     )
 
 
-async def _post(client: httpx.AsyncClient, url: str, payload: dict) -> None:
+async def _post(client: httpx.AsyncClient, url: str, payload: dict) -> bool:
     response = await client.post(url, json=payload, timeout=SEND_TIMEOUT_SECONDS)
     if response.status_code >= 400:
         logger.warning("alert channel returned %s", response.status_code)
+    return 200 <= response.status_code < 300
 
 
-async def _deliver(text: str) -> None:
-    async with httpx.AsyncClient() as client:
-        if settings.alert_webhook_url:
-            # "content" suits Discord, "text" suits Slack and ntfy. Sending both
-            # keys means one payload works across all of them.
-            await _post(client, settings.alert_webhook_url, {"content": text, "text": text})
-        if settings.alert_telegram_bot_token and settings.alert_telegram_chat_id:
-            await _post(
-                client,
+async def _deliver(text: str) -> bool:
+    delivered = False
+    channels = []
+    if settings.alert_webhook_url:
+        channels.append((settings.alert_webhook_url, {"content": text, "text": text}))
+    if settings.alert_telegram_bot_token and settings.alert_telegram_chat_id:
+        channels.append(
+            (
                 f"https://api.telegram.org/bot{settings.alert_telegram_bot_token}/sendMessage",
                 {"chat_id": settings.alert_telegram_chat_id, "text": text},
             )
+        )
+    async with httpx.AsyncClient() as client:
+        for url, payload in channels:
+            try:
+                accepted = await _post(client, url, payload)
+                delivered = accepted or delivered
+            except Exception as exc:  # one broken channel must not suppress the other
+                logger.warning("alert channel failed: %s", type(exc).__name__)
+
+    return delivered
 
 
 def notify(
@@ -132,7 +142,7 @@ def notify(
         try:
             asyncio.run(_deliver(text))
         except Exception:  # noqa: BLE001 - an alert must never raise
-            logger.warning("could not deliver alert %s", event, exc_info=True)
+            logger.warning("could not deliver alert %s", event)
         return
 
     task = loop.create_task(_deliver(text))
@@ -149,4 +159,4 @@ def _finished(task: asyncio.Task) -> None:
     if task.cancelled():
         return
     if error := task.exception():
-        logger.warning("alert delivery failed: %s", type(error).__name__, exc_info=error)
+        logger.warning("alert delivery failed: %s", type(error).__name__)

@@ -41,6 +41,8 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const [err, setErr] = useState<string | null>(null);
   const [savedFacts, setSavedFacts] = useState<MemoryCandidate[]>([]);
   const [justOnboarded, setJustOnboarded] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const seededRef = useRef(false);
@@ -383,11 +385,12 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
               </div>
             </div>
 
+            {historyError && <p role="alert" className="mb-3 text-pink-deep">{historyError}</p>}
             <ul className="space-y-2">
               {convos.map((c) => {
                 const active = c.id === conversationId;
                 return (
-                  <li key={c.id}>
+                  <li key={c.id} className="flex items-stretch gap-2">
                     <button
                       onClick={() => {
                         liveConversation.current = null;
@@ -395,7 +398,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                         setHistoryOpen(false);
                       }}
                       aria-current={active ? "true" : undefined}
-                      className={`flex w-full flex-col gap-0.5 border-2 border-ink px-3 py-2.5 text-left transition ${
+                      className={`flex min-w-0 flex-1 flex-col gap-0.5 border-2 border-ink px-3 py-2.5 text-left transition ${
                         active ? "bg-sun shadow-pop-xs" : "bg-paper-hi hover:bg-sun-pale"
                       }`}
                     >
@@ -404,6 +407,16 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                         {relativeTime(c.last_message_at || c.created_at)}
                       </span>
                     </button>
+                    <button className="btn-icon shrink-0 self-center" aria-label={`Delete conversation: ${c.title}`} disabled={!!deletingId || streaming} onClick={async () => {
+                      if (!window.confirm(`Delete “${c.title}” and its messages? Saved memories remain in Memory.`)) return;
+                      setDeletingId(c.id); setHistoryError("");
+                      try {
+                        await apiFetch(`/conversations/${c.id}`, {method:"DELETE"});
+                        await refetchConvos();
+                        if (conversationId === c.id) { liveConversation.current = null; setConversationId(null); setMessages([]); setSavedFacts([]); }
+                      } catch (e) { setHistoryError(e instanceof Error ? e.message : "Could not delete the conversation."); }
+                      finally { setDeletingId(null); }
+                    }}><Icon name="trash" size={18}/></button>
                   </li>
                 );
               })}

@@ -101,6 +101,21 @@ def _goals_block(goals: list[Goal]) -> str:
     return "## Current goals and priorities\n" + "\n".join(lines)
 
 
+def filter_shared_context(agent: AgentConfig, rows: list) -> list:
+    """Apply the same domain filter in live requests and synthetic evaluations.
+
+    Preferences are shared across the team: language, response style and hard
+    constraints can change any specialist's answer. Private notes are separate.
+    """
+    wanted = set(agent.shared_context_fields or [])
+    if not wanted:
+        return rows
+    wanted.add("preferences")
+    return [
+        m for m in rows if m.category in wanted or m.key in wanted or getattr(m, "pinned", False)
+    ]
+
+
 def build_context(
     *,
     agent: AgentConfig,
@@ -111,6 +126,7 @@ def build_context(
     history: list[Message],
     user_message: str,
 ) -> ContextPacket:
+    shared = filter_shared_context(agent, shared)
     personal_block, shared_used = _memory_block("PERSONAL_CONTEXT", shared)
     agent_block, agent_used = _memory_block("AGENT_MEMORY", agent_memory)
 

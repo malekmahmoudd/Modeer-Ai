@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import time
+import traceback
 import uuid
 from collections import Counter
 from dataclasses import dataclass, field
@@ -54,6 +55,8 @@ class Health:
     provider_rate_limits: int = 0
     provider_quota_exhausted_at: datetime | None = None
     provider_last_retry_after: float | None = None
+    provider_failed_until: dict[str, float] = field(default_factory=dict)
+    provider_blocked_until: dict[str, float] = field(default_factory=dict)
 
     def snapshot(self) -> dict:
         uptime = (datetime.now(UTC) - self.started_at).total_seconds()
@@ -64,6 +67,16 @@ class Health:
             "by_status_class": dict(sorted(self.by_status_class.items())),
             "unhandled_errors": self.unhandled_errors,
             "provider": {
+                "failed_models": {
+                    m: until
+                    for m, until in self.provider_failed_until.items()
+                    if until > time.time()
+                },
+                "blocked_models": {
+                    m: until
+                    for m, until in self.provider_blocked_until.items()
+                    if until > time.time()
+                },
                 "rate_limits": self.provider_rate_limits,
                 "quota_exhausted_at": (
                     self.provider_quota_exhausted_at.isoformat()
@@ -94,7 +107,7 @@ def _route_template(request: Request) -> str:
     the user's, and a log full of them is a log full of personal identifiers.
     """
     route = request.scope.get("route")
-    return getattr(route, "path", request.url.path)
+    return getattr(route, "path", "<unmatched>")
 
 
 class AccessLogMiddleware(BaseHTTPMiddleware):
@@ -103,14 +116,15 @@ class AccessLogMiddleware(BaseHTTPMiddleware):
         health.requests += 1
         try:
             response = await call_next(request)
-        except Exception:
+        except Exception as exc:
             # The handler below turns this into a response; here we only need
             # the timing line so a failure is visible in the access log too.
             elapsed = time.monotonic() - started
             logger.warning(
                 "%s %s -> unhandled after %.2fs", request.method, _route_template(request), elapsed
             )
-            raise
+            health.by_status_class["5xx"] += 1
+            return await unhandled(request, exc)
         elapsed = time.monotonic() - started
         health.by_status_class[f"{response.status_code // 100}xx"] += 1
         level = logging.WARNING if response.status_code >= 500 else logging.INFO
@@ -131,37 +145,40 @@ def install(app: FastAPI) -> None:
     """Attach the access log and the unhandled-exception handler."""
     app.add_middleware(AccessLogMiddleware)
 
-    @app.exception_handler(Exception)
-    async def unhandled(request: Request, exc: Exception) -> JSONResponse:
-        incident = uuid.uuid4().hex[:6]
-        health.unhandled_errors += 1
-        health.last_error_at = datetime.now(UTC)
-        health.last_error_id = incident
-        health.last_error_type = type(exc).__name__
-        # exc_info gives the traceback; the message carries no request content.
-        logger.error(
-            "incident=%s %s %s raised %s",
-            incident,
-            request.method,
-            _route_template(request),
-            type(exc).__name__,
-            exc_info=exc,
+    app.add_exception_handler(Exception, unhandled)
+    logging.getLogger("uvicorn.error").addFilter(SafeServerException())
+
+
+async def unhandled(request: Request, exc: Exception) -> JSONResponse:
+    incident = uuid.uuid4().hex[:6]
+    health.unhandled_errors += 1
+    health.last_error_at = datetime.now(UTC)
+    health.last_error_id = incident
+    health.last_error_type = type(exc).__name__
+    # Render only stack locations; exception text and source lines may contain secrets.
+    logger.error(
+        "incident=%s %s %s raised %s stack=%s",
+        incident,
+        request.method,
+        _route_template(request),
+        type(exc).__name__,
+        [(f.filename, f.lineno, f.name) for f in traceback.extract_tb(exc.__traceback__)],
+    )
+    if health.unhandled_errors % settings.alert_error_threshold == 0:
+        notify(
+            "Unhandled errors",
+            f"{health.unhandled_errors} since start. Latest incident {incident} "
+            f"({type(exc).__name__}) on {_route_template(request)}.",
+            Severity.CRITICAL,
+            key="unhandled-errors",
         )
-        if health.unhandled_errors % settings.alert_error_threshold == 0:
-            notify(
-                "Unhandled errors",
-                f"{health.unhandled_errors} since start. Latest incident {incident} "
-                f"({type(exc).__name__}) on {_route_template(request)}.",
-                Severity.CRITICAL,
-                key=f"errors-{health.unhandled_errors // settings.alert_error_threshold}",
-            )
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": "Something went wrong on our side. Please try again.",
-                "incident": incident,
-            },
-        )
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Something went wrong on our side. Please try again.",
+            "incident": incident,
+        },
+    )
 
 
 #: A retry-after beyond this is the provider rationing by the day, not the
@@ -169,7 +186,7 @@ def install(app: FastAPI) -> None:
 DAILY_QUOTA_RETRY_SECONDS = 180.0
 
 
-def record_rate_limit(retry_after: float | None) -> None:
+def record_rate_limit(retry_after: float | None, model: str = "unknown") -> None:
     """Note a provider 429, and alert if the daily budget looks spent.
 
     Called from the provider on every 429. A short retry-after is ordinary
@@ -182,10 +199,32 @@ def record_rate_limit(retry_after: float | None) -> None:
     health.provider_last_retry_after = retry_after
     if retry_after is not None and retry_after > DAILY_QUOTA_RETRY_SECONDS:
         health.provider_quota_exhausted_at = datetime.now(UTC)
+        health.provider_blocked_until[model] = time.time() + retry_after
         notify(
             "AI provider daily quota exhausted",
-            f"The provider asked for a {retry_after:.0f}s wait. Replies will fail "
-            f"for everyone until the budget refills.",
+            f"The provider asked for a {retry_after:.0f}s wait on model {model}. "
+            "Replies using that model may fail until its budget refills.",
             Severity.CRITICAL,
             key="provider-quota",
         )
+
+
+def record_provider_failure(model: str) -> None:
+    health.provider_failed_until[model] = time.time() + 120
+
+
+def record_provider_success(model: str) -> None:
+    health.provider_blocked_until.pop(model, None)
+    health.provider_failed_until.pop(model, None)
+
+
+class SafeServerException(logging.Filter):
+    """Last-resort ASGI server errors must not format exception values or chains."""
+
+    def filter(self, record):
+        if record.exc_info:
+            record.msg = "ASGI request failed (%s); see application incident log"
+            record.args = (record.exc_info[0].__name__,)
+            record.exc_info = None
+            record.exc_text = None
+        return True

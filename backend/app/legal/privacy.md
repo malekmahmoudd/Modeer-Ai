@@ -62,10 +62,10 @@ that backup was taken.
 |---|---|
 | See what it remembers | Memory, in the app — every stored fact, editable |
 | Correct or delete a single fact | Memory — edit or delete it |
-| Delete one conversation | Delete it from that conversation |
-| Take everything with you | `GET /api/users/me/export` — the whole account as JSON, messages included |
-| Delete everything | `POST /api/users/me/delete` with `{"confirm": "DELETE"}` |
-| Sign out every device | `POST /api/auth/sign-out-everywhere` |
+| Delete one conversation | Open conversation history, then choose its delete button |
+| Take everything with you | Account → Download my data — a JSON file, messages included |
+| Delete everything | Account → Delete my account → type DELETE |
+| Sign out every device | Account → Sign out every device |
 
 **Deletion is immediate and irreversible.** It removes your account,
 conversations, messages, memories, goals, briefings and usage counters from the

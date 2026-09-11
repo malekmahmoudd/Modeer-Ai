@@ -14,6 +14,9 @@ from app.db.base import Base
 from app.db.session import SessionLocal, engine
 
 logging.basicConfig(level=logging.INFO)
+# HTTP client INFO/DEBUG logs contain full URLs, including webhook credentials.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 logger = logging.getLogger("modeer")
 
 
@@ -29,7 +32,9 @@ async def lifespan(app: FastAPI):
             db.commit()
             logger.info("Synced %d agents into the registry table", n)
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Agent sync skipped (has the database been migrated?): %s", exc)
+        logger.warning(
+            "Agent sync skipped (has the database been migrated?): %s", type(exc).__name__
+        )
     yield
 
 

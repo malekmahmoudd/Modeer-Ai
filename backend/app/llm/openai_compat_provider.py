@@ -5,13 +5,18 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 import time
 from collections.abc import AsyncIterator
 
 import httpx
 
 from app.core.config import settings
-from app.core.observability import record_rate_limit
+from app.core.observability import (
+    record_provider_failure,
+    record_provider_success,
+    record_rate_limit,
+)
 from app.llm.base import LLMMessage, LLMProvider
 
 logger = logging.getLogger(__name__)
@@ -87,12 +92,16 @@ class OpenAICompatProvider(LLMProvider):
                         if response.status_code == 429:
                             # Records the throttle and alerts the operator when
                             # the retry-after says the daily budget is spent.
-                            record_rate_limit(_retry_after(response))
+                            record_rate_limit(_retry_after(response), model)
+                            wait = _retry_after(response)
+                            advice = (
+                                f"Please try again in about {math.ceil(wait / 60)} "
+                                f"{'minute' if math.ceil(wait / 60) == 1 else 'minutes'}."
+                                if wait
+                                else "Please try again later."
+                            )
                             raise ProviderError(
-                                "The AI provider is at its usage limit. "
-                                "Please wait a minute and "
-                                "try again.",
-                                retry_after=_retry_after(response),
+                                "The AI provider is at its usage limit. " + advice, retry_after=wait
                             )
                         if response.status_code >= 400:
                             raise ProviderError(
@@ -141,11 +150,17 @@ class OpenAICompatProvider(LLMProvider):
                                 yield text
             if not emitted or not finished:
                 raise ProviderError("The AI reply was incomplete. Please try again.")
+            record_provider_success(model)
+        except ProviderError:
+            record_provider_failure(model)
+            raise
         except (TimeoutError, httpx.TimeoutException) as exc:
+            record_provider_failure(model)
             raise ProviderError(
                 "The AI provider took too long to reply. Please try again."
             ) from exc
         except httpx.RequestError as exc:
+            record_provider_failure(model)
             raise ProviderError("Could not reach the AI provider. Please try again.") from exc
         finally:
             logger.info(
@@ -159,6 +174,7 @@ class OpenAICompatProvider(LLMProvider):
 def _retry_after(response: httpx.Response) -> float | None:
     """The upstream retry-after header in seconds, when it sent a usable one."""
     try:
-        return float(response.headers.get("retry-after", ""))
+        value = float(response.headers.get("retry-after", ""))
+        return value if math.isfinite(value) and value > 0 else None
     except ValueError:
         return None

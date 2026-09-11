@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 
@@ -20,6 +21,7 @@ export default function LoginPage() {
       <input id="access-key" type="password" autoComplete="current-password" required minLength={32} className="field" value={key} onChange={e => setKey(e.target.value)} />
       {error && <p role="alert" className="my-3 text-pink-deep">{error}</p>}
       <button disabled={busy} className="btn btn-pink mt-5 w-full">{busy ? "Signing in…" : "Meet your team"}</button>
+      <Link href="/privacy" className="mt-5 block py-2 text-sm underline">Privacy & your data</Link>
     </form>
   </div>;
 }

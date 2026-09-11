@@ -295,3 +295,50 @@ def test_judge_verdict_parses_and_fails_on_any_failed_dimension():
 def test_unparsable_judge_output_is_marked_unavailable_not_failed():
     verdict = _parse_judgement("the reply looks fine to me")
     assert not verdict.available and verdict.error
+
+
+def test_judge_receives_the_same_known_profile_as_the_agent():
+    from app.agents.rubric import _judge_prompt
+
+    prompt = _judge_prompt(
+        {"input": "hello", "display_name": "Alex", "profile": {"occupation": "engineer"}}, "Hi Alex"
+    )
+    assert "display_name=Alex" in prompt
+    assert '"occupation": "engineer"' in prompt
+
+
+def test_incomplete_or_nonboolean_judge_scores_are_unavailable():
+    assert not _parse_judgement(
+        '{"dimensions":{"grounding":{"pass":true}}}', {"grounding", "currency"}
+    ).available
+    assert not _parse_judgement('{"dimensions":{"grounding":{"pass":"false"}}}').available
+
+
+def test_judge_retries_a_short_rate_limit_without_losing_the_response(monkeypatch):
+    import asyncio
+    import json
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+
+    from app.agents import rubric
+    from app.llm.openai_compat_provider import ProviderError
+
+    dimensions = {
+        name: {"pass": True, "evidence": ""}
+        for name in rubric.JUDGE_DIMENSIONS
+        if name != "delivers"
+    }
+    provider = SimpleNamespace(
+        complete=AsyncMock(
+            side_effect=[
+                ProviderError("usage limit", retry_after=5),
+                SimpleNamespace(text=json.dumps({"dimensions": dimensions})),
+            ]
+        )
+    )
+    pause = AsyncMock()
+    monkeypatch.setattr(rubric.asyncio, "sleep", pause)
+    result = asyncio.run(rubric.judge({"input": "hello"}, "Hello", provider=provider, model="test"))
+    assert result.available and result.passed
+    assert provider.complete.await_count == 2
+    pause.assert_awaited_once_with(6)

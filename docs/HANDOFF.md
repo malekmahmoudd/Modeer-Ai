@@ -4,6 +4,30 @@ Written for an assistant picking this up with no prior conversation. Read this
 top to bottom before changing anything; it records constraints and failure modes
 that are not visible from the code alone.
 
+## Current update — 2026-09-11
+
+Read `docs/launch-fixes.md` first. Earlier completion claims below are historical.
+This pass fixed export after a briefing, private exception/URL logging, provider
+readiness and alert cooldown/delivery handling. It added Account, public Privacy,
+and history deletion controls. Linux backup/restore and failure notifications
+were rehearsed with disposable PostgreSQL 16 data at schema 0003.
+
+A further defect was found: shared memories categorized as preferences were
+filtered out of specialist requests. The live and evaluation paths now use the
+same filter, including shared preferences while preserving private-note isolation.
+
+Free providers remain mandatory. Do not promote a model solely because keyword
+checks pass, do not remove failing rows, and preserve Writing's configured model.
+Quality generation and judge availability are separate results. The former judge
+omitted the synthetic profile/name and could accept incomplete dimensions; those
+errors are fixed. Saved responses are regraded without regenerating them.
+
+Hosting/domain, real TLS, physical off-host storage, installed schedules, real
+operator delivery and final public-domain journeys remain owner/deployment checks.
+Do not merge main or publish without the user. The local production frontend
+startup was rejected by automatic approval review with only "blocked by policy";
+do not relabel the successful development-browser checks as production checks.
+
 ## Update: account limits and browser QA (2026-09-10)
 
 Read `docs/STATUS.md`, `docs/usage-limits.md`, and `docs/browser-qa.md` first.

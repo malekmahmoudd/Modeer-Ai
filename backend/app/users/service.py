@@ -149,7 +149,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "id": b.id,
                 "summary": b.summary,
                 "items": b.items,
-                "generated_for_date": when(b.generated_for_date),
+                "generated_for_date": b.generated_for_date,
                 "created_at": when(b.created_at),
             }
             for b in db.scalars(select(Briefing).where(Briefing.user_id == user.id))

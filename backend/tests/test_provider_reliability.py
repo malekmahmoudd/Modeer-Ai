@@ -73,3 +73,17 @@ def test_truncated_connection_is_not_success(monkeypatch):
     )
     with pytest.raises(ProviderError, match="incomplete"):
         asyncio.run(call())
+
+
+def test_long_provider_wait_is_not_described_as_one_minute(monkeypatch):
+    call, _ = run(monkeypatch, httpx.Response(429, headers={"retry-after": "1131"}))
+    with pytest.raises(ProviderError, match="19 minutes") as exc:
+        asyncio.run(call())
+    assert exc.value.retry_after == 1131
+
+
+@pytest.mark.parametrize("value", ["nan", "inf", "-1", "0", "invalid"])
+def test_invalid_retry_headers_are_ignored(value):
+    from app.llm.openai_compat_provider import _retry_after
+
+    assert _retry_after(httpx.Response(429, headers={"retry-after": value})) is None
