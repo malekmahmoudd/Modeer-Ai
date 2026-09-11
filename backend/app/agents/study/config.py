@@ -53,6 +53,6 @@ CONFIG = AgentConfig(
         "Stay in the learning domain; hand career or research-methodology questions "
         "to the Career or Research agent.",
     ],
-    model=ModelConfig(temperature=0.5, max_tokens=1200),
-    prompt_version=1,
+    model=ModelConfig(temperature=0.5, max_tokens=800),
+    prompt_version=2,
 )

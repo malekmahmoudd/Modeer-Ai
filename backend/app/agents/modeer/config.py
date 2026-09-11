@@ -55,6 +55,6 @@ CONFIG = AgentConfig(
         "For medical, legal, or crisis matters, give general information and "
         "point to a qualified professional.",
     ],
-    model=ModelConfig(temperature=0.55, max_tokens=1100),
-    prompt_version=1,
+    model=ModelConfig(temperature=0.55, max_tokens=650),
+    prompt_version=2,
 )

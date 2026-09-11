@@ -53,6 +53,9 @@ class Health:
     #: the product is down for everyone until the budget refills, which is the
     #: one an operator has to hear about.
     provider_rate_limits: int = 0
+    #: Replies delivered truncated because they ran to the token cap.
+    length_stops: int = 0
+    last_length_stop_model: str | None = None
     provider_quota_exhausted_at: datetime | None = None
     provider_last_retry_after: float | None = None
     provider_failed_until: dict[str, float] = field(default_factory=dict)
@@ -66,6 +69,7 @@ class Health:
             "requests": self.requests,
             "by_status_class": dict(sorted(self.by_status_class.items())),
             "unhandled_errors": self.unhandled_errors,
+            "length_stops": self.length_stops,
             "provider": {
                 "failed_models": {
                     m: until
@@ -228,3 +232,14 @@ class SafeServerException(logging.Filter):
             record.exc_info = None
             record.exc_text = None
         return True
+
+
+def record_length_stop(model: str) -> None:
+    """A reply ran to its token cap and was delivered truncated.
+
+    Not an error — the reader still got the answer — but worth counting. If this
+    climbs, the cap is fighting the prompt rather than backing it up, and one of
+    the two is wrong.
+    """
+    health.length_stops += 1
+    health.last_length_stop_model = model

@@ -1,0 +1,232 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "samples": 3,
+  "summary": {
+    "modeer-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 0,
+      "judge_passes": 0,
+      "evaluated": 0,
+      "passes": 0,
+      "pass_rate": null
+    },
+    "study-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 0,
+      "judge_passes": 0,
+      "evaluated": 0,
+      "passes": 0,
+      "pass_rate": null
+    },
+    "career-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 0,
+      "judge_passes": 0,
+      "evaluated": 0,
+      "passes": 0,
+      "pass_rate": null
+    },
+    "research-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "deterministic_passes": 1,
+      "judge_available": 0,
+      "judge_passes": 0,
+      "evaluated": 0,
+      "passes": 0,
+      "pass_rate": null
+    }
+  },
+  "judge_model": "qwen/qwen3.8-27b",
+  "judge_version": 2,
+  "results": [
+    {
+      "agent": "modeer",
+      "sample": 1,
+      "prompt_version": 2,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "modeer-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "seconds": 1.25,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 142,
+        "violations": []
+      },
+      "output": "**Focus for the coming week**\n\n1. **Internship CV** \u2013\u202fDedicate the first\u202f3\u202fdays to a solid draft.  \n   - Day\u202f1: Outline sections (education, projects, skills, experience).  \n   - Day\u202f2: Flesh out each section, using concise bullet points.  \n   - Day\u202f3: Refine wording, ensure consistent formatting, and add a brief personal statement.\n\n2. **Programming exam preparation** \u2013\u202fReserve the remaining\u202f4\u202fdays for focused study.  \n   - Day\u202f4\u20115: Review core concepts and work through practice problems in the topics you find toughest.  \n   - Day\u202f6\u20117: Simulate a timed exam, then review mistakes and reinforce weak areas.\n\n**Next actions**  \n-\u202fTomorrow morning, create the CV outline (about 30\u202fminutes).  \n-\u202fSet a daily 90\u2011minute study block for the exam topics you\u2019re least confident about.  \n\nLet me know if you\u2019d like a more detailed study\u2011topic list or a quick checklist for the CV draft.",
+      "judge": {
+        "passed": false,
+        "available": false,
+        "dimensions": {},
+        "worst_problem": "",
+        "error": "ProviderError: The AI provider is at its usage limit. Please try again in about 7 minutes."
+      },
+      "passed": null
+    },
+    {
+      "agent": "study",
+      "sample": 1,
+      "prompt_version": 2,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "study-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Give me a study plan for the next two weeks.",
+      "context": [
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "mechanical engineering"
+        },
+        {
+          "category": "goals",
+          "key": "preparing_for",
+          "value": "thermodynamics final on the 20th"
+        }
+      ],
+      "seconds": 1.89,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'thermodynamics' / 'mechanical' / 'final'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 350,
+        "violations": []
+      },
+      "output": "**Assumption:** You are a mechanical\u2011engineering student preparing for a thermodynamics final on the 20th and can dedicate\u202f\u2248\u202f3\u202fhours\u202fday\u207b\u00b9 to focused study.\n\n**Two\u2011week study schedule**\n\n| Day | Focus & Activities (\u22483\u202fh) |\n|-----|---------------------------|\n| 1 | Review lecture notes\u202f+\u202foutline the syllabus; list all major topics (laws, cycles, property tables). |\n| 2 | First law (energy balances) \u2013 work through a textbook example of a closed system; create a one\u2011page cheat sheet of key equations. |\n| 3 | Second law \u2013 entropy generation; solve a simple heat\u2011transfer problem; add entropy sign\u2011convention table to cheat sheet. |\n| 4 | Property relations \u2013 use steam tables/ Mollier diagram; practice interpolating values for two sample states. |\n| 5 | Ideal\u2011gas & real\u2011gas models \u2013 derive PV\u202f=\u202fnRT and apply the compressibility factor; solve a problem on gas expansion. |\n| 6 | Power cycles \u2013 Rankine cycle basics; draw the T\u2011s diagram and compute efficiency for a given set of boiler/condensor pressures. |\n| 7 | Refrigeration cycles \u2013 Vapor\u2011compression cycle; calculate COP for a sample refrigerator. |\n| 8 | Review days\u202f1\u20117 \u2013 quick flash\u2011card quiz on equations and concepts; identify any lingering weak spots. |\n| 9 | Combustion & chemical\u2011reaction thermochemistry \u2013 Hess\u2019s law example; compute enthalpy change for a fuel\u2011oxidation reaction. |\n| 10 | Irreversibility & exergy \u2013 solve an exergy\u2011destruction problem for a throttling valve. |\n| 11 | Multicomponent systems \u2013 partial molar properties; practice a mixture\u2011property calculation. |\n| 12 | Practice exam \u2013 attempt a past\u2011paper question set covering all topics; time yourself (\u224890\u202fmin). |\n| 13 | Review the practice exam \u2013 mark errors, revisit the specific concepts that caused mistakes, redo those problems. |\n| 14 | Final consolidation \u2013 rewrite the cheat sheet from memory, run a rapid \u201cclosed\u2011book\u201d recall of each major topic, and relax with light review (e.g., flash cards). |\n\n**Next step:** After you try Day\u202f12\u2019s practice set, let me know which topics gave you the most trouble so we can fine\u2011tune the final review.",
+      "judge": {
+        "passed": false,
+        "available": false,
+        "dimensions": {},
+        "worst_problem": "",
+        "error": "ProviderError: The AI provider is at its usage limit. Please try again in about 10 minutes."
+      },
+      "passed": null
+    },
+    {
+      "agent": "career",
+      "sample": 1,
+      "prompt_version": 3,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "career-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should my next move be?",
+      "context": [
+        {
+          "category": "career",
+          "key": "current_role",
+          "value": "junior data analyst, 2 years in"
+        },
+        {
+          "category": "career",
+          "key": "career_goal",
+          "value": "become a data scientist"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Berlin, no relocation possible"
+        }
+      ],
+      "seconds": 1.48,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'data scientist' / 'analyst' / 'Berlin'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 249,
+        "violations": []
+      },
+      "output": "**Recommendation:** Pursue an internal move to a data\u2011science\u2011focused role at your current company while simultaneously building a portfolio of end\u2011to\u2011end ML projects.\n\n**Trade\u2011off:** This path lets you leverage existing relationships and domain knowledge (low risk, faster ramp\u2011up) but may limit exposure to a broader tech stack if your firm\u2019s data\u2011science practice is narrow. An external job would give fresh tools and networks but requires a full job search and risk of relocation constraints.\n\n**Next actions**\n\n1. **Map the internal path** \u2013\u202fIdentify any open \u201cData Scientist\u202f/\u202fMachine Learning Engineer\u201d positions or \u201cData Analyst \u2192 Data Scientist\u201d transition programs within your Berlin office; set up an informational chat with the hiring manager or a senior data scientist this week.  \n2. **Showcase transferable work** \u2013\u202fSelect two recent analyst projects where you applied statistical modelling or predictive analytics; rewrite them as case studies (problem, data, method, impact) and add them to a GitHub repo with clear notebooks and a short README.  \n3. **Close the skill gap** \u2013\u202fEnroll in a focused, project\u2011based ML course (e.g., Coursera\u2019s \u201cMachine Learning Engineering for Production\u201d or a local bootcamp) and commit to completing one capstone that mirrors a business problem you\u2019ve seen at work within the next 8\u202fweeks.  \n\nThese steps keep you rooted in Berlin, build the concrete evidence hiring managers need, and position you to negotiate a data\u2011science title internally before you consider external offers. Let me know if you need help structuring the case\u2011study write\u2011up or selecting a suitable ML course.",
+      "judge": {
+        "passed": false,
+        "available": false,
+        "dimensions": {},
+        "worst_problem": "",
+        "error": "ProviderError: The AI provider is at its usage limit. Please try again in about 7 minutes."
+      },
+      "passed": null
+    },
+    {
+      "agent": "research",
+      "sample": 1,
+      "prompt_version": 3,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "research-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Give me a reading-and-analysis plan for my dissertation topic.",
+      "context": [
+        {
+          "category": "education",
+          "key": "level",
+          "value": "PhD candidate"
+        },
+        {
+          "category": "education",
+          "key": "field_of_study",
+          "value": "urban economics"
+        }
+      ],
+      "seconds": 2.34,
+      "error": "",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'urban' / 'economics' / 'dissertation' / 'PhD'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 413,
+        "violations": []
+      },
+      "output": "**Assumption:**\u202fYour dissertation will involve a literature review, data collection, and analysis typical for an urban\u2011economics PhD project, and you have roughly\u202f12\u202fweeks to complete the reading\u2011and\u2011analysis phase before writing.\n\n### Week\u2011by\u2011Week Reading & Analysis Schedule  \n\n| Week | Goal | Core Activities (\u2248\u202f10\u202fh) |\n|------|------|--------------------------|\n| 1 | Scope & framing |\u202fDefine research question; list 5\u20117 key sub\u2011questions; compile a preliminary bibliography of 15\u202fseminal works (search terms: \u201curban agglomeration economies\u201d, \u201cspatial equilibrium\u201d, \u201ccity size distribution\u201d). |\n| 2 | Theoretical foundations |\u202fRead 3\u202ffoundational books/monographs; write a 1\u2011page summary of each theory\u2019s assumptions and predictions; note gaps relevant to your sub\u2011questions. |\n| 3 | Methodological landscape |\u202fSurvey 8\u202fmethodology papers (e.g., spatial econometrics, GIS\u2011based regressions); create a comparison table of data requirements, strengths, and limitations. |\n| 4 | Empirical benchmarks I |\u202fIdentify 4\u202frecent empirical studies on your core topic; extract their data sources, model specifications, and key findings; flag any contradictory results. |\n| 5 | Empirical benchmarks II |\u202fRepeat for another 4\u202fstudies focusing on different geographic contexts or time periods; begin a synthesis matrix linking each study to your sub\u2011questions. |\n| 6 | Data\u2011source audit |\u202fCatalogue all potential datasets (census, land\u2011use, transport, housing price indices); assess accessibility, granularity, and licensing; shortlist 2\u20113 primary sources. |\n| 7 | Critical gaps |\u202fUsing the synthesis matrix, pinpoint where existing literature leaves unanswered questions; draft a \u201cresearch gap\u201d paragraph to anchor your contribution. |\n| 8 | Preliminary model design |\u202fSketch candidate empirical models (specify dependent/independent variables, fixed effects, spatial lags); note required variables and any proxy measures. |\n| 9 | Feasibility check |\u202fMatch model requirements to shortlisted datasets; identify missing variables or measurement issues; plan supplemental data collection if needed. |\n| 10 | Refine literature narrative |\u202fWrite a 2\u2011page \u201cstate of the art\u201d draft integrating theory, methods, and empirical findings; highlight how your model addresses the identified gaps. |\n| 11 | Peer feedback |\u202fShare the draft with advisor or a colleague; collect comments on clarity, relevance, and methodological soundness. |\n| 12 | Revise & finalize reading log |\u202fIncorporate feedback; produce a concise reading log (citation, key contribution, relevance to each sub\u2011question). This log will feed directly into your dissertation chapter. |\n\n**Next step:**\u202fConfirm the overall timeline (e.g., total weeks available) and any specific data or methodological constraints you already know, so I can adjust the schedule accordingly.",
+      "judge": {
+        "passed": false,
+        "available": false,
+        "dimensions": {},
+        "worst_problem": "",
+        "error": "ProviderError: The AI provider is at its usage limit. Please try again in about 9 minutes."
+      },
+      "passed": null
+    }
+  ]
+}

@@ -56,6 +56,6 @@ CONFIG = AgentConfig(
         "Encourage sensible progression; warn against ego-driven load jumps.",
         "Detailed nutrition/macros for medical conditions -> qualified dietitian.",
     ],
-    model=ModelConfig(temperature=0.5, max_tokens=1200),
-    prompt_version=2,
+    model=ModelConfig(temperature=0.5, max_tokens=800),
+    prompt_version=3,
 )

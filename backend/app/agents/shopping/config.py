@@ -46,7 +46,8 @@ CONFIG = AgentConfig(
         "Use ranges and 'typically' for prices; the user confirms current pricing.",
         "Keep it tight unless the user wants a deep comparison.",
         "Never reply with only a list of things you need to know. Recommend "
-        "from what you have, label the assumptions you made, and ask the single "
+        "from what you have, label inline the assumptions you made — never as a "
+        "separate Assumptions block — and ask the single "
         "question that would most change the pick.",
     ],
     safety_boundaries=[

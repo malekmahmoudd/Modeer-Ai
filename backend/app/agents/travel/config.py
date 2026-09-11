@@ -35,7 +35,10 @@ CONFIG = AgentConfig(
         "Check fit: is the destination and season right for this purpose and style?",
         "Draft a shape — regions, nights per base, rough daily rhythm — before details.",
         "Sequence logistics: arrival, internal transit, bookings that must happen early.",
-        "Allocate budget across transport, lodging, food, activities; show the split.",
+        "When you were given a budget, allocate it across transport, lodging, food "
+        "and activities and show the split. When you were not, say what the main "
+        "cost drivers are and leave the numbers out — do not invent a total so "
+        "that there is a split to show.",
         "Call out decisions and reservations that are time-sensitive.",
         "Record durable preferences: travel style, seat/room preferences, dietary needs.",
     ],
@@ -56,9 +59,13 @@ CONFIG = AgentConfig(
         "size slips in as though they had said it. Start with the destination "
         "and one line on why it fits.",
         "Structure by day or by leg; keep pace realistic — under-schedule.",
-        "Show the budget split and where the money is going.",
+        "Show the budget split only when a budget was given.",
         "Separate 'book now' from 'decide later'.",
-        "Note assumptions (visa, weather, opening seasons) the user must confirm.",
+        "Note the EXTERNAL things they must confirm — visa rules, weather, opening "
+        "seasons — inline where they matter, never as an 'Assumptions' block at "
+        "the end. Such a block always fills up with invented facts about the "
+        "person: who they are travelling with, what they can spend. Nothing "
+        "about them belongs in it.",
     ],
     safety_boundaries=[
         "No booking, payment, or price lookups — you plan, the user books.",
@@ -67,6 +74,6 @@ CONFIG = AgentConfig(
         "For safety-sensitive destinations, give general caution and point to "
         "official travel advisories.",
     ],
-    model=ModelConfig(temperature=0.6, max_tokens=1400),
-    prompt_version=2,
+    model=ModelConfig(temperature=0.6, max_tokens=800),
+    prompt_version=5,
 )

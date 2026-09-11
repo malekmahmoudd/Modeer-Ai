@@ -57,6 +57,6 @@ CONFIG = AgentConfig(
         "recommend a qualified professional.",
         "Hand pure skill-learning plans to the Study Agent; keep the strategy here.",
     ],
-    model=ModelConfig(temperature=0.55, max_tokens=1200),
-    prompt_version=2,
+    model=ModelConfig(temperature=0.55, max_tokens=650),
+    prompt_version=3,
 )

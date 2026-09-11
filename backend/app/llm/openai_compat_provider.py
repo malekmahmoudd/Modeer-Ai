@@ -13,6 +13,7 @@ import httpx
 
 from app.core.config import settings
 from app.core.observability import (
+    record_length_stop,
     record_provider_failure,
     record_provider_success,
     record_rate_limit,
@@ -131,11 +132,17 @@ class OpenAICompatProvider(LLMProvider):
                             choice = choices[0]
                             reason = choice.get("finish_reason")
                             if reason == "length":
-                                raise ProviderError(
-                                    "The reply reached its length limit. "
-                                    "Please ask for a shorter "
-                                    "answer."
-                                )
+                                # Keep what has already streamed. Discarding a
+                                # long, useful reply because the model ran to
+                                # its cap is worse for the reader than ending a
+                                # sentence early, and it is what made max_tokens
+                                # unusable as a length control. Only a cap hit
+                                # with nothing emitted is a real failure, and
+                                # that falls through to the check below.
+                                logger.info("provider=%s stopped at token cap", self.name)
+                                record_length_stop(model)
+                                finished = True
+                                break
                             if reason:
                                 finished = True
                             text = (choice.get("delta") or {}).get("content")

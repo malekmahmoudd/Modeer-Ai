@@ -94,6 +94,61 @@ regraded. This confirms a quality blocker independently of the original quota
 interruption. The full corrected evidence is in
 `quality-production-launch-regraded.json`.
 
+## Answer-length fix — 2026-09-11 (gate 1)
+
+Eleven of the fourteen regraded failures were `too_long`; the grounding findings
+were three. It was one dominant problem, and partly ours rather than the model's:
+the prompt said "under 350 words" while `max_tokens` handed the agent 1200–1400
+tokens, roughly 900–1050 words. The budget is the louder signal. `max_tokens`
+could not be used as a control either, because hitting the cap raised
+`ProviderError` and discarded the whole reply — the cap could only destroy an
+answer, never shorten one.
+
+Three changes:
+
+- **Truncation is graceful.** Running to the cap now keeps what has already
+  streamed and ends the reply; only a cap consumed with nothing emitted is still
+  an error. Counted as `length_stops` in readiness so a rising count shows the
+  cap fighting the prompt.
+- **Caps match the stated ceiling.** Plan agents 1200–1400 → 800, advice agents
+  → 650. Comfortably above the 450-word ceiling, far below the previous ~900.
+- **Limits the model can count.** At most three headings, one table, one line per
+  row or day; no "Why this works", "Downside test" or "Assumptions" block. Those
+  sections were exactly what Study and Finance padded with.
+
+Two further conflicts, the same bug class as Writing's rationale rule — a
+per-agent instruction contradicting a global rule, which the model resolves by
+doing the forbidden thing:
+
+- Travel was told "show the budget split" unconditionally *and* "never invent a
+  budget". It invented budgets so it had a split to show. The split is now
+  conditional on a budget having been given.
+- Travel was told to "note assumptions the user must confirm" while the global
+  rule forbids an Assumptions block. It produced one, filled with invented
+  personal facts ("You're traveling solo", "flexible budget"). Now scoped to
+  external items — visa, weather, seasons — inline, with nothing about the person.
+
+Rule 3 also now covers **which model or version of a thing someone owns**:
+Shopping turned "already on iPhone" into "your iPhone 13/14".
+
+### Measured on `openai/gpt-oss-120b`
+
+| | Deterministic | `too_long` | Word range |
+|---|---|---|---|
+| Before (39 responses, regraded) | 28/39 | **11** | 9–803 |
+| After length fix (18 responses) | 18/18 | **0** | 9–428 |
+| After travel/shopping fixes (6) | 6/6 | **0** | 229–345 |
+
+With the judge, the 18-response run scored 17/18 and the travel/shopping run
+5/6. Every reply ended on a complete sentence — the lower caps shortened answers
+by choice, not by truncation.
+
+**Not yet measured:** the owned-model/version rule was added after the last run,
+and a full 39-case run directly comparable to the 25/39 baseline did not
+complete — the provider's daily budget ran out after four cases. Resume it with
+`python quality_check.py --samples 3 --resume` on a fresh budget before treating
+gate 1 as closed.
+
 ## Remaining launch gates
 
 1. Address the measured answer-quality failures and repeat tests on the exact
