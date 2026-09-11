@@ -64,18 +64,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
-            <Link href="/account" className="grid min-h-11 place-items-center px-2 text-sm font-bold underline decoration-pink decoration-2 underline-offset-4">Account</Link>
-            {auth?.required && <button className="text-xs underline" onClick={async () => { await apiFetch("/auth/logout", { method: "POST" }); window.location.assign("/login"); }}>Sign out</button>}
+            {!atHome && <Link href="/account" className="grid min-h-11 place-items-center px-2 text-sm font-bold underline decoration-pink decoration-2 underline-offset-4">Account</Link>}
+            {!atHome && auth?.required && <button className="text-xs underline" onClick={async () => { await apiFetch("/auth/logout", { method: "POST" }); window.location.assign("/login"); }}>Sign out</button>}
             {name && (
-              <span className="hidden items-center gap-2 sm:flex">
-                <span className="text-[13px] font-semibold text-ink-soft">{name}</span>
+              <Link href="/account" aria-label="Your account" className="flex min-h-11 items-center gap-2">
+                <span className="hidden text-[13px] font-semibold text-ink-soft sm:inline">{name}</span>
                 <span
                   className="grid h-9 w-9 place-items-center rounded-full border-2 border-ink bg-sun text-[13px] font-black"
                   aria-hidden
                 >
                   {name.charAt(0).toUpperCase()}
                 </span>
-              </span>
+              </Link>
             )}
           </div>
         </div>

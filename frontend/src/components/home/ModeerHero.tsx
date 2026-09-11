@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 
-export function ModeerHero() {
+export function ModeerHero({ onboarding = false }: { onboarding?: boolean }) {
   const router = useRouter();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
@@ -13,7 +13,11 @@ export function ModeerHero() {
     if (pending) return;
     const q = draft.trim();
     setPending(true);
-    router.push(q ? `/agents/modeer?q=${encodeURIComponent(q)}` : "/agents/modeer");
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (onboarding) params.set("onboarding", "1");
+    const query = params.toString();
+    router.push(`/agents/modeer${query ? `?${query}` : ""}`);
   }
   return (
     <section className="sunshine-hero" aria-labelledby="hero-title">

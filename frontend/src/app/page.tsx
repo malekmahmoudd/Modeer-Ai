@@ -6,7 +6,6 @@ import { AgentGrid } from "@/components/AgentGrid";
 import { Scribble } from "@/components/art/Ink";
 import { TodayBand } from "@/components/home/TodayBand";
 import { ModeerHero } from "@/components/home/ModeerHero";
-import { MeetModeer } from "@/components/onboarding/MeetModeer";
 import { SectionHead } from "@/components/ui/primitives";
 import { useApi } from "@/lib/api";
 import type { UserProfile } from "@/types";
@@ -23,11 +22,9 @@ export default function HomePage() {
     );
   }
 
-  if (user && !user.onboarded) return <MeetModeer />;
-
   return (
     <div className="anim-fade sunshine-home">
-      <ModeerHero />
+      <ModeerHero onboarding={!!user && !user.onboarded} />
 
       <section className="sunshine-team-section">
         <SectionHead
