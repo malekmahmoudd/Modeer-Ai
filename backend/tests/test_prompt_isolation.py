@@ -172,9 +172,11 @@ def test_one_specialists_conversation_history_stays_in_its_own_prompt(client, re
     assert "STUDY-HISTORY-MARKER" not in recorder.prompt_for("Career Agent")
 
 
-def test_ask_my_team_keeps_each_specialists_private_notes_to_itself(
-    client, recorder, accounts, monkeypatch
-):
+def test_ask_my_team_uses_no_private_notes_at_all(client, recorder, accounts, monkeypatch):
+    """Every specialist's answer in a consult is handed to Modeer for the
+    synthesis. A private note used in that answer would reach an agent the
+    Memory page promises it never reaches — so a consult uses shared context only,
+    and no call it makes may carry a private note."""
     monkeypatch.setattr(settings, "team_enabled", True)
     sign_in, origin = accounts
     sign_in("a" * 40)
@@ -187,8 +189,11 @@ def test_ask_my_team_keeps_each_specialists_private_notes_to_itself(
         headers=origin,
     )
     assert response.status_code == 200, response.text
+    assert recorder.prompt_for("Study Agent") and recorder.prompt_for("Career Agent")
+    consult = recorder.everything()
+    assert "STUDY-PRIVATE-MARKER" not in consult
+    assert "CAREER-PRIVATE-MARKER" not in consult
 
-    study, career = recorder.prompt_for("Study Agent"), recorder.prompt_for("Career Agent")
-    assert "STUDY-PRIVATE-MARKER" in study and "CAREER-PRIVATE-MARKER" in career
-    assert "CAREER-PRIVATE-MARKER" not in study
-    assert "STUDY-PRIVATE-MARKER" not in career
+    # Positive control: the same note does reach Study in an ordinary chat.
+    _chat(client, origin, "study", "What should I revise?")
+    assert "STUDY-PRIVATE-MARKER" in recorder.calls[-1]["system"]

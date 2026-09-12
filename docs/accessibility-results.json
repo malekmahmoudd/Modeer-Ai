@@ -1,0 +1,186 @@
+{
+  "url": "https://localhost:8443",
+  "axe": {
+    "desktop /login": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          ".btn: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "desktop /signup": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          "button: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "desktop /recover": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          "button: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "desktop /privacy": [],
+    "desktop /login (invitation key)": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          ".btn: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "desktop /": [],
+    "desktop /team": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          ".mt-4: Fix any of the following: Element has insufficient color contrast of 4.16 (foreground color: #e6296f, background color: #fffcf2, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "desktop /memory": [],
+    "desktop /goals": [],
+    "desktop /account": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          "section:nth-child(3) > form > .btn-pink.mt-4.btn: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1",
+          "section:nth-child(4) > .btn-pink.btn: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "desktop /agents/modeer": [],
+    "desktop /agents/study": [],
+    "phone /login": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          ".btn: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "phone /signup": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          "button: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "phone /recover": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          "button: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "phone /privacy": [],
+    "phone /login (invitation key)": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          ".btn: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "phone /": [],
+    "phone /team": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          ".mt-4: Fix any of the following: Element has insufficient color contrast of 4.16 (foreground color: #e6296f, background color: #fffcf2, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "phone /memory": [],
+    "phone /goals": [],
+    "phone /account": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [
+          "section:nth-child(3) > form > .btn-pink.mt-4.btn: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1",
+          "section:nth-child(4) > .btn-pink.btn: Fix any of the following: Element has insufficient color contrast of 3.27 (foreground color: #ffffff, background color: #ff438a, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1"
+        ]
+      }
+    ],
+    "phone /agents/modeer": [],
+    "phone /agents/study": [],
+    "desktop /signup (recovery codes)": []
+  },
+  "keyboard": {
+    "/login": {
+      "stops": 7,
+      "problems": []
+    },
+    "/signup": {
+      "stops": 6,
+      "problems": []
+    },
+    "/recover": {
+      "stops": 5,
+      "problems": []
+    },
+    "/privacy": {
+      "stops": 3,
+      "problems": []
+    },
+    "/": {
+      "stops": 14,
+      "problems": []
+    },
+    "/team": {
+      "stops": 18,
+      "problems": []
+    },
+    "/memory": {
+      "stops": 28,
+      "problems": []
+    },
+    "/goals": {
+      "stops": 10,
+      "problems": []
+    },
+    "/account": {
+      "stops": 15,
+      "problems": []
+    },
+    "/agents/modeer": {
+      "stops": 12,
+      "problems": []
+    },
+    "/agents/study": {
+      "stops": 14,
+      "problems": []
+    }
+  }
+}

@@ -37,7 +37,18 @@ class User(UUIDMixin, TimestampMixin, Base):
     session_epoch: Mapped[int] = mapped_column(
         Integer, default=0, nullable=False, server_default="0"
     )
+    #: scrypt hash (app.core.passwords). None for accounts that sign in with an
+    #: operator-issued access key and have not set a password.
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    #: Whether Modeer may learn facts from this person's messages automatically.
+    #: Their own saves and edits on the Memory page are unaffected.
+    memory_auto: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, server_default="1"
+    )
 
+    recovery_codes: Mapped[list[RecoveryCode]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
     conversations: Mapped[list[Conversation]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
@@ -51,6 +62,22 @@ class User(UUIDMixin, TimestampMixin, Base):
     briefings: Mapped[list[Briefing]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+
+
+class RecoveryCode(UUIDMixin, TimestampMixin, Base):
+    """One single-use way back into an account whose password was lost.
+
+    Only a hash is kept. A code is spent by setting ``used_at``, not deleted, so
+    the Account page can say how many remain.
+    """
+
+    __tablename__ = "recovery_codes"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    code_hash: Mapped[str] = mapped_column(String(64))
+    used_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="recovery_codes")
 
 
 class Agent(TimestampMixin, Base):

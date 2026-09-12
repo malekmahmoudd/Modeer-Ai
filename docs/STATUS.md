@@ -1,9 +1,22 @@
 # Project status — Modeer Personal AI Team MVP
 
-_Last updated: 2026-09-11 · phase: production-readiness for a private, invite-only deployment_
+_Last updated: 2026-09-13 · phase: production readiness, invite-only or open signup_
 
 
-## Current: review remediation — 2026-09-12
+## Current: owner decisions implemented — 2026-09-13
+
+Open signup (behind `SIGNUP_ENABLED`, default off) with passwords and single-use
+recovery codes; a per-person automatic-memory switch; Ask My Team without
+private notes; refunds for provider failures before any text; minimal public
+health and agent bodies; sync chat off in production; Next 16 with a per-request
+nonce CSP; an automated accessibility scan and keyboard pass. Schema **0004**.
+**314 backend tests** (also inside the production image), production rehearsal
+**23/23**, 0 frontend advisories. Quality, three samples: partial at **32/36**,
+two real grounding lapses. Open: colour contrast (owner), a real screen-reader
+pass, a real host and domain, off-host restore, alert delivery, a physical
+phone. Details: `launch-fixes.md` → "Owner decisions implemented — 2026-09-13".
+
+## Earlier: review remediation — 2026-09-12
 
 An independent read-only review of the pass below found twelve defects; all the
 code findings are fixed with regression tests, plus a latent message-ordering

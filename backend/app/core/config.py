@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     #: implementation is kept and tested; set TEAM_ENABLED=true to switch it on
     #: once a UI exists. See docs/launch-fixes.md.
     team_enabled: bool = False
+    #: Open signup (POST /api/auth/signup and the /signup page). Off until you
+    #: choose to open the doors: an invite-only beta keeps provisioning accounts
+    #: by hand, and turning this on is the public-launch step. SIGNUP_ENABLED=true.
+    signup_enabled: bool = False
 
     # --- Operations ---
     #: Accounts allowed to see the monitoring dashboard. It shows every
@@ -62,10 +66,10 @@ class Settings(BaseSettings):
             if not self.llm_api_key:
                 raise ValueError("Production requires LLM_API_KEY")
         if self.auth_required:
-            if len(self.auth_secret) < 32 or not self.auth_access_keys:
-                raise ValueError(
-                    "Authentication requires a strong AUTH_SECRET and AUTH_ACCESS_KEYS"
-                )
+            # Access keys are optional now: accounts can also sign in with a
+            # password. The signing secret is what every session rests on.
+            if len(self.auth_secret) < 32:
+                raise ValueError("Authentication requires a strong AUTH_SECRET")
             if any(
                 len(v) != 64 or any(c not in "0123456789abcdef" for c in v)
                 for v in self.auth_access_keys.values()

@@ -13,6 +13,7 @@ from app.agents.runtime import AgentRuntime
 from app.conversations import service as convo_service
 from app.conversations.schemas import ChatRequest
 from app.core.auth import session_epoch_matches
+from app.core.config import settings
 from app.core.usage import account_scope, limited_caller
 from app.db.session import SessionLocal
 from app.users.service import get_by_id, get_or_create_demo_user
@@ -26,6 +27,8 @@ def _resolve_user(db, x_user_id: str | None, request: Request | None = None):
     if x_user_id:
         user = get_by_id(db, x_user_id)
         if user is None:
+            if settings.auth_required:  # see app.api.deps.get_current_user
+                raise HTTPException(status_code=401, detail="Please sign in")
             raise HTTPException(status_code=404, detail="Unknown user")
         if request is not None and not session_epoch_matches(request, user):
             raise HTTPException(status_code=401, detail="Please sign in")
@@ -101,7 +104,14 @@ async def chat_sync(
     x_user_id: CallerId,
     request: Request,
 ) -> dict:
-    """Non-streaming convenience endpoint (used by tests and as a fallback)."""
+    """Non-streaming convenience endpoint for tests and local tools.
+
+    No screen uses it, so production does not serve it: an unused route is
+    still something to keep correct and defend. Checked after authentication,
+    like Ask My Team, so an anonymous caller still gets 401.
+    """
+    if settings.environment == "production":
+        raise HTTPException(status_code=404, detail="Not Found")
     agent = get_agent(agent_id)
     if agent is None:
         raise HTTPException(status_code=404, detail="Unknown agent")

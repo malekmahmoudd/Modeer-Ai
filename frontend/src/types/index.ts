@@ -14,15 +14,8 @@ export interface Agent {
   starters: string[];
 }
 
-export interface AgentDetail extends Agent {
-  reasoning_framework: string[];
-  response_behavior: string[];
-  safety_boundaries: string[];
-  shared_context_fields: string[];
-  memory_namespace: string;
-  prompt_version: number;
-  model: { model: string | null; temperature: number; max_tokens: number };
-}
+/** The API no longer publishes how an agent is built — only what a screen shows. */
+export type AgentDetail = Agent;
 
 /** How an assistant reply ended. Replies saved before this existed completed. */
 export type Completion = "completed" | "truncated" | "interrupted" | "failed";
@@ -135,7 +128,19 @@ export interface UserProfile {
   display_name: string;
   onboarded: boolean;
   profile: Record<string, unknown>;
+  memory_auto: boolean;
   created_at: string;
+}
+
+export interface AuthStatus {
+  required: boolean;
+  signup_enabled: boolean;
+}
+
+export interface AccountSecurity {
+  has_password: boolean;
+  recovery_codes_left: number;
+  email: string | null;
 }
 
 export type ChatStreamEvent =

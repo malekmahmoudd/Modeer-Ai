@@ -4,12 +4,31 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
+/** Pages a signed-out person can use. A 401 there is an answer, not a reason to leave. */
+export const PUBLIC_PAGES = ["/login", "/privacy", "/signup", "/recover"];
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
     super(message);
     this.status = status;
   }
+}
+
+/**
+ * A validation failure arrives as a list of objects, one per field. Turned into
+ * the sentences they carry — otherwise a form shows "[object Object]".
+ */
+function readableDetail(detail: unknown): string {
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => (item && typeof item === "object" && "msg" in item ? String(item.msg) : ""))
+      .map((msg) => msg.replace(/^Value error, /, ""))
+      .filter(Boolean)
+      .join(" ");
+  }
+  return "";
 }
 
 export async function apiFetch<T>(
@@ -23,14 +42,14 @@ export async function apiFetch<T>(
       ...(init.headers || {}),
     },
   });
-  if (res.status === 401 && typeof window !== "undefined" && window.location.pathname !== "/login") {
+  if (res.status === 401 && typeof window !== "undefined" && !PUBLIC_PAGES.includes(window.location.pathname)) {
     window.location.assign("/login");
   }
   if (!res.ok) {
     let detail = res.statusText;
     try {
       const body = await res.json();
-      detail = body.detail || JSON.stringify(body);
+      detail = readableDetail(body.detail) || JSON.stringify(body);
     } catch {
       /* keep statusText */
     }

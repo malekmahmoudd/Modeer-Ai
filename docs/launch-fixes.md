@@ -626,17 +626,153 @@ proven in the rehearsal, not there. The journey's wording was corrected to say
 so — it had claimed the reply was "abandoned without a stored reply" while
 asserting nothing of the kind.
 
+## Owner decisions implemented — 2026-09-13
+
+The review-remediation work above was committed as `ee5328d`. The owner then
+asked for the open items and product decisions to be done, choosing **open
+signup**, **password** sign-in, **recovery codes**, and automatic memory **on,
+with a per-person switch**. Everything below is on top of `ee5328d`.
+
+**Accounts**
+
+- **Open signup behind a switch.** `SIGNUP_ENABLED` (default `false`) adds
+  `/signup`: name, email, password (10–128 characters). Passwords are hashed with
+  scrypt (`app/core/passwords.py`). Signup issues ten single-use recovery codes,
+  shown once, stored as SHA-256 hashes; the page will not continue until the
+  person ticks "I've saved these codes". `AUTH_ACCESS_KEYS` is no longer required
+  to start; invitation keys keep working beside passwords.
+- **Password sign-in** answers a wrong password and an unknown email with the
+  same message after the same work (a decoy hash is checked when there is no
+  account).
+- **Recovery.** `/recover` takes email, code and a new password; the code is
+  spent, every other session ends, and the page says how many codes are left.
+  The Account page changes the password (other sessions end), sets a first
+  password on a key account (which issues codes), and makes a fresh set of codes
+  (old ones retired). A wrong confirmation password answers 403, not 401, so the
+  page is not sent to sign in mid-form.
+- **Last resort for the operator:** `provision_user.py --rotate --clear-password`
+  for someone who has lost the password and every code (OPERATIONS.md).
+- **Throttles:** 10 password or recovery attempts per email per 15 minutes; 5
+  signups per client address per hour. Counters live in `usage_buckets` under
+  hashed subjects.
+- **Schema 0004:** `users.password_hash`, `users.memory_auto`, `recovery_codes`.
+  Email changes are refused for password accounts (the email is the sign-in
+  name); profile fields are bounded.
+
+**Privacy and consent**
+
+- **Automatic memory has a per-person switch** (Account → What Modeer learns).
+  Off means no extraction call is made at all; saving by hand still works and
+  nothing stored is removed. It is in the export.
+- **Ask My Team no longer carries private notes.** A consult builds each
+  specialist's prompt from shared context only and learns nothing, so a
+  specialist's private notes cannot reach Modeer through its answer. Proven at
+  the provider's input, with a positive control that an ordinary chat does
+  include them.
+- **Failed calls are refunded.** A provider failure before any text returns the
+  charge to the account's window; anything that produced text stays charged.
+  `docs/usage-limits.md` records the caveat that the provider may still have
+  counted it.
+
+**Public surface**
+
+- `/api/health` answers `status` and `database` only in production;
+  `/api/health/detail` answers `status`, `database`, `schema_current` to anyone
+  and the full body only to signed-in `ADMIN_ACCOUNTS`. `watchdog.sh` reads only
+  `status`.
+- `/api/agents/{id}` no longer shows model settings or the prompt framework.
+- The synchronous chat route answers 404 in production.
+
+**Frontend (owner-authorised for these items)**
+
+- **Next 16.3.5** (`eslint-config-next` 16.3.5; ESLint flat config). `npm audit
+  --omit=dev`: 0 vulnerabilities. Next 16's new React Compiler lint rules flag
+  five existing patterns; they are set to *warn*, not refactored, so the owner's
+  components are unchanged (0 errors, 13 warnings).
+- **Nonce CSP.** `src/proxy.ts` sends a per-request policy with `'nonce-…'
+  'strict-dynamic'` and no `'unsafe-inline'` for scripts; pages render per
+  request (`await connection()` in the root layout). Styles keep
+  `'unsafe-inline'` for `style=""` attributes. Caddy keeps a nonce-less fallback
+  for responses without a policy, plus COOP and `Permissions-Policy`;
+  `X-Powered-By` is off.
+- **Validation errors are readable.** `apiFetch` turned FastAPI's list of field
+  errors into "[object Object]"; it now shows the sentences. Found by the
+  rehearsal.
+
+Frontend files touched, all new UI using the existing classes and colours:
+`package.json`, `package-lock.json`, `tsconfig.json` (Next's build set
+`jsx: react-jsx`), `.eslintrc.json` (removed), `eslint.config.mjs` (new),
+`next.config.mjs`, `src/proxy.ts` (new), `src/app/layout.tsx`,
+`src/app/login/page.tsx`, `src/app/signup/page.tsx` (new),
+`src/app/recover/page.tsx` (new), `src/app/account/page.tsx`,
+`src/components/auth/RecoveryCodes.tsx` (new), `src/components/AppShell.tsx`,
+`src/lib/api.ts`, `src/types/index.ts`, and
+`src/components/goals/GoalsManager.tsx` (one attribute, below).
+
+**Accessibility**
+
+`deploy/tests/production-rehearsal/accessibility-check.cjs` ran axe-core (WCAG
+2.2 A/AA and best practice) on eleven pages plus the recovery-code screen, at
+1280px and 390px, and a keyboard-only pass (`docs/accessibility-results.json`):
+
+- **Keyboard:** every page reachable by Tab, every stop on screen with a visible
+  focus indicator; signup through to a first message works without a mouse.
+- **Names, roles, labels, landmarks, headings:** no violations. The one item
+  axe flagged for review — an `aria-label` on a plain `div` in the Goals summary,
+  which screen readers ignore — now has `role="group"`. Invisible change.
+- **Colour contrast — not changed, owner's call.** White text on the pink
+  buttons (`#ffffff` on `#ff438a`) is **3.27:1**, below the 4.5:1 AA minimum for
+  14px bold text; it appears on Login, Signup, Recover and two Account buttons.
+  One pink link on Team (`#e6296f` on `#fffcf2`) is **4.16:1**. Darker pink,
+  dark text on pink, or larger button text (18.66px bold counts as large, 3:1)
+  would each pass.
+- **Not done:** a pass with a real screen reader (NVDA or VoiceOver). Automated
+  scans catch perhaps a third of real problems; this is evidence, not sign-off.
+
+**Three-sample quality run — partial.** `docs/quality-release-2026-09-13.json.partial`,
+recorded at `ee5328d` (release settings: `openai/gpt-oss-120b`, Writing on
+`qwen/qwen3.8-27b`, reasoning `low`, judge `qwen/qwen3.8-27b`). The daily quota
+stopped it at **36 of 39** cases: **32 passed, 4 failed**, deterministic rubric
+36/36, no provider errors, nothing truncated. All four failures are the judge's
+grounding and concision checks:
+
+| Case | Judge's complaint | Adjudication |
+|---|---|---|
+| Modeer, sample 1 | concision: a "Day-by-day plan" heading | Likely judge false positive; the plan was asked for |
+| Study, sample 1 | grounding: "have roughly 2 h / day" | Contested: stated as an assumption, not as a fact about the person |
+| Fitness, sample 1 | grounding: "dumbbells (up to ~20 kg)" | **Real** — an invented detail |
+| Shopping, sample 2 | grounding: compact phone; also "typically £429–£479" | **Real** — an unsupported price claim the rubric does not catch |
+
+The two defects fixed on 2026-09-12 (invented month, question-only answer) did
+not recur in 36 cases. Two real grounding lapses remain at roughly one in
+eighteen replies; no prompt change was made for them in this pass. The last
+three cases were not run: the code has changed since, so finishing needs
+`--resume --allow-code-change` (mixing revisions, recorded as such) or a fresh
+run on a new day's quota.
+
+**Evidence (2026-09-13)**
+
+| Check | Result |
+|---|---|
+| Backend suite | **314 passed** (283 + 31), Ruff clean, new and touched files formatted |
+| Backend suite inside the production image | **314 passed**; image holds exactly the locked set |
+| `alembic upgrade head` + `alembic check` | Head 0004, no drift; downgrade and re-upgrade clean |
+| Production rehearsal, Chrome | **23/23** checks, zero CSP violations, zero page errors — `docs/production-rehearsal-results.json` |
+| Accessibility check | No violations except colour contrast: 7 elements on 6 pages, at both widths; keyboard pass clean |
+| Frontend | typecheck clean; lint 0 errors (13 warnings); production build; link policy 8 allowed / 21 refused |
+| `npm audit --omit=dev` | **0 vulnerabilities** (was the `postcss` advisory) |
+| Backend lock | unchanged since `ee5328d` (audit clean then) |
+
 ## Remaining launch gates
 
-Production readiness is **not** claimed. Status after this pass:
+Production readiness is **not** claimed. Status after the 2026-09-13 pass:
 
-1. **Answer quality — both known defects addressed, needs a wider re-measure.**
-   The two rules the model was breaking were tightened and measured the same day
-   (above): neither defect recurred, and the 13-case suite stayed at 12/13 with
-   its remaining failure a 12-word length overshoot. Four samples per case is
-   thin. Run `quality_check.py --samples 3` on fresh quota and adjudicate what it
-   finds before calling quality closed. Free-provider quotas remain shared across
-   all users and can stop replies even when the app works correctly.
+1. **Answer quality — two grounding lapses remain.** The three-sample run
+   (partial, 32/36) found an invented equipment detail and an unsupported price;
+   the rubric does not catch prices. Decide whether to tighten grounding for
+   Fitness and Shopping, then finish or re-run the three-sample suite on fresh
+   quota. Free-provider quotas remain shared across all users and can stop
+   replies even when the app works correctly.
 2. **Real host and domain — not verified (owner).** TLS from a public CA, secure
    cookies, cross-account denial, streaming and interrupted reconnection on the
    real domain. The local rehearsal covered the same checks with Caddy's local
@@ -646,15 +782,15 @@ Production readiness is **not** claimed. Status after this pass:
    rules, and restore from that storage.
 4. **Operator delivery — not verified (owner).** Configure a real recipient and
    confirm receipt of outage, recovery, backup-failure and test notifications.
-5. **Physical phone — not verified.** The 390px checks ran in desktop Chrome.
-   No accessibility scanner or screen-reader pass has been run either; the
-   announcement gap found in review is fixed and checked in a browser.
-6. **Memory remediation** — run `tools.memory_audit` on any database that held
+5. **Physical phone and a screen reader — not verified.** The 390px checks ran
+   in desktop Chrome. The automated accessibility scan and keyboard pass are
+   done; a pass with NVDA or VoiceOver is not.
+6. **Colour contrast (owner).** Pink buttons at 3.27:1 and one Team link at
+   4.16:1 fail WCAG AA; see Accessibility above. A design decision.
+7. **Memory remediation** — run `tools.memory_audit` on any database that held
    data before this change, and follow the process above.
-7. **Frontend dependency advisory** — `next@15.5.25` bundles a `postcss` with
-   published advisories; the fix is a major upgrade to Next 16. The affected
-   code processes CSS at build time, from this repository's own files, so the
-   practical exposure is low. Owner's call, since it touches the frontend.
+8. **Backup round-trip on schema 0004** — rerun once; the last one was on 0003.
 
-Invite-only beta is the current account model; unrestricted public signup is
-not built.
+The account model is now the operator's choice: invitation keys only
+(`SIGNUP_ENABLED=false`, the default) or open signup with passwords and recovery
+codes. There is no email-based reset by design.

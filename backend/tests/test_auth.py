@@ -136,6 +136,8 @@ PUBLIC_ROUTES = {
     ("GET", "/api/legal/privacy"),  # readable before you accept an invitation
     ("POST", "/api/auth/login"),
     ("POST", "/api/auth/logout"),
+    ("POST", "/api/auth/signup"),  # creates the session it would otherwise need
+    ("POST", "/api/auth/recover"),  # for exactly the person who cannot sign in
 }
 _SAMPLE_BODY = {
     "/api/goals": {"title": "x"},

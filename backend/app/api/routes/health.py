@@ -5,13 +5,15 @@ from functools import lru_cache
 from pathlib import Path
 
 from alembic.script import ScriptDirectory
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 from sqlalchemy import text
 
 from app.agents.registry import all_agents
 from app.api.deps import DbSession
+from app.core.auth import COOKIE, session_claims
 from app.core.config import settings
 from app.core.observability import health as health_counters
+from app.users.service import get_by_id
 
 router = APIRouter(tags=["system"])
 
@@ -46,22 +48,30 @@ def health(db: DbSession) -> dict:
         db_ok = True
     except Exception:  # noqa: BLE001
         db_ok = False
-    return {
+    body = {
         "status": "ok" if db_ok else "degraded",
         "database": "ok" if db_ok else "error",
-        "llm_provider": settings.llm_provider,
-        "llm_model": settings.llm_model,
-        "agents": len(all_agents()),
-        "environment": settings.environment,
     }
+    if settings.environment != "production":
+        # Handy on a development machine; in production the provider, model and
+        # environment are nobody's business but the operator's.
+        body |= {
+            "llm_provider": settings.llm_provider,
+            "llm_model": settings.llm_model,
+            "agents": len(all_agents()),
+            "environment": settings.environment,
+        }
+    return body
 
 
 @router.get("/health/detail")
-def health_detail(db: DbSession, response: Response) -> dict:
-    """Readiness plus what this process has seen since it started.
+def health_detail(db: DbSession, response: Response, request: Request) -> dict:
+    """Readiness, and — for an operator — what this process has seen since start.
 
-    Public on purpose: it exposes counts and timings, never content, and an
-    uptime check that needs a credential is one more thing to break at 3am.
+    The status code and ``status`` stay public: an uptime check that needs a
+    credential is one more thing to break at 3am, and the watchdog reads only
+    those. The counters, model names, incident ids and error types are for an
+    admin: they describe the deployment's weak moments to anyone who asks.
     """
     try:
         db.execute(text("SELECT 1"))
@@ -84,16 +94,37 @@ def health_detail(db: DbSession, response: Response) -> dict:
     if settings.environment == "production" and not schema_current:
         ready = False
     response.status_code = 200 if ready else 503
-    return {
+    public = {
         "status": "ok" if ready else "degraded",
         "database": "ok" if db_ok else "error",
+        "schema_current": schema_current,
+    }
+    if not _operator(request, db):
+        return public
+    return {
+        **public,
         "schema_revision": ", ".join(sorted(applied)) or None,
         "expected_schema_revision": ", ".join(sorted(expected)) or None,
-        "schema_current": schema_current,
         "environment": settings.environment,
         "auth_required": settings.auth_required,
         **counters,
     }
+
+
+def _operator(request: Request, db) -> bool:
+    """Whether the caller may see the full readiness detail.
+
+    Everyone, when authentication is off (a local development server). With it
+    on, only a signed-in account listed in ADMIN_ACCOUNTS whose session is
+    current — the same people who can open the dashboard.
+    """
+    if not settings.auth_required:
+        return True
+    claims = session_claims(request.cookies.get(COOKIE, ""))
+    if not claims or claims[0] not in settings.admin_accounts:
+        return False
+    account = get_by_id(db, claims[0])
+    return account is not None and (account.session_epoch or 0) == claims[1]
 
 
 def _erroring(counters: dict) -> bool:

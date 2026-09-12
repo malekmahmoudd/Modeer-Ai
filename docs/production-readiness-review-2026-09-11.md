@@ -560,3 +560,23 @@ the 13-case suite held at 12/13 with total length slightly down. Four samples a
 case is thin evidence: a three-sample suite run on fresh quota is the next
 measurement. One journey check was found to be keyword-based and failing a good
 answer; it now grades deterministically.
+
+## Appendix — owner decisions (added 2026-09-13)
+
+The owner decided the product questions and asked for them to be implemented, on
+top of commit `ee5328d`. Evidence: `launch-fixes.md` → "Owner decisions
+implemented — 2026-09-13".
+
+| Item | Status |
+|---|---|
+| PD-1 | **Done** — per-request nonce with `'strict-dynamic'` for scripts (`frontend/src/proxy.ts`), no `'unsafe-inline'` for scripts; styles keep it for `style=""` attributes. Checked in the rehearsal: nonce differs per request, zero violations |
+| PD-2 | **Done** — anonymous health bodies reduced to up/down fields; full readiness only for `ADMIN_ACCOUNTS`; agent detail no longer shows model settings or framework. The agent *list* already showed only public fields |
+| PD-3 | **Done** — a provider failure before any text is refunded; partial replies and cancellations stay charged |
+| PD-4 | **Partly done** — a per-person switch for automatic memory. Unchanged: hand-saved sensitive facts still reach agents whose context filter includes their category, and Modeer |
+| PD-5 | **Done** — the synchronous chat route answers 404 in production |
+| PD-6 | **Done for private notes** — a consult uses shared context only and runs no extraction. Unchanged: each consult still adds an "Ask My Team" conversation to each chosen specialist's history, and a malformed body gets 422 before the 404 while off |
+| PD-7 | **Open** — not part of this request |
+| PD-8 | **Done** — no `X-Powered-By`; `Permissions-Policy` and `Cross-Origin-Opener-Policy` sent |
+| CG-5 (frontend) | **Fixed** — Next 16.3.5; `npm audit --omit=dev` reports 0 |
+| CG-6 | **Partly done** — axe-core scan at two widths and a keyboard pass; only colour contrast fails (owner's design call). No physical device, no real screen reader |
+| Public production account model | **Built** — open signup behind `SIGNUP_ENABLED`, passwords, single-use recovery codes, throttles. No email reset, by design |

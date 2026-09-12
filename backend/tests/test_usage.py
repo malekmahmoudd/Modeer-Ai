@@ -107,6 +107,78 @@ def test_failed_provider_keeps_charge():
         assert db.scalar(select(UsageBucket.amount).where(UsageBucket.account == "alice")) == 361
 
 
+def _run_budgeted(inner, account="bob"):
+    from app.core.usage import BudgetedProvider
+
+    async def run():
+        token = account_scope.set(account)
+        got = []
+        try:
+            async for delta in BudgetedProvider(inner).stream_chat(
+                system="hello", messages=[], model="test", temperature=0, max_tokens=100
+            ):
+                got.append(delta)
+        except Exception as exc:  # noqa: BLE001 - the caller asserts on the type
+            return got, exc
+        finally:
+            account_scope.reset(token)
+        return got, None
+
+    outcome = asyncio.run(run())
+    with SessionLocal() as db:
+        charged = db.scalar(select(UsageBucket.amount).where(UsageBucket.account == account))
+    return outcome, charged
+
+
+def test_a_provider_refusal_before_any_text_is_refunded():
+    """Every failure offers "Try again"; charging each one would let a short
+    outage use up a person's whole day for replies they never got."""
+    from app.llm.openai_compat_provider import ProviderError
+
+    class Refuses:
+        name = "refuses"
+
+        async def stream_chat(self, **kwargs):
+            raise ProviderError("The AI provider could not respond (HTTP 503).")
+            yield ""
+
+    (_, error), charged = _run_budgeted(Refuses())
+    assert isinstance(error, ProviderError)
+    assert charged == 0
+
+
+def test_a_reply_that_produced_text_stays_charged_even_if_cut_short():
+    from app.llm.base import INTERRUPTED, StreamEnded
+
+    class CutShort:
+        name = "cut"
+
+        async def stream_chat(self, **kwargs):
+            yield "Half an answer"
+            raise StreamEnded(INTERRUPTED, "dropped")
+
+    (got, error), charged = _run_budgeted(CutShort(), account="carol")
+    assert got == ["Half an answer"] and isinstance(error, StreamEnded)
+    assert charged == 361, "tokens were spent on text the person received"
+
+
+def test_the_account_allowance_is_still_enforced_after_refunds(monkeypatch):
+    """A refund returns exactly what was taken, never more."""
+    from app.llm.openai_compat_provider import ProviderError
+
+    class Refuses:
+        name = "refuses"
+
+        async def stream_chat(self, **kwargs):
+            raise ProviderError("refused")
+            yield ""
+
+    for _ in range(3):
+        _run_budgeted(Refuses(), account="dave")
+    (_, _), charged = _run_budgeted(Refuses(), account="dave")
+    assert charged == 0
+
+
 def test_memory_extraction_is_charged(client, monkeypatch):
     from app.llm.mock_provider import MockLLMProvider
 

@@ -42,8 +42,21 @@ def get_or_create_demo_user(db: Session) -> User:
     return user
 
 
+class EmailChangeRefused(ValueError):
+    """The sign-in email of a password account changes with the password, not here."""
+
+
 def update_profile(db: Session, user: User, data: ProfileUpdate) -> User:
     payload = data.model_dump(exclude_unset=True)
+    if "email" in payload:
+        new_email = payload["email"].strip().lower() if payload["email"] else None
+        if user.password_hash is not None and new_email != user.email:
+            # For a password account the email is how they sign in and recover;
+            # a session alone should not be enough to move it.
+            raise EmailChangeRefused(
+                "This account signs in with its email; it cannot be changed here."
+            )
+        payload["email"] = new_email
     if "profile" in payload and payload["profile"] is not None:
         merged = dict(user.profile or {})
         merged.update(payload.pop("profile"))
@@ -83,6 +96,9 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
             "display_name": user.display_name,
             "onboarded": user.onboarded,
             "profile": user.profile or {},
+            "memory_auto": user.memory_auto,
+            # How the account signs in — never the password or code hashes.
+            "signs_in_with": "password" if user.password_hash else "access key",
             "created_at": when(user.created_at),
         },
         "conversations": [

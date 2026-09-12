@@ -41,6 +41,8 @@ services:
       LLM_BASE_URL: http://upstream:9000/v1
       LLM_MODEL: rehearsal-model
       MEMORY_EXTRACTION: rules
+      SIGNUP_ENABLED: "true"
+      ADMIN_ACCOUNTS: '["00000000-0000-4000-8000-00000000000a"]'
       # One run makes a few dozen requests; the account limits have their own
       # tests (tests/test_usage.py) and are not what this rehearses.
       ACCOUNT_REQUESTS_PER_MINUTE: "60"

@@ -2,7 +2,13 @@
 
 Streaming usage is unavailable: deliberately charge UTF-8 prompt bytes + output
 cap, with framing allowance. These are conservative budget units, not billing
-measurements. Failed/cancelled calls stay charged because they may cost tokens.
+measurements.
+
+A call the provider refused or failed before sending a single word is refunded:
+the person got nothing, and with "Try again" on every failure a handful of
+outages would otherwise use up their day. Anything that produced text — even a
+reply cut short — stays charged, as does a call the person abandoned, because
+the provider may have spent the tokens either way.
 """
 
 import time
@@ -25,7 +31,31 @@ class BudgetExceeded(ProviderError):
     pass
 
 
-def charge(account: str, kind: str, amount: int, limit: int, seconds: int):
+def refund(account: str, kind: str, amount: int, window: int) -> None:
+    """Give back a charge for work the provider never did.
+
+    Aimed at the window the charge landed in, so a refund that crosses midnight
+    UTC cannot hand out allowance on the new day.
+    """
+    with SessionLocal() as db:
+        db.execute(
+            update(UsageBucket)
+            .where(
+                UsageBucket.account == account,
+                UsageBucket.kind == kind,
+                UsageBucket.window == window,
+                UsageBucket.amount >= amount,
+            )
+            .values(amount=UsageBucket.amount - amount)
+        )
+        db.commit()
+
+
+def charge(account: str, kind: str, amount: int, limit: int, seconds: int) -> int:
+    """Take ``amount`` from the current window, or raise BudgetExceeded.
+
+    Returns the window charged, so a refund can find it.
+    """
     now = int(time.time())
     window = now // seconds
     with SessionLocal() as db:
@@ -65,6 +95,7 @@ def charge(account: str, kind: str, amount: int, limit: int, seconds: int):
             )
         )
         db.commit()
+    return window
 
 
 async def limited_caller(user_id=Depends(caller_id)):
@@ -89,6 +120,7 @@ class BudgetedProvider(LLMProvider):
 
     async def stream_chat(self, *, system, messages, model, temperature, max_tokens):
         account = account_scope.get()
+        units = window = 0
         if account is not None:
             units = (
                 len(system.encode("utf-8"))
@@ -96,12 +128,20 @@ class BudgetedProvider(LLMProvider):
                 + max_tokens
                 + 256
             )
-            charge(account, "tokens", units, settings.account_daily_token_budget, 86400)
-        async for delta in self.inner.stream_chat(
-            system=system,
-            messages=messages,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        ):
-            yield delta
+            window = charge(account, "tokens", units, settings.account_daily_token_budget, 86400)
+        emitted = False
+        try:
+            async for delta in self.inner.stream_chat(
+                system=system,
+                messages=messages,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            ):
+                emitted = emitted or bool(delta)
+                yield delta
+        except ProviderError:
+            # A refusal or failure before any text: nothing was delivered.
+            if account is not None and not emitted:
+                refund(account, "tokens", units, window)
+            raise

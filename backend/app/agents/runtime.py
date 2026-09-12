@@ -94,16 +94,30 @@ class AgentRuntime:
         user_message: str | None,
         *,
         retry: bool = False,
+        private_notes: bool = True,
+        learn: bool = True,
     ) -> AsyncIterator[RuntimeEvent]:
         """Run one turn, or with ``retry`` regenerate the latest unfinished one.
 
         A retry reuses the turn's user message rather than writing it again, and
         only runs when the person asks: nothing here retries on its own. Turns in
         one conversation are serialised; see :func:`one_turn_at_a_time`.
+
+        ``private_notes=False`` answers from shared context alone — for any turn
+        whose reply is handed on to another agent, where a private note would
+        otherwise travel inside the answer. ``learn=False`` skips memory
+        extraction for the turn.
         """
         async with one_turn_at_a_time(conversation.id):
             async for event in self._run_turn(
-                db, user, agent, conversation, user_message, retry=retry
+                db,
+                user,
+                agent,
+                conversation,
+                user_message,
+                retry=retry,
+                private_notes=private_notes,
+                learn=learn,
             ):
                 yield event
 
@@ -116,6 +130,8 @@ class AgentRuntime:
         user_message: str | None,
         *,
         retry: bool = False,
+        private_notes: bool = True,
+        learn: bool = True,
     ) -> AsyncIterator[RuntimeEvent]:
         if retry:
             try:
@@ -130,6 +146,8 @@ class AgentRuntime:
             user_row = convo_service.add_message(db, conversation, "user", user_message)
 
         shared, agent_mem = memory_service.context_for_agent(db, user.id, agent)
+        if not private_notes:
+            agent_mem = []
         goals = goal_service.list_goals(db, user.id)
         history = convo_service.history_for_model(
             [m for m in convo_service.history(db, conversation.id) if m.id != user_row.id]
@@ -237,7 +255,13 @@ class AgentRuntime:
             # Once per user message. A retry of a turn that already got partway
             # has already learned from this message; asking again would spend
             # another provider call to learn nothing new.
-            if (user_row.meta or {}).get("memory_extracted"):
+            # Nothing is learned when the person has switched automatic memory
+            # off — no provider call, nothing stored. Their own saves still work.
+            if (
+                not learn
+                or not getattr(user, "memory_auto", True)
+                or (user_row.meta or {}).get("memory_extracted")
+            ):
                 candidates = []
             elif settings.use_llm_extraction:
                 try:

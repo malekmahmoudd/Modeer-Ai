@@ -60,7 +60,7 @@ export function GoalsManager() {
         lede="Modeer and your team use these to shape advice and your daily briefing. Keep it short — a handful of things that actually matter."
       />
 
-      <div className="goal-summary" aria-label="Goal progress"><span><strong>{active.length}</strong> in progress</span><span><strong>{done.length}</strong> completed</span><p className="hand">One step at a time.</p></div>
+      <div className="goal-summary" role="group" aria-label="Goal progress"><span><strong>{active.length}</strong> in progress</span><span><strong>{done.length}</strong> completed</span><p className="hand">One step at a time.</p></div>
       <form onSubmit={add} className="goal-form mb-9">
         <div className="flex flex-col gap-2.5 sm:flex-row">
           <label htmlFor="goal-title" className="sr-only">

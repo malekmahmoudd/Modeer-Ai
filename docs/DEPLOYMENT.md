@@ -1,14 +1,22 @@
 # Private deployment runbook
 
-This prepares an invite-only deployment, not public signup. No hosting account or domain has been selected and nothing has been published.
+This prepares either an invite-only deployment (the default) or one with open
+signup (`SIGNUP_ENABLED=true`). No hosting account or domain has been selected
+and nothing has been published.
 
-## Current release checks — 2026-09-11
+## Current release checks — 2026-09-13
 
-The current schema is **0003** (ten application tables plus Alembic metadata).
-This revision has been applied to an isolated PostgreSQL 16 database and restored
-from an encrypted archive using the Linux scripts. Production readiness now
-requires this revision. `/api/health/detail` returns 503 on degraded readiness;
-use it for external monitoring, rather than relying on basic liveness.
+The current schema is **0004** (eleven application tables plus Alembic metadata).
+0004 adds `users.password_hash`, `users.memory_auto` (defaults to on for existing
+accounts) and the `recovery_codes` table. It has been applied to PostgreSQL 16 in
+the production rehearsal, and on SQLite through upgrade, `alembic check`,
+downgrade and re-upgrade. Production readiness requires the current revision.
+`/api/health/detail` returns 503 on degraded readiness; use it for external
+monitoring, rather than relying on basic liveness.
+
+Earlier checks (2026-09-11) applied 0003 to an isolated PostgreSQL 16 database
+and restored it from an encrypted archive using the Linux scripts; rerun the
+backup round-trip once on 0004 before relying on it (OPERATIONS.md).
 
 For production Linux scheduling, mandatory encryption, copied-archive retention,
 and failure alerts, follow **OPERATIONS.md**. The PowerShell section below is a
@@ -25,6 +33,9 @@ checks. Account controls are now available in the application, with a public
 | `TEAM_ENABLED` | unset / `false` (the default) | Ask My Team has no screen yet and is the most expensive route. The code is kept and tested; set `TEAM_ENABLED=true` in `deploy/.env` and restart the backend to switch it on once a UI exists. While off, `POST /api/team/ask` answers 404 to signed-in callers and 401 to anonymous ones. |
 | `MEMORY_STORE_SENSITIVE` | unset / `false` (the default) | Automatic extraction does not store sensitive facts (health, money, identity numbers, beliefs, …). People can still save any fact themselves on the Memory page. |
 | `LLM_MODEL` | `openai/gpt-oss-120b` | Writing keeps its own `qwen/qwen3.8-27b` override in its agent config. |
+| `SIGNUP_ENABLED` | `false` for invite-only; `true` to let anyone create an account | Adds `/signup`: email, password (10–128 characters, scrypt-hashed) and ten single-use recovery codes, shown once and stored as SHA-256 hashes. Signup is limited to 5 per client address per hour and password sign-in to 10 attempts per email per 15 minutes. Behind Caddy the client address is the connecting IP (Caddy replaces any `X-Forwarded-For` the client sends). With it off, `POST /api/auth/signup` answers 404. |
+| `AUTH_ACCESS_KEYS` | `{}` is allowed | Invitation keys still work alongside passwords, but are no longer required for the backend to start; `AUTH_SECRET` (32+ characters) is. |
+| `ADMIN_ACCOUNTS` | your account id | Besides the operator dashboard, only these accounts see the full `/api/health/detail` body. Your id is `id` in `GET /api/users/me` once signed in. |
 
 ### Backend dependency lock
 
@@ -84,36 +95,60 @@ digest in `backend/Dockerfile`, and do the same.
 
 ### Content Security Policy
 
-`deploy/Caddyfile` sends, on every response:
+Pages get their policy from the frontend (`frontend/src/proxy.ts`), made fresh
+for every request:
 
 ```
-default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+default-src 'self'; script-src 'self' 'nonce-<random>' 'strict-dynamic'; style-src 'self' 'unsafe-inline';
 img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none';
 base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 ```
 
+Next.js puts the nonce on its own scripts, and `'strict-dynamic'` lets those
+load the rest of the bundle. An injected `<script>` has no nonce and does not
+run. That is why every page renders per request (the root layout awaits
+`connection()`): a page cached at build time would carry a stale nonce.
+`'unsafe-inline'` remains for **styles** only, because React renders `style=""`
+attributes; that cannot run code.
+
+`deploy/Caddyfile` adds the same policy without a nonce (`script-src 'self'`)
+to any response that has none — the API, static files. The leading `?` means it
+never replaces the page's policy. Caddy also sends HSTS, `nosniff`,
+`X-Frame-Options`, `Referrer-Policy`, `Cross-Origin-Opener-Policy: same-origin`
+and a `Permissions-Policy` that turns off camera, microphone, location, payment
+and USB; the frontend no longer sends `X-Powered-By`.
+
 Everything the app loads is same-origin: scripts, stylesheets, fonts (`next/font`
 self-hosts them at build time), images, and `/api` including chat streams.
-`data:` images are the CSS paper textures. The two `'unsafe-inline'` entries are
-deliberate: Next.js inlines its page data as `<script>` tags and server-renders
-`style=""` attributes; replacing them with nonces needs per-request rendering and
-middleware in the frontend. What the policy still guarantees: no third-party
-script, stylesheet, font or image host; no connection to any other origin, so
-injected content cannot send data elsewhere; no plugins; no `<base>` hijack; no
-framing. If a new feature loads anything from another origin, it will be blocked
-until the policy names that origin.
+`data:` images are the CSS paper textures. If a new feature loads anything from
+another origin, it will be blocked until both policies name that origin.
 
-Validated in Chrome against the production images: seven pages and every chat
-state rendered with zero violations (`docs/production-rehearsal-results.json`).
+Validated in Chrome against the production images: ten pages and every chat
+state rendered with zero violations, and the nonce differs between requests
+(`docs/production-rehearsal-results.json`).
+
+### Public endpoints
+
+- `GET /api/health` (liveness) answers `status` and `database` only in production.
+- `GET /api/health/detail` (readiness) answers `status`, `database` and
+  `schema_current` to anyone, with 503 when degraded. Signed-in `ADMIN_ACCOUNTS`
+  get the full body: environment, schema revision, counters, recent incident ids.
+- `GET /api/agents/{id}` shows what the agent list shows: no model name, prompt
+  framework or other settings.
+- `POST /api/agents/{id}/chat` (synchronous) answers 404 in production; the app
+  uses the streaming route.
 
 ### Production rehearsal
 
 `deploy/tests/production-rehearsal/` runs the production images on 127.0.0.1
-with HTTPS, a throwaway database and a scripted model, and checks 16 things in a
-browser — headers and CSP, cookies, streaming through Caddy, every reply
+with HTTPS, a throwaway database and a scripted model, and checks 20 things in a
+browser — headers and the nonce CSP, cookies, streaming through Caddy, every reply
 completion state and its recovery, link handling, blank messages, deletion,
-account switching, readiness and a 390px layout. Its README has the commands.
-It is not evidence about a real domain, a phone, or the real model.
+account switching, the public endpoints, signup, password sign-in, recovery
+codes, the memory switch and a 390px layout. `accessibility-check.cjs` in the
+same folder adds an axe-core scan and a keyboard pass
+(`docs/accessibility-results.json`). Its README has the commands. It is not
+evidence about a real domain, a phone, a screen reader, or the real model.
 
 ## Historical usage-limit migration
 
@@ -136,10 +171,15 @@ Only Caddy publishes ports 80 and 443. PostgreSQL and the backend remain on the 
 
 ## Bootstrap accounts
 
-**The ordering below is not optional.** Production fails closed: with
-`AUTH_REQUIRED=true` and no `AUTH_ACCESS_KEYS`, the backend refuses to start. But
-you cannot mint an access key without a database, and the database is only
-reachable once the stack is up. The way through is to bring up **only** the
+**With open signup** (`SIGNUP_ENABLED=true`) there is nothing to provision: run
+the build and migration lines below, bring the stack up, create your own account
+at `/signup`, put its id in `ADMIN_ACCOUNTS` and restart the backend. The
+invitation-key steps that follow are for invite-only deployments, or for people
+you want to invite with a key anyway.
+
+**The ordering below is not optional.** The migration must run before the
+backend serves traffic, and you cannot mint an access key without a database,
+which is only reachable once the stack is up. The way through is to bring up **only** the
 database, then run the migration and provisioning steps in one-off containers
 that opt out of production mode. That override is safe here and nowhere else:
 
@@ -174,13 +214,15 @@ docker cp modeer-provision:/tmp/invite.json ./invite.json
 docker rm modeer-provision
 ```
 
-The bootstrap override applies only to that one-off container; it publishes no port. Read invite.json locally. Merge its AUTH_ACCESS_KEYS_entry into the AUTH_ACCESS_KEYS JSON object in deploy/.env. Give the access_key privately to that person. Delete the local invite file after secure delivery. Repeat for each account. The app's /login page exchanges the key for a signed HttpOnly, SameSite=Strict cookie, Secure in production, expiring after seven days. Sessions are checked on the server; removing a hash revokes all that user's sessions. Change the signing secret to revoke all sessions. Access keys are high-entropy private invitations, not reusable human passwords.
+The bootstrap override applies only to that one-off container; it publishes no port. Read invite.json locally. Merge its AUTH_ACCESS_KEYS_entry into the AUTH_ACCESS_KEYS JSON object in deploy/.env. Give the access_key privately to that person. Delete the local invite file after secure delivery. Repeat for each account. The app's /login page exchanges the key for a signed HttpOnly, SameSite=Strict cookie, Secure in production, expiring after seven days. Sessions are checked on the server; removing a hash revokes all that user's sessions. Change the signing secret to revoke all sessions. Access keys are high-entropy private invitations, not reusable human passwords. A key account can add a password on its Account page (it then gets recovery codes too); from then on either works.
+
+Password accounts are not tied to `AUTH_ACCESS_KEYS`. Their sessions end when the person changes their password, uses a recovery code, signs out everywhere, or deletes the account — or for everyone, when `AUTH_SECRET` changes. There is no email-based reset: a person who loses both their password and every recovery code cannot get back in without the operator.
 
 ```sh
 docker compose --env-file deploy/.env -f deploy/compose.yml up -d --build
 ```
 
-Confirm /api/health, login, logout, persistence across restart, and cross-account denial before inviting others. Keep the beta small: the provider's shared token quota is not multiplied by the number of users. For a public launch, add managed identity/recovery, distributed request quotas, production monitoring and a security review.
+Confirm /api/health, login, logout, persistence across restart, and cross-account denial before inviting others. The provider's shared token quota is not multiplied by the number of users. Before a public launch, also do a pass with a real screen reader and settle the colour-contrast findings in `docs/accessibility-results.json`.
 
 ## Backup and restore
 

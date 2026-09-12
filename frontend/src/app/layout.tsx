@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo_Black, Caveat, Inter, Permanent_Marker } from "next/font/google";
+import { connection } from "next/server";
 
 import { AppShell } from "@/components/AppShell";
 import "./globals.css";
@@ -39,7 +40,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Render every page per request: each needs its own script nonce (see
+  // src/proxy.ts), and a page prerendered at build time would carry none.
+  await connection();
   return (
     <html
       lang="en"

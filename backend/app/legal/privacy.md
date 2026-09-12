@@ -15,10 +15,19 @@ assume the more cautious reading and ask.
   can afford, what you are avoiding. Some are shared across the whole team; some
   stay with one specialist.
 - **Goals** you set, and **daily briefings** it generates.
-- **Your account**: display name, email address, and when you joined.
+- **Your account**: display name, email address, when you joined, and whether
+  automatic learning is on.
+- **Your password and recovery codes — never in readable form.** The password
+  is stored as a scrypt hash and each recovery code as a SHA-256 hash; neither
+  can be read back, by you or by the operator. A code is marked used once used.
 - **Usage counters**: how many requests and roughly how many tokens your account
   has used, per minute and per day. These exist to stop one account exhausting
-  the shared allowance. They record volume, never content.
+  the shared allowance. They record volume, never content. If a request fails
+  before the model sends any text, it is not counted against you.
+- **Sign-in attempt counters**: how many times someone tried to sign in or reset
+  a password for an email address, and how many accounts were created from one
+  network address, for up to an hour. They are stored as one-way hashes of the
+  address, not the address itself, and exist to stop guessing.
 
 Some of what it remembers is sensitive by nature — health, money, work. When
 Modeer recognises a fact as sensitive it does not store it automatically unless
@@ -42,14 +51,16 @@ that backup was taken.
 
 - **You.**
 - **Whoever runs the server.** They hold the database and the backup passphrase,
-  so they can read anything in it. Modeer is invite-only and self-hosted: trust
+  so they can read anything in it. Modeer is self-hosted: trust
   in the operator is part of the arrangement, and no software here changes that.
 - **Your model provider.** To answer you, Modeer sends the specialist's
   instructions, the relevant facts it remembers about you, the recent messages
   of that conversation (up to the last 40) and your new message to the
-  configured provider — by default Groq. A second, separate request sends your
-  message again so the model can pick out any durable facts worth remembering.
-  Your message text and your personal context leave the server on every turn.
+  configured provider — by default Groq. While automatic learning is on, a
+  second, separate request sends your message again so the model can pick out
+  any durable facts worth remembering; switch it off on your Account page and
+  that second request is not made. Your message text and your personal context
+  leave the server on every turn.
   What the provider does with it is governed by their terms, not this document.
 - **Nobody else.** Other accounts on the same deployment cannot read your
   conversations, memories or goals; that isolation is enforced and tested.
@@ -67,6 +78,7 @@ that backup was taken.
 | You want to | How |
 |---|---|
 | See what it remembers | Memory, in the app — every stored fact, editable |
+| Stop it learning from your messages | Account → What Modeer learns → switch off "Learn from my messages automatically". Nothing already saved is removed, and you can still save facts yourself |
 | Correct or delete a single fact | Memory — edit or delete it. An edit is yours: Modeer will not overwrite it automatically later |
 | Delete one conversation | Open conversation history, then choose its delete button |
 | Take everything with you | Account → Download my data — a JSON file, messages included |
@@ -80,12 +92,17 @@ backup retention schedule, 30 days by default.
 
 ## Sessions and access
 
-You sign in with an invitation key. Modeer stores only a SHA-256 hash of it,
-never the key itself. A session is a signed, HttpOnly, SameSite=Strict cookie
-that expires after seven days.
+You sign in with your email and password, or with an invitation key if the
+operator gave you one. Modeer stores only hashes of passwords, keys and recovery
+codes, never the secrets themselves. A session is a signed, HttpOnly,
+SameSite=Strict cookie that expires after seven days.
 
-If you lose a device, sign out everywhere. If you think the key itself has
-leaked, tell the operator — it needs rotating, which signing out cannot do.
+If you lose a device, sign out everywhere. If you forget your password, use one
+of your recovery codes; that also signs out every other device. Changing your
+password does the same. No email is ever sent, so there is no reset link: if you
+lose your password and every recovery code, only the operator can let you back
+in, after checking it is really you. If you think an invitation key has leaked,
+tell the operator — it needs rotating, which signing out cannot do.
 
 ## Advice, and its limits
 
@@ -97,5 +114,6 @@ qualified professional. For anything with real consequences, check it.
 
 ## Changes
 
-This deployment is private and invite-only. If what is stored or who can see it
-changes, the operator should tell you before it takes effect.
+This deployment is self-hosted; whether anyone can sign up or only invited people
+is the operator's setting. If what is stored or who can see it changes, the
+operator should tell you before it takes effect.

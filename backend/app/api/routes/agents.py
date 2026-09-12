@@ -26,16 +26,13 @@ def _public(agent) -> dict:
 
 
 def _detail(agent) -> dict:
-    return {
-        **_public(agent),
-        "reasoning_framework": agent.reasoning_framework,
-        "response_behavior": agent.response_behavior,
-        "safety_boundaries": agent.safety_boundaries,
-        "shared_context_fields": agent.shared_context_fields,
-        "memory_namespace": agent.namespace,
-        "prompt_version": agent.prompt_version,
-        "model": agent.model.model_dump(),
-    }
+    """What a screen shows about an agent — nothing about how it is built.
+
+    This route needs no sign-in. It used to return the reasoning framework,
+    safety rules, context wiring, prompt version and model settings: the
+    working parts of every prompt, to anyone. No screen used them.
+    """
+    return _public(agent)
 
 
 @router.get("")

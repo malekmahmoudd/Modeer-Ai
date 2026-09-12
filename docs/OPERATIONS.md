@@ -139,10 +139,14 @@ second copy elsewhere is what makes it complete. Both are free.
 
 ## What to watch
 
-`GET /api/health` — liveness. `GET /api/health/detail` — readiness plus what the
-process has seen: uptime, request counts by status class, unhandled errors, and
-the applied schema revision. Both are public, deliberately: an uptime check that
-needs a credential is one more thing to break at 3am.
+`GET /api/health` — liveness. `GET /api/health/detail` — readiness. Both answer
+anyone, deliberately: an uptime check that needs a credential is one more thing
+to break at 3am. Since 2026-09-13 an anonymous caller gets only what a check
+needs — `status`, `database`, `schema_current` (liveness: `status`, `database`)
+— and the HTTP status. Sign in as an account listed in `ADMIN_ACCOUNTS` and open
+`/api/health/detail` in the browser for the rest: uptime, request counts by
+status class, unhandled errors, recent incident ids, provider counters and both
+schema revisions. `watchdog.sh` reads only `status`, so it is unaffected.
 
 Point any external uptime checker at `/api/health/detail` and alert on:
 
@@ -151,7 +155,7 @@ Point any external uptime checker at `/api/health/detail` and alert on:
   recently accumulated, or an observed provider quota block is active, or a
   model has failed several requests in a row (see below);
 - `"schema_current": false` — the database is not at the migration head this
-  build expects. Readiness reports both sides: `schema_revision` is what the
+  build expects. Readiness reports both sides to admins: `schema_revision` is what the
   database is at, `expected_schema_revision` is what the running code was built
   against. This catches the failure where a stale image migrated to its own idea
   of head and the app is running against a schema it does not expect.
@@ -225,12 +229,18 @@ over it, and asserts every table matches the archive again.
 | Situation | Action |
 |---|---|
 | Lost device | Account → Sign out every device. Ends their sessions only. |
+| Password forgotten | Login → "Forgot your password? Use a recovery code". Each code works once; the Account page makes a fresh set. Sessions elsewhere end. |
+| Password and every recovery code lost | No self-service way back — by design there is no email reset. After confirming who they are by a channel you trust: `python provision_user.py --rotate --clear-password --email … --output key.json`, merge the entry into `AUTH_ACCESS_KEYS`, restart, hand over the key. That removes their password and codes and ends their sessions; they sign in with the key and set a new password on the Account page, which issues fresh codes. |
+| Password suspected known to someone else | Account → change password. Every other session ends. |
+| Repeated sign-in or signup attempts | Already limited: 10 password attempts per email per 15 minutes, 5 signups per client address per hour, both answering 429. The counters live in `usage_buckets`, hashed. |
 | Access key leaked or lost | `python provision_user.py --rotate --email … --output new-key.json`. New key, sessions ended, one account affected. **Remove the old `AUTH_ACCESS_KEYS` entry** — adding the new one beside it leaves the leaked key working. |
 | Signing secret suspected | Rotate `AUTH_SECRET`. This signs out **every** account at once. |
 | Someone leaves | Delete their account (theirs to do), then remove their `AUTH_ACCESS_KEYS` entry. |
 
 Removing an entry from `AUTH_ACCESS_KEYS` invalidates that account's live
 sessions immediately, because the key digest is part of the session signature.
+Password-only accounts have no entry; their sessions end through the account's
+session generation (password change, recovery, sign out everywhere) or deletion.
 
 ## Updating
 

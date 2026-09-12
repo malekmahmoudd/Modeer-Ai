@@ -12,6 +12,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.auth import authenticated_id, session_epoch_matches
+from app.core.config import settings
 from app.db.models import User
 from app.db.session import get_db
 from app.users.service import get_by_id, get_or_create_demo_user
@@ -27,6 +28,11 @@ def get_current_user(
     if x_user_id:
         user = get_by_id(db, x_user_id)
         if user is None:
+            if settings.auth_required:
+                # A signed session for an account that no longer exists: that is
+                # a sign-in problem, and the client's 401 handling sends them to
+                # the login page.
+                raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Please sign in")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unknown user")
         # A cookie from a generation the account has since revoked is spent.
         if not session_epoch_matches(request, user):

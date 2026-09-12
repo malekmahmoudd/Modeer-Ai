@@ -86,7 +86,15 @@ async def ask_team(
             db.add(convo)
             db.flush()
             answer, completion = "", "failed"
-            async for event in runtime.run_stream(db, user, agent, convo, body.question):
+            # Shared context only: each answer is handed to Modeer for the
+            # synthesis, so a specialist's private note used here would reach an
+            # agent the Memory page promises it never reaches. And no memory
+            # extraction: the same question would otherwise be mined once per
+            # specialist.
+            turn = runtime.run_stream(
+                db, user, agent, convo, body.question, private_notes=False, learn=False
+            )
+            async for event in turn:
                 if event.type == "end":
                     answer, completion = event.data["content"], event.data["completion"]
                 elif event.type == "error":

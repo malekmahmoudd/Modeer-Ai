@@ -25,6 +25,7 @@ from app.main import app  # noqa: E402
 from app.users.service import get_or_create_demo_user  # noqa: E402
 
 _WIPE_TABLES = [
+    "recovery_codes",
     "usage_buckets",
     "briefings",
     "goals",

@@ -18,10 +18,20 @@ def test_list_agents_shape(client):
     assert {"name", "role", "icon", "accent", "description"} <= set(modeer)
 
 
-def test_agent_detail_exposes_framework(client):
+def test_agent_detail_shows_the_agent_not_its_workings(client):
+    """No sign-in is needed here, so the prompt's working parts stay private."""
     detail = client.get("/api/agents/study").json()
-    assert detail["reasoning_framework"]
-    assert detail["memory_namespace"] == "study"
+    assert {"id", "name", "role", "starters", "composer_placeholder"} <= set(detail)
+    hidden = {
+        "reasoning_framework",
+        "response_behavior",
+        "safety_boundaries",
+        "shared_context_fields",
+        "memory_namespace",
+        "prompt_version",
+        "model",
+    }
+    assert not hidden & set(detail), f"leaked: {hidden & set(detail)}"
     assert client.get("/api/agents/does-not-exist").status_code == 404
 
 

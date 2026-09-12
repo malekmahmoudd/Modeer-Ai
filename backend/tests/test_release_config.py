@@ -95,6 +95,33 @@ def test_api_docs_are_off_in_production():
     assert _production_app_urls() == {"docs": None, "redoc": None, "openapi": None}
 
 
+def test_public_readiness_says_only_what_an_uptime_check_needs(client, make_user, monkeypatch):
+    """With authentication on, an anonymous caller learns up or down — not model
+    names, counters, incident ids or error types. An admin still sees it all."""
+    alice = make_user("Alice")
+    key = "a" * 40
+    monkeypatch.setattr(settings, "auth_required", True)
+    monkeypatch.setattr(settings, "auth_secret", "s" * 40)
+    monkeypatch.setattr(
+        settings, "auth_access_keys", {alice.id: hashlib.sha256(key.encode()).hexdigest()}
+    )
+    anonymous = client.get("/api/health/detail").json()
+    assert set(anonymous) == {"status", "database", "schema_current"}
+
+    monkeypatch.setattr(settings, "admin_accounts", [alice.id])
+    origin = {"Origin": settings.frontend_url}
+    client.post("/api/auth/login", json={"access_key": key}, headers=origin)
+    admin = client.get("/api/health/detail").json()
+    assert {"provider", "unhandled_errors", "schema_revision"} <= set(admin)
+
+
+def test_sync_chat_route_is_not_served_in_production(client, monkeypatch):
+    monkeypatch.setattr(settings, "environment", "production")
+    assert client.post("/api/agents/study/chat", json={"message": "hello"}).status_code == 404
+    liveness = client.get("/api/health").json()
+    assert set(liveness) == {"status", "database"}, "production liveness names the model"
+
+
 def test_production_refuses_the_offline_preview_model():
     """Without this, a missing LLM_PROVIDER serves canned replies to invitees
     while every health check reports ok."""

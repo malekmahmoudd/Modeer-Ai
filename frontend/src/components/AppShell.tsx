@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { Brand } from "@/components/Brand";
 import { Icon } from "@/components/ui/Icon";
-import { apiFetch, useApi } from "@/lib/api";
+import { apiFetch, PUBLIC_PAGES, useApi } from "@/lib/api";
 import { firstName } from "@/lib/format";
 import type { UserProfile } from "@/types";
 
@@ -24,7 +24,7 @@ function isActive(pathname: string, href: string) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const publicPage = pathname === "/login" || pathname === "/privacy";
+  const publicPage = PUBLIC_PAGES.includes(pathname);
   const { data: user } = useApi<UserProfile>(publicPage ? null : "/users/me");
   const name = firstName(user?.display_name);
   const { data: auth } = useApi<{ required: boolean }>("/auth/status");

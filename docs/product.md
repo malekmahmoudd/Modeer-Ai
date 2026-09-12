@@ -64,6 +64,10 @@ where the user selects specialists, each answers through the shared runtime, and
 Modeer synthesises. Not automatic, not autonomous. Built after the core 1:1 chat.
 
 **Off for the initial release** (`TEAM_ENABLED=false`, the default): no screen
-calls it yet. Before switching it on, note that each specialist's answer — which
-may draw on that specialist's private notes — is passed to Modeer for the
-synthesis, so "only that agent sees them" stops holding for a consult.
+calls it yet. Since 2026-09-13 a consult keeps "only that agent sees them" true:
+each specialist answers from the shared context and the conversation alone, with
+none of its private notes in the prompt, and a consult teaches no one anything
+(no memory extraction). Answers may be a little less personal than a 1:1 chat
+with the same specialist; that is the price of the synthesis step not carrying
+private notes to Modeer. `tests/test_prompt_isolation.py` reads the provider's
+input to prove it.

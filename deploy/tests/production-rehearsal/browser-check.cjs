@@ -10,12 +10,13 @@ const base = process.env.REHEARSAL_URL || "https://localhost:8443";
 const report = process.env.REHEARSAL_REPORT || "production-rehearsal-results.json";
 const KEY_A = "q".repeat(40);
 const KEY_B = "r".repeat(40);
-// The policy under test is the one in the repository's Caddyfile, not a copy.
-const shippedCsp = fs
+// The fallback policy under test is the one in the repository's Caddyfile, not a
+// copy. Pages send their own per-request nonce policy (frontend/src/proxy.ts).
+const fallbackCsp = fs
   .readFileSync(path.join(__dirname, "..", "..", "Caddyfile"), "utf8")
-  .match(/Content-Security-Policy "([^"]+)"/)[1];
+  .match(/\?Content-Security-Policy "([^"]+)"/)[1];
 
-const results = { url: base, csp: shippedCsp, checks: [], cspViolations: [], pageErrors: [] };
+const results = { url: base, csp: fallbackCsp, checks: [], cspViolations: [], pageErrors: [] };
 const check = (name) => {
   results.checks.push(name);
   console.log("PASS", name);
@@ -39,8 +40,18 @@ async function session(browser, viewport) {
 }
 
 async function signIn(page, key) {
+  // The seeded rehearsal accounts are invitation-key accounts.
   await page.goto(base + "/login");
+  await page.getByRole("button", { name: "Have an invitation key? Use it instead" }).click();
   await page.getByLabel("Access key").fill(key);
+  await page.getByRole("button", { name: "Meet your team" }).click();
+  await page.waitForURL(base + "/");
+}
+
+async function signInWithPassword(page, email, password) {
+  await page.goto(base + "/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Meet your team" }).click();
   await page.waitForURL(base + "/");
 }
@@ -64,18 +75,32 @@ const lastReply = (page) => page.locator(".assistant-message").last();
     // --- headers, sign-in, every page under the shipped policy ---------------
     const doc = await page.goto(base + "/login");
     const headers = doc.headers();
-    assert.equal(headers["content-security-policy"], shippedCsp);
+    const pageCsp = headers["content-security-policy"] || "";
+    const scriptSrc = pageCsp.split(";").map((d) => d.trim()).find((d) => d.startsWith("script-src")) || "";
+    assert.match(scriptSrc, /'nonce-[A-Za-z0-9+/_=-]+'/, `no script nonce: ${pageCsp}`);
+    assert.match(scriptSrc, /'strict-dynamic'/);
+    assert.doesNotMatch(scriptSrc, /unsafe-inline|unsafe-eval/, `script-src too loose: ${scriptSrc}`);
+    assert(!pageCsp.includes(","), "two CSP headers were merged into one page response");
+    const secondNonce = ((await page.request.get(base + "/login")).headers()["content-security-policy"] || "")
+      .match(/'nonce-([^']+)'/)?.[1];
+    assert(secondNonce && !pageCsp.includes(secondNonce), "the nonce did not change between requests");
     assert.match(headers["strict-transport-security"] || "", /max-age=\d+/);
     assert.equal(headers["x-frame-options"], "DENY");
     assert.equal(headers["x-content-type-options"], "nosniff");
-    check("document carries the Caddyfile CSP and security headers");
+    assert.equal(headers["cross-origin-opener-policy"], "same-origin");
+    assert.match(headers["permissions-policy"] || "", /camera=\(\)/);
+    assert.equal(headers["x-powered-by"], undefined, "the framework announces itself");
+    const apiCsp = (await page.request.get(base + "/api/auth/status")).headers()["content-security-policy"];
+    assert.equal(apiCsp, fallbackCsp, "API responses lost the Caddyfile fallback policy");
+    check("pages carry a per-request nonce CSP with no inline allowance for scripts; API keeps the fallback");
 
     await signIn(page, KEY_A);
     const cookie = (await context.cookies()).find((c) => c.httpOnly);
     assert(cookie && cookie.secure && cookie.sameSite === "Strict", "session cookie flags");
     check("sign-in over HTTPS sets an httpOnly, Secure, SameSite=Strict session");
 
-    for (const route of ["/", "/team", "/memory", "/goals", "/account", "/privacy", "/agents/study"]) {
+    const everyPage = ["/", "/team", "/memory", "/goals", "/account", "/privacy", "/agents/study"];
+    for (const route of [...everyPage, "/login", "/signup", "/recover"]) {
       await page.goto(base + route);
       await page.waitForLoadState("networkidle");
       await page.locator("main").waitFor();
@@ -94,7 +119,7 @@ const lastReply = (page) => page.locator(".assistant-message").last();
       results.cspViolations.push(...state.violations.map((v) => `${route}: ${v}`));
     }
     assert.deepEqual(results.cspViolations, [], "CSP violations while rendering pages");
-    check("seven pages render with scripts, styles, fonts and images allowed and no violations");
+    check("ten pages render with scripts, styles, fonts and images allowed and no CSP violations");
 
     // --- onboarding -> memory -> follow-up ---------------------------------------
     await page.goto(base + "/agents/modeer?onboarding=1");
@@ -278,13 +303,94 @@ const lastReply = (page) => page.locator(".assistant-message").last();
     check("a duplicate memory label is refused without paging the operator");
 
     // --- readiness through the proxy ---------------------------------------------------
-    const ready = await page.request.get(base + "/api/health/detail");
+    const ready = await page.request.get(base + "/api/health/detail"); // account A is an admin
     assert.equal(ready.status(), 200);
     const body = await ready.json();
     assert.equal(body.environment, "production");
     assert.equal(body.schema_current, true);
-    check("readiness through Caddy: production, schema current");
+    const outsider = await browser.newContext({ ignoreHTTPSErrors: true });
+    const anonymous = await (await outsider.request.get(base + "/api/health/detail")).json();
+    assert.deepEqual(Object.keys(anonymous).sort(), ["database", "schema_current", "status"]);
+    const liveness = await (await outsider.request.get(base + "/api/health")).json();
+    assert.deepEqual(Object.keys(liveness).sort(), ["database", "status"], "liveness names the model");
+    const agentDetail = await (await outsider.request.get(base + "/api/agents/study")).json();
+    assert(!("model" in agentDetail) && !("reasoning_framework" in agentDetail), "agent internals public");
+    const syncChat = await outsider.request.post(base + "/api/agents/study/chat", {
+      data: { message: "hello" },
+      headers: { Origin: base },
+    });
+    assert.equal(syncChat.status(), 401, "unused chat route answered an anonymous caller");
+    await outsider.close();
+    check("readiness: production and schema current for an admin; anonymous callers learn only up or down");
     await context.close();
+
+    // --- open signup, password sign-in, recovery codes, memory consent ---------------------
+    const newcomer = await session(browser, { width: 1280, height: 860 });
+    const np = newcomer.page;
+    const email = `newcomer-${Date.now()}@example.com`;
+    const firstPassword = "a sturdy first passphrase";
+    await np.goto(base + "/login");
+    await np.getByRole("link", { name: "New here? Create an account" }).click();
+    await np.waitForURL(base + "/signup");
+    await np.getByLabel("What should we call you?").fill("Nadia");
+    await np.getByLabel("Email").fill(email);
+    await np.getByLabel("Password").fill(firstPassword);
+    // A reserved domain is refused with a readable sentence, not "[object Object]".
+    await np.getByLabel("Email").fill("someone@reserved.test");
+    await np.getByRole("button", { name: "Create my account" }).click();
+    const refusal = np.getByRole("alert");
+    await refusal.waitFor();
+    assert.doesNotMatch(await refusal.innerText(), /object Object/, "validation errors render as garbage");
+    await np.getByLabel("Email").fill(email);
+    await np.getByRole("button", { name: "Create my account" }).click();
+    await np.getByRole("heading", { name: "Save your recovery codes." }).waitFor();
+    const codes = await np.locator("ol li").allInnerTexts();
+    assert.equal(codes.length, 10);
+    assert(await np.getByRole("button", { name: "Meet your team" }).isDisabled(), "continued without saving");
+    await np.getByLabel("I've saved these codes").check();
+    await np.getByRole("button", { name: "Meet your team" }).click();
+    await np.waitForURL(/\/agents\/modeer/);
+    check("open signup creates a signed-in account and shows ten recovery codes once");
+
+    await np.goto(base + "/memory");
+    await np.getByRole("button", { name: "Sign out", exact: true }).click();
+    await np.waitForURL(base + "/login");
+    await signInWithPassword(np, email, firstPassword);
+    check("sign-in with email and password");
+
+    await np.goto(base + "/account");
+    await np.getByLabel("Current password").fill("definitely not the password");
+    await np.getByLabel("New password").fill("another fine passphrase");
+    await np.getByRole("button", { name: "Change password" }).click();
+    await np.getByRole("alert").filter({ hasText: "current password" }).waitFor();
+    assert(np.url().endsWith("/account"), "a wrong confirmation sent the person to the login page");
+    await np.getByLabel("Learn from my messages automatically").uncheck();
+    await np.getByRole("status").filter({ hasText: "no longer learn" }).waitFor();
+    const me = await (await np.request.get(base + "/api/users/me")).json();
+    assert.equal(me.memory_auto, false);
+    check("account page: a wrong password is answered in place, and automatic memory switches off");
+
+    await np.goto(base + "/memory");
+    await np.getByRole("button", { name: "Sign out", exact: true }).click();
+    await np.waitForURL(base + "/login");
+    await np.getByRole("link", { name: "Forgot your password? Use a recovery code" }).click();
+    // The login page has an Email field too: wait for the recover page before filling.
+    await np.getByRole("heading", { name: "Use a recovery code." }).waitFor();
+    await np.getByLabel("Email").fill(email);
+    await np.getByLabel("Recovery code").fill(codes[0].toLowerCase());
+    await np.getByLabel("New password").fill("recovered passphrase here");
+    await np.getByRole("button", { name: "Reset password and sign in" }).click();
+    await np.getByText("You have 9 recovery codes left.", { exact: false }).waitFor();
+    await np.goto(base + "/memory");
+    await np.getByRole("button", { name: "Sign out", exact: true }).click();
+    await np.waitForURL(base + "/login");
+    await np.getByLabel("Email").fill(email);
+    await np.getByLabel("Password").fill(firstPassword);
+    await np.getByRole("button", { name: "Meet your team" }).click();
+    await np.getByRole("alert").waitFor();
+    await signInWithPassword(np, email, "recovered passphrase here");
+    check("a recovery code resets the password; the old one stops working");
+    await newcomer.context.close();
 
     // --- mobile ------------------------------------------------------------------------
     const phone = await session(browser, { width: 390, height: 844 });

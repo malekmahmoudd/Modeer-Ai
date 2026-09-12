@@ -4,7 +4,43 @@ Written for an assistant picking this up with no prior conversation. Read this
 top to bottom before changing anything; it records constraints and failure modes
 that are not visible from the code alone.
 
-## Current update — review remediation (2026-09-12)
+## Current update — owner decisions implemented (2026-09-13)
+
+On top of commit `ee5328d`, per the owner's choices (open signup, password,
+recovery codes, memory on with a switch). Details and evidence:
+`launch-fixes.md` → "Owner decisions implemented — 2026-09-13".
+
+- **Accounts:** `SIGNUP_ENABLED` (default off) opens `/signup`; scrypt
+  passwords; ten single-use recovery codes (hashed); `/recover`; change
+  password and regenerate codes on Account; throttles; schema **0004**.
+  Invitation keys still work and are no longer required to start. No email
+  reset by design; `provision_user.py --rotate --clear-password` is the
+  operator's last resort.
+- **Consent and privacy:** per-person automatic-memory switch; Ask My Team uses
+  shared context only and learns nothing; provider failures before any text are
+  refunded.
+- **Public surface:** minimal anonymous health bodies (full detail for
+  `ADMIN_ACCOUNTS`), agent detail without model settings, sync chat 404 in
+  production.
+- **Frontend (owner-authorised for these items only):** Next 16.3.5, nonce CSP
+  in `src/proxy.ts`, signup/recover pages, Account additions. File list in
+  launch-fixes.md. The standing rule is unchanged: **do not edit the frontend
+  unless asked.**
+- **Accessibility:** axe-core scan and keyboard pass (`accessibility-check.cjs`)
+  — only colour contrast fails (pink buttons 3.27:1), left for the owner. No
+  real screen-reader pass yet.
+
+Numbers: **314 backend tests** (also inside the image), rehearsal **23/23**,
+frontend audit 0 vulnerabilities. Three-sample quality run partial at **32/36**
+with two real grounding lapses (Fitness invented dumbbell weight, Shopping
+unsupported price) — see launch-fixes.md.
+
+Trap found this pass: on a client-side navigation the old page's fields are
+still there for a moment. A Playwright check that filled "Email" right after
+clicking a link filled the login form, not the recovery form. Wait for the new
+page's heading first.
+
+## Earlier update — review remediation (2026-09-12)
 
 An independent read-only review (`docs/production-readiness-review-2026-09-11.md`)
 found twelve defects and several gaps; all of the code findings are now fixed,

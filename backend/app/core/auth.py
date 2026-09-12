@@ -19,6 +19,17 @@ def key_user(key: str) -> str | None:
     return None
 
 
+def _key_binding(user_id: str) -> str:
+    """What else a session signature is bound to, beyond the account id.
+
+    For an account that signs in with an operator-issued access key, the key's
+    digest: removing or rotating the key in AUTH_ACCESS_KEYS then invalidates
+    every session minted with it. A password account has no key; its sessions
+    are revoked through the session epoch, which changes with the password.
+    """
+    return settings.auth_access_keys.get(user_id, "")
+
+
 def sign_session(user_id: str, epoch: int = 0) -> str:
     """Mint a session cookie for one account.
 
@@ -30,7 +41,7 @@ def sign_session(user_id: str, epoch: int = 0) -> str:
     payload = f"{user_id}.{epoch}.{int(time.time()) + settings.session_seconds}"
     signature = hmac.new(
         settings.auth_secret.encode(),
-        (payload + settings.auth_access_keys[user_id]).encode(),
+        (payload + _key_binding(user_id)).encode(),
         hashlib.sha256,
     ).hexdigest()
     return f"{payload}.{signature}"
@@ -40,11 +51,12 @@ def session_claims(token: str) -> tuple[str, int] | None:
     """Verify the cookie and return (user_id, epoch), or None.
 
     Deliberately does not touch the database: this runs on every request, and
-    the epoch is compared against the stored one where the account is loaded.
+    the epoch is compared against the stored one where the account is loaded —
+    which is also what turns away a deleted account.
     """
     try:
         user_id, epoch, expiry, signature = token.split(".")
-        digest = settings.auth_access_keys[user_id]
+        digest = _key_binding(user_id)
         expected = hmac.new(
             settings.auth_secret.encode(),
             f"{user_id}.{epoch}.{expiry}{digest}".encode(),
