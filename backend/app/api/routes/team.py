@@ -10,11 +10,12 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.agents.registry import get_agent, require_agent
 from app.agents.runtime import AgentRuntime
 from app.core.auth import session_epoch_matches
+from app.core.config import settings
 from app.core.usage import BudgetExceeded, limited_caller
 from app.db.models import Conversation
 from app.db.session import SessionLocal
@@ -31,11 +32,21 @@ class AskTeamRequest(BaseModel):
     question: str = Field(min_length=1, max_length=4000)
     agent_ids: list[str] = Field(min_length=1, max_length=5)
 
+    @field_validator("question")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        # Refused before any conversation is created or any provider call made.
+        if not value.strip():
+            raise ValueError("Question cannot be empty")
+        return value
+
 
 class SpecialistTake(BaseModel):
     agent_id: str
     name: str
     answer: str
+    # completed | truncated | interrupted | failed — see app.agents.runtime.
+    completion: str = "completed"
 
 
 class AskTeamResponse(BaseModel):
@@ -50,6 +61,10 @@ async def ask_team(
     x_user_id: CallerId,
     request: Request,
 ):
+    # Checked after authentication, so an anonymous caller still gets 401 and
+    # learns nothing about which features this deployment has switched on.
+    if not settings.team_enabled:
+        raise HTTPException(status_code=404, detail="Ask My Team is not available")
     for slug in body.agent_ids:
         if get_agent(slug) is None:
             raise HTTPException(status_code=404, detail=f"Unknown agent: {slug}")
@@ -70,15 +85,17 @@ async def ask_team(
             convo = Conversation(user_id=user.id, agent_id=slug, title="Ask My Team")
             db.add(convo)
             db.flush()
-            answer = ""
+            answer, completion = "", "failed"
             async for event in runtime.run_stream(db, user, agent, convo, body.question):
                 if event.type == "end":
-                    answer = event.data["content"]
+                    answer, completion = event.data["content"], event.data["completion"]
                 elif event.type == "error":
                     if event.data.get("status") == 429:
                         raise HTTPException(429, event.data["error"])
                     answer = f"(unavailable: {event.data['error']})"
-            takes.append(SpecialistTake(agent_id=slug, name=agent.name, answer=answer))
+            takes.append(
+                SpecialistTake(agent_id=slug, name=agent.name, answer=answer, completion=completion)
+            )
         db.commit()
 
         synthesis = await _synthesise(user, body.question, takes)

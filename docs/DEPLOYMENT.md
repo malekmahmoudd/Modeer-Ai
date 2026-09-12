@@ -17,6 +17,104 @@ storage, host scheduling and actual operator notification remain deployment-day
 checks. Account controls are now available in the application, with a public
 `/privacy` page.
 
+## Release configuration — 2026-09-11 (production-readiness pass)
+
+| Setting | Release value | Why |
+|---|---|---|
+| `ENVIRONMENT` | `production` (set by `deploy/compose.yml`) | Also turns off `/docs`, `/redoc` and `/openapi.json` in the app itself, not only by Caddy's routing. |
+| `TEAM_ENABLED` | unset / `false` (the default) | Ask My Team has no screen yet and is the most expensive route. The code is kept and tested; set `TEAM_ENABLED=true` in `deploy/.env` and restart the backend to switch it on once a UI exists. While off, `POST /api/team/ask` answers 404 to signed-in callers and 401 to anonymous ones. |
+| `MEMORY_STORE_SENSITIVE` | unset / `false` (the default) | Automatic extraction does not store sensitive facts (health, money, identity numbers, beliefs, …). People can still save any fact themselves on the Memory page. |
+| `LLM_MODEL` | `openai/gpt-oss-120b` | Writing keeps its own `qwen/qwen3.8-27b` override in its agent config. |
+
+### Backend dependency lock
+
+`backend/requirements.txt` states ranges; the image installs
+`backend/requirements.lock` — all 33 runtime packages, transitive ones included,
+pinned with hashes — using `pip install --require-hashes --no-deps` followed by
+`pip check`. The base image is pinned by digest, as are the database, proxy and
+frontend images. `tests/test_dependency_lock.py` fails when the lock drifts from
+`requirements.txt` or from the environment the tests run in. The lock is for
+Linux (the image): it includes `uvloop`, which does not install on Windows; a
+Windows dev venv uses `requirements-dev.txt`.
+
+Verified 2026-09-12: the built image contains exactly the locked set (33
+packages plus pip), and the full backend suite passes inside that image.
+
+**Check for published advisories** whenever the lock changes — this is how the
+Starlette problem below was found:
+
+```sh
+docker run --rm -v "$PWD/backend/requirements.lock:/lock/requirements.lock:ro" python:3.12-slim \
+  sh -c "pip install -q pip-audit && pip-audit --disable-pip -r /lock/requirements.lock"
+```
+
+2026-09-12: FastAPI moved from 0.115.14 to **0.141.1** (Starlette 0.46.2 →
+**1.6.0**) because the audit reported 14 advisories against that Starlette, all
+fixed by 1.3.1 or earlier. The audit is clean at the new versions. Two things to
+know if you go back through this: FastAPI 0.141 keeps included routers nested,
+so `app.routes` no longer lists their routes (the authentication sweep in
+`tests/test_auth.py` reads the generated schema instead), and Starlette's test
+client warns that `httpx` support is deprecated in favour of `httpx2`.
+
+To change a dependency: edit the range in `requirements.txt`, install it in the
+dev venv, run the suite, then regenerate the lock on the image's own platform,
+constrained to what you just tested:
+
+```sh
+cd backend
+.venv/Scripts/python.exe -m pip freeze --all > /tmp/tested.txt   # any path
+docker run --rm -v "$PWD:/src" -v /tmp/tested.txt:/tested.txt:ro python:3.12-slim sh -c '
+  pip install -q pip-tools && grep -iv "^pip==" /tested.txt > /tmp/c.txt &&
+  printf -- "-c /tmp/c.txt\n-r /src/requirements.txt\n" > /tmp/lock.in &&
+  cd /tmp && pip-compile -q --generate-hashes --strip-extras --no-emit-index-url \
+    -o /src/requirements.lock /tmp/lock.in'
+```
+
+Then rebuild the image and rerun the suite inside it, from the repository root:
+
+```sh
+docker build -t modeer-backend:check backend
+docker run --rm -v "$PWD/backend/tests:/app/tests:ro" \
+  -v "$PWD/deploy/tests/image-check.sh:/image-check.sh:ro" modeer-backend:check sh /image-check.sh
+```
+
+It fails if the image holds anything other than the locked set, then runs the
+suite. To move the base image, `docker pull python:3.12-slim`, put the printed
+digest in `backend/Dockerfile`, and do the same.
+
+### Content Security Policy
+
+`deploy/Caddyfile` sends, on every response:
+
+```
+default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none';
+base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+```
+
+Everything the app loads is same-origin: scripts, stylesheets, fonts (`next/font`
+self-hosts them at build time), images, and `/api` including chat streams.
+`data:` images are the CSS paper textures. The two `'unsafe-inline'` entries are
+deliberate: Next.js inlines its page data as `<script>` tags and server-renders
+`style=""` attributes; replacing them with nonces needs per-request rendering and
+middleware in the frontend. What the policy still guarantees: no third-party
+script, stylesheet, font or image host; no connection to any other origin, so
+injected content cannot send data elsewhere; no plugins; no `<base>` hijack; no
+framing. If a new feature loads anything from another origin, it will be blocked
+until the policy names that origin.
+
+Validated in Chrome against the production images: seven pages and every chat
+state rendered with zero violations (`docs/production-rehearsal-results.json`).
+
+### Production rehearsal
+
+`deploy/tests/production-rehearsal/` runs the production images on 127.0.0.1
+with HTTPS, a throwaway database and a scripted model, and checks 16 things in a
+browser — headers and CSP, cookies, streaming through Caddy, every reply
+completion state and its recovery, link handling, blank messages, deletion,
+account switching, readiness and a 390px layout. Its README has the commands.
+It is not evidence about a real domain, a phone, or the real model.
+
 ## Historical usage-limit migration
 
 Before starting this version, run `alembic upgrade head` using the existing deployment migration procedure. Revision 0002 adds `usage_buckets`; the schema now has ten application tables. Configure `ACCOUNT_REQUESTS_PER_MINUTE` and `ACCOUNT_DAILY_TOKEN_BUDGET` for the size of the invite list; see [usage-limits.md](usage-limits.md). The prior container/backup verification was on revision 0001 (nine tables). The new migration has been rehearsed on SQLite and an isolated PostgreSQL 16 container, including downgrade/re-upgrade, concurrent quota admission, and persistence across separate processes.
@@ -124,7 +222,7 @@ not have these scripts, this repo, or Windows. Any machine with openssl and
 ```sh
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 240000 \
   -pass file:/path/to/passphrase -in modeer-TIMESTAMP.dump.enc -out modeer.dump
-pg_restore --list modeer.dump          # should list nine TABLE DATA entries
+pg_restore --list modeer.dump          # ten TABLE DATA entries (nine before revision 0002)
 ```
 
 This was verified against an archive produced by `backup.ps1`. Note the reason
@@ -154,7 +252,8 @@ Caddy issue an internal certificate instead of going to Let's Encrypt:
 
 - both images build;
 - `alembic upgrade head` applies the initial schema to PostgreSQL 16, creating
-  all nine tables — previously only ever run against SQLite;
+  all nine tables of revision 0001 (ten since 0002) — previously only ever run
+  against SQLite;
 - the documented bootstrap works end to end: database alone, migrate, provision,
   merge the digest, bring the stack up;
 - HTTPS through Caddy: `/api/health` reports `environment: production`,

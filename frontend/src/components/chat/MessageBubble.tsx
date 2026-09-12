@@ -3,7 +3,14 @@ import Link from "next/link";
 import { AgentBadge } from "@/components/art/AgentPortrait";
 import { ThinkingDots } from "@/components/ui/primitives";
 import { renderMarkdown } from "@/lib/markdown";
-import type { Agent, Message } from "@/types";
+import type { Agent, Completion, Message } from "@/types";
+
+// Shown under a reply that did not finish, when the server gave no notice.
+const UNFINISHED: Record<Exclude<Completion, "completed">, string> = {
+  truncated: "This reply reached its length limit and may be incomplete.",
+  interrupted: "This reply stopped before it finished.",
+  failed: "No reply arrived for this message.",
+};
 
 export function MessageBubble({
   message,
@@ -30,6 +37,7 @@ export function MessageBubble({
     (ctx?.personal_context_count ?? 0) > 0 ||
     (ctx?.agent_memory_used?.length ?? 0) > 0;
   const empty = !message.content;
+  const ended = message.completion ?? "completed";
 
   return (
     <div className="assistant-message flex gap-3">
@@ -47,7 +55,13 @@ export function MessageBubble({
           )}
         </div>
 
-        {!streaming && contextUsed && (
+        {!streaming && ended !== "completed" && (
+          <p className="mt-2.5 text-[12.5px] font-semibold text-ink-soft">
+            {message.meta?.notice || UNFINISHED[ended]}
+          </p>
+        )}
+
+        {!streaming && contextUsed && ended !== "failed" && (
           <Link
             href="/memory"
             className="mt-2.5 inline-flex items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-wide text-ink-soft transition hover:text-pink-deep"

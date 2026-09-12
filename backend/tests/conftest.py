@@ -10,6 +10,9 @@ os.environ["DATABASE_URL"] = f"sqlite+pysqlite:///{_TMP_DB.as_posix()}"
 os.environ["LLM_PROVIDER"] = "mock"
 os.environ["MEMORY_STORE_SENSITIVE"] = "false"
 os.environ["MEMORY_MIN_CONFIDENCE"] = "0.55"
+# Ask My Team ships switched off, but its implementation is kept and must stay
+# tested. The disabled default has its own explicit test in test_release_config.py.
+os.environ["TEAM_ENABLED"] = "true"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

@@ -38,11 +38,21 @@ async def lifespan(app: FastAPI):
     yield
 
 
+def api_docs(environment: str) -> dict:
+    """Interactive docs are a development aid. In production they would publish
+    every route and schema to anyone who can reach the API, so they are off —
+    whatever the proxy in front happens to route."""
+    if environment == "production":
+        return {"docs_url": None, "redoc_url": None, "openapi_url": None}
+    return {}
+
+
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
     description="Personal AI assistant (Modeer) plus a shared-context specialist team.",
     lifespan=lifespan,
+    **api_docs(settings.environment),
 )
 
 install_observability(app)
@@ -60,4 +70,4 @@ app.include_router(api_router)
 
 @app.get("/")
 def root() -> dict:
-    return {"service": settings.app_name, "docs": "/docs", "api": "/api"}
+    return {"service": settings.app_name, "docs": app.docs_url, "api": "/api"}

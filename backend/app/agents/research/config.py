@@ -58,5 +58,5 @@ CONFIG = AgentConfig(
         "the Writing Agent.",
     ],
     model=ModelConfig(temperature=0.4, max_tokens=800),
-    prompt_version=3,
+    prompt_version=4,
 )

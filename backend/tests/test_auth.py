@@ -148,18 +148,24 @@ _SAMPLE_BODY = {
 
 
 def test_every_personal_data_route_refuses_an_anonymous_caller(client, make_user, monkeypatch):
-    """Walk the real route table so a new endpoint cannot quietly skip auth."""
+    """Walk the real route table so a new endpoint cannot quietly skip auth.
+
+    Read from the generated schema rather than ``app.routes``: since FastAPI
+    0.141 an included router stays nested, so walking ``app.routes`` found only
+    the root route — a sweep that silently checks nothing is worse than none.
+    """
     from app.main import app
 
     enable(monkeypatch, [(make_user("Alice"), "a" * 40)])
     origin = {"Origin": settings.frontend_url}
     checked = 0
 
-    for route in app.routes:
-        path = getattr(route, "path", "")
+    for path, operations in app.openapi()["paths"].items():
         if not path.startswith("/api"):
             continue
-        for method in sorted(getattr(route, "methods", set()) - {"HEAD", "OPTIONS"}):
+        for method in sorted(m.upper() for m in operations):
+            if method in ("HEAD", "OPTIONS"):
+                continue
             if (method, path) in PUBLIC_ROUTES:
                 continue
             url = path.replace("{agent_id}", "study")

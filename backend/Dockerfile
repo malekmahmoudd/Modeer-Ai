@@ -1,9 +1,17 @@
-FROM python:3.12-slim
+# Pinned by digest: a rebuild gets the same Python the lock was resolved and
+# tested on, not whatever 3.12-slim points at that day. To move it, see
+# docs/DEPLOYMENT.md, "Backend dependency lock".
+FROM python:3.12-slim@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt && useradd --create-home app
+# requirements.lock pins every package, transitive ones included, to the version
+# the test suite ran against, with hashes; requirements.txt only states ranges.
+# --no-deps: nothing outside the lock can be pulled in; pip check proves the
+# locked set is complete and consistent.
+COPY requirements.lock .
+RUN pip install --no-cache-dir --require-hashes --no-deps -r requirements.lock \
+    && pip check \
+    && useradd --create-home app
 COPY . .
 USER app
 EXPOSE 8000
 CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-access-log"]
-

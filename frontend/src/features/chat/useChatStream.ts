@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { API_BASE } from "@/lib/api";
-import type { ChatStreamEvent, ContextDiagnostics, MemoryCandidate } from "@/types";
+import type { ChatStreamEvent, Completion, ContextDiagnostics, MemoryCandidate } from "@/types";
 
 interface Options {
   onStart?: (conversationId: string, context: ContextDiagnostics) => void;
@@ -13,12 +13,16 @@ interface Options {
     context: ContextDiagnostics | null;
     contextUsed: boolean;
     content: string;
+    completion: Completion;
+    notice: string;
   }) => void;
   onMemory?: (info: {
     candidates: MemoryCandidate[];
     newlyOnboarded: boolean;
   }) => void;
-  onError?: (message: string) => void;
+  /** `unfinishedIn` names the conversation when the server had started the
+   *  turn, so it holds a record of how the reply ended. */
+  onError?: (message: string, unfinishedIn: string | null) => void;
 }
 
 /** Streams a chat turn from POST /agents/:id/chat/stream (SSE) into React state. */
@@ -30,8 +34,9 @@ export function useChatStream(agentId: string, opts: Options = {}) {
 
   useEffect(() => () => abortRef.current?.abort(), [agentId]);
 
+  /** Send a message, or with `retry` regenerate the latest unfinished reply. */
   const send = useCallback(
-    async (message: string, conversationId: string | null) => {
+    async (message: string | null, conversationId: string | null, retry = false) => {
       if (abortRef.current) return;
       setText("");
       setReplyComplete(false);
@@ -44,12 +49,15 @@ export function useChatStream(agentId: string, opts: Options = {}) {
       let acc = "";
       let context: ContextDiagnostics | null = null;
       let convId = conversationId;
+      let started: string | null = null;
 
       try {
         const res = await fetch(`${API_BASE}/agents/${agentId}/chat/stream`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, conversation_id: conversationId }),
+          body: JSON.stringify(
+            retry ? { conversation_id: conversationId, retry: true } : { message, conversation_id: conversationId },
+          ),
           signal: controller.signal,
         });
         if (res.status === 401) { window.location.assign("/login"); return; }
@@ -80,6 +88,7 @@ export function useChatStream(agentId: string, opts: Options = {}) {
             }
             if (evt.type === "start") {
               convId = evt.conversation_id;
+              started = evt.conversation_id;
               context = evt.context;
               opts.onStart?.(evt.conversation_id, evt.context);
             } else if (evt.type === "delta") {
@@ -96,6 +105,8 @@ export function useChatStream(agentId: string, opts: Options = {}) {
                 context,
                 contextUsed: evt.context_used,
                 content: evt.content || acc,
+                completion: evt.completion ?? "completed",
+                notice: evt.notice ?? "",
               });
             } else if (evt.type === "memory") {
               opts.onMemory?.({
@@ -103,6 +114,7 @@ export function useChatStream(agentId: string, opts: Options = {}) {
                 newlyOnboarded: evt.newly_onboarded,
               });
             } else if (evt.type === "error") {
+              if (evt.conversation_id) started = evt.conversation_id;
               throw new Error(evt.error);
             }
           }
@@ -110,10 +122,11 @@ export function useChatStream(agentId: string, opts: Options = {}) {
         if (!ended) throw new Error("The connection ended before the reply finished. Please try again.");
         void convId;
       } catch (err) {
+        const unfinishedIn = ended ? null : started;
         if (controller.signal.reason === "timeout") {
-          opts.onError?.(ended ? "Your reply was saved, but memory processing timed out. Check Memory before relying on a new fact." : "The connection timed out. Please try again.");
+          opts.onError?.(ended ? "Your reply was saved, but memory processing timed out. Check Memory before relying on a new fact." : "The connection timed out. Please try again.", unfinishedIn);
         } else if ((err as Error).name !== "AbortError") {
-          opts.onError?.(err instanceof Error ? err.message : "Stream error");
+          opts.onError?.(err instanceof Error ? err.message : "Stream error", unfinishedIn);
         }
       } finally {
         clearTimeout(timeout);

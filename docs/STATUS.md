@@ -3,7 +3,36 @@
 _Last updated: 2026-09-11 · phase: production-readiness for a private, invite-only deployment_
 
 
-## Current launch-fix pass — 2026-09-11
+## Current: review remediation — 2026-09-12
+
+An independent read-only review of the pass below found twelve defects; all the
+code findings are fixed with regression tests, plus a latent message-ordering
+bug found on the way and a dependency upgrade (FastAPI 0.141.1 / Starlette
+1.6.0) that clears 14 published advisories. A second pass over that same work
+caught three regressions it had introduced, all fixed. **283 backend tests**,
+19/19 production-image browser checks, all application steps of the live journey
+on the real model, and a complete release-configuration quality run at
+**12/13**. The two measured answer-quality defects were fixed in the shared
+prompt rules and re-measured on the live model — neither recurred — but four
+samples a case is thin, so a three-sample run remains the next quality
+measurement. Details, evidence and the remaining
+owner gates: `launch-fixes.md` → "Review remediation — 2026-09-12";
+dispositions: `production-readiness-review-2026-09-11.md`.
+
+## Earlier: production-readiness pass — 2026-09-11 (evening)
+
+**Still not approved for public production.** Memory extraction now fails
+closed, every reply records how it ended (with an explicit retry), and the
+release items — dependency lock, Ask My Team off by default, sustained-failure
+readiness, CSP, link policy, API docs off in production — are done. Backend:
+**263 tests**, also passing inside the production image. A local rehearsal of the
+production images passed 16/16 browser checks with zero CSP violations. The
+release-configuration quality run is **incomplete**: the daily quota stopped it
+at 27/39 cases (21 passed, 2 failed, 4 ungraded). Details, commands and the
+remaining owner-side gates (real domain, off-host restore, scheduler, alert
+delivery, physical phone) are in `launch-fixes.md` → "Production-readiness pass".
+
+## Earlier launch-fix pass — 2026-09-11 (historical)
 
 **Not approved for public production.** Read `launch-fixes.md` for current
 verification and remaining gates. Account controls and privacy are now in the

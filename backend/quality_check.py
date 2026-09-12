@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -91,8 +92,13 @@ def _is_rate_limit(exc: Exception) -> bool:
     return "usage limit" in str(exc).lower() or "429" in str(exc)
 
 
-async def _complete_with_backoff(agent, packet) -> tuple[str, float, str]:
-    """Return (text, seconds, error). Retries only rate limits, never bad answers."""
+async def _complete_with_backoff(agent, packet) -> tuple[str, float, str, str]:
+    """Return (text, seconds, error, finish). Retries only rate limits, never bad answers.
+
+    ``finish`` is "truncated" when the reply ran into its token cap: the text is
+    graded as it stands, and the row says it was cut rather than passing it off
+    as a whole answer.
+    """
     provider = get_llm_provider()
     for attempt in range(RATE_LIMIT_RETRIES + 1):
         start = time.monotonic()
@@ -104,11 +110,11 @@ async def _complete_with_backoff(agent, packet) -> tuple[str, float, str]:
                 temperature=agent.model.temperature,
                 max_tokens=agent.model.max_tokens,
             )
-            return result.text, round(time.monotonic() - start, 2), ""
+            return result.text, round(time.monotonic() - start, 2), "", result.finish
         except Exception as exc:  # noqa: BLE001 - recorded, not raised
             elapsed = round(time.monotonic() - start, 2)
             if not _is_rate_limit(exc) or attempt >= RATE_LIMIT_RETRIES:
-                return "", elapsed, f"{type(exc).__name__}: {exc}"
+                return "", elapsed, f"{type(exc).__name__}: {exc}", "failed"
             # A per-minute throttle is worth waiting out. A per-day quota is not:
             # it comes back with a retry-after far beyond any sensible pause, and
             # retrying just burns the rest of the run producing empty rows.
@@ -119,7 +125,7 @@ async def _complete_with_backoff(agent, packet) -> tuple[str, float, str]:
                 ) from exc
             print(f"    rate limited, waiting {wait:.0f}s", flush=True)
             await asyncio.sleep(wait)
-    return "", 0.0, "exhausted rate-limit retries"
+    return "", 0.0, "exhausted rate-limit retries", "failed"
 
 
 async def main() -> int:
@@ -132,7 +138,15 @@ async def main() -> int:
     parser.add_argument("--judge-model", default="openai/gpt-oss-120b")
     parser.add_argument("--no-judge", action="store_true")
     parser.add_argument("--pace", type=float, default=PACE_SECONDS)
+    parser.add_argument(
+        "--allow-code-change",
+        action="store_true",
+        help="Resume even though the code or settings changed since the saved rows",
+    )
     args = parser.parse_args()
+    # Taken once, at start: this process imported the code as it was then, and
+    # later edits on disk do not change what it runs — only what `git` reports.
+    args.generated_with = settings_fingerprint(args)
 
     if args.samples < 1 or args.pace < 0:
         parser.error("samples must be positive and pace nonnegative")
@@ -172,7 +186,7 @@ async def main() -> int:
             user_message=case["input"],
         )
         try:
-            text, seconds, error = await _complete_with_backoff(agent, packet)
+            text, seconds, error, finish = await _complete_with_backoff(agent, packet)
         except QuotaExhausted as exc:
             aborted = str(exc)
             print(f"\nABORTED after {len(results)}/{len(cases)} cases: {exc}", flush=True)
@@ -192,6 +206,7 @@ async def main() -> int:
             "context": [*case.get("shared_context", []), *case.get("agent_memory", [])],
             "seconds": seconds,
             "error": error,
+            "finish": finish,
             "keyword_passed": keyword_passed,
             "keyword_checks": keyword_checks,
             "review": verdict.as_dict(),
@@ -226,6 +241,33 @@ async def main() -> int:
     return 0 if passed == len(results) else 1
 
 
+def code_revision() -> str:
+    """The commit these answers were generated from, plus whether it was dirty.
+
+    Without it a resumed run silently mixes code states: the run this replaced
+    had four rows from an older provider in the same file, and nothing in the
+    results said so.
+    """
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
+        ).stdout.strip()
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
+        ).stdout.strip()
+        return f"{head}-dirty" if dirty else head
+    except Exception:  # noqa: BLE001 - provenance is best effort, never fatal
+        return "unknown"
+
+
+def settings_fingerprint(args) -> dict:
+    return {
+        "code_revision": code_revision(),
+        "reasoning_effort": settings.llm_reasoning_effort,
+        "llm_timeout_seconds": settings.llm_timeout_seconds,
+    }
+
+
 def resume_rows(path: Path, args, cases) -> list[dict]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if (
@@ -236,6 +278,13 @@ def resume_rows(path: Path, args, cases) -> list[dict]:
         or data.get("samples", 1) != args.samples
     ):
         raise ValueError("Resume settings differ from the saved run")
+    saved = data.get("generated_with")
+    now = args.generated_with
+    if saved is not None and saved != now and not args.allow_code_change:
+        raise ValueError(
+            f"Saved rows were generated with {saved}, this run would use {now}. "
+            "Start a new --out, or pass --allow-code-change to mix them knowingly."
+        )
     rows = data["results"]
     if len(rows) > len(cases):
         raise ValueError("Resume case list differs")
@@ -267,6 +316,7 @@ def summarize(results: list[dict]) -> dict:
             "attempts": len(rows),
             "responses": len(valid),
             "provider_errors": len(rows) - len(valid),
+            "truncated": sum(r.get("finish") == "truncated" for r in valid),
             "deterministic_passes": sum(r["review"]["passed"] for r in valid),
             "judge_available": len(judged),
             "judge_passes": sum(r["judge"]["passed"] for r in judged),
@@ -286,6 +336,7 @@ def _write(path: Path, args, results: list[dict]) -> None:
                 "provider": settings.llm_provider,
                 "model": args.model or settings.llm_model,
                 "samples": args.samples,
+                "generated_with": args.generated_with,
                 "summary": summarize(results),
                 "judge_model": None if args.no_judge else args.judge_model,
                 "judge_version": 2,
@@ -300,6 +351,8 @@ def _write(path: Path, args, results: list[dict]) -> None:
 def _print_row(row: dict) -> None:
     mark = "UNAVAILABLE" if row["passed"] is None else "PASS" if row["passed"] else "FAIL"
     print(f"{mark} {row['agent']:9} {row['case']:30} {row['seconds']:>6}s", flush=True)
+    if row.get("finish") == "truncated":
+        print("    finish: truncated at the token cap", flush=True)
     if row["error"]:
         print(f"    provider: {row['error']}", flush=True)
     for violation in row["review"]["violations"]:

@@ -26,6 +26,14 @@ class Settings(BaseSettings):
     # Conservative UTF-8 input units plus maximum output tokens, UTC day.
     memory_timeout_seconds: float = Field(default=8, ge=1, le=30)
 
+    # --- Features ---
+    #: Ask My Team (POST /api/team/ask). Off for the initial release: no screen
+    #: calls it yet, and it is the most expensive route — up to five specialists
+    #: plus a synthesis per request against a shared free quota. The
+    #: implementation is kept and tested; set TEAM_ENABLED=true to switch it on
+    #: once a UI exists. See docs/launch-fixes.md.
+    team_enabled: bool = False
+
     # --- Operations ---
     #: Accounts allowed to see the monitoring dashboard. It shows every
     #: account's usage, so it is not for every invitee.
@@ -47,6 +55,12 @@ class Settings(BaseSettings):
                 raise ValueError("Production requires DEBUG=false and AUTH_REQUIRED=true")
             if not self.frontend_url.startswith("https://"):
                 raise ValueError("Production FRONTEND_URL must use HTTPS")
+            # Otherwise a missing LLM_PROVIDER would serve the offline preview
+            # model to invitees while every health check reported ok.
+            if self.llm_provider.lower().strip() in ("", "mock", "none"):
+                raise ValueError("Production requires a real LLM_PROVIDER, not the mock model")
+            if not self.llm_api_key:
+                raise ValueError("Production requires LLM_API_KEY")
         if self.auth_required:
             if len(self.auth_secret) < 32 or not self.auth_access_keys:
                 raise ValueError(

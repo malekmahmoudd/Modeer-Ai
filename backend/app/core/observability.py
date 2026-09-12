@@ -58,6 +58,11 @@ class Health:
     last_length_stop_model: str | None = None
     provider_quota_exhausted_at: datetime | None = None
     provider_last_retry_after: float | None = None
+    #: Every failed provider request since start, transient ones included.
+    provider_failures: int = 0
+    #: Failed requests in a row per model, reset by any success.
+    provider_failure_streak: Counter = field(default_factory=Counter)
+    #: Models whose failures are sustained (see PROVIDER_FAILURE_STREAK).
     provider_failed_until: dict[str, float] = field(default_factory=dict)
     provider_blocked_until: dict[str, float] = field(default_factory=dict)
 
@@ -81,6 +86,9 @@ class Health:
                     for m, until in self.provider_blocked_until.items()
                     if until > time.time()
                 },
+                # Visible, but not a readiness failure until sustained.
+                "failures": self.provider_failures,
+                "failure_streaks": {m: n for m, n in self.provider_failure_streak.items() if n},
                 "rate_limits": self.provider_rate_limits,
                 "quota_exhausted_at": (
                     self.provider_quota_exhausted_at.isoformat()
@@ -109,9 +117,24 @@ def _route_template(request: Request) -> str:
 
     ``/api/conversations/{conversation_id}`` rather than the real id: the id is
     the user's, and a log full of them is a log full of personal identifiers.
+
+    Since FastAPI 0.141 an included router keeps its own relative path, so the
+    route alone reads ``/conversations/{conversation_id}`` with no ``/api``.
+    The prefix is recovered from the request path by putting each parameter's
+    name back where its value sits — and if any value survives that, the
+    relative pattern is used instead, because an id must never reach the log.
     """
     route = request.scope.get("route")
-    return getattr(route, "path", "<unmatched>")
+    pattern = getattr(route, "path", "")
+    if not pattern:
+        return "<unmatched>"
+    params = request.scope.get("path_params") or {}
+    path = request.url.path
+    for name, value in params.items():
+        path = path.replace(str(value), "{" + name + "}", 1)
+    if any(str(value) in path for value in params.values()):
+        return pattern
+    return path
 
 
 class AccessLogMiddleware(BaseHTTPMiddleware):
@@ -213,13 +236,33 @@ def record_rate_limit(retry_after: float | None, model: str = "unknown") -> None
         )
 
 
+#: Failed requests in a row, for one model, before readiness reports degraded.
+#: One timeout or dropped stream is weather — the person sees it and retries —
+#: and paging on it teaches the operator to ignore pages. Several in a row with
+#: no success between is an outage.
+PROVIDER_FAILURE_STREAK = 3
+#: How long a sustained failure stays reported after the latest failed request.
+#: Longer than the watchdog's five-minute cadence, so a quiet deployment's
+#: outage is still seen; any success clears it at once.
+PROVIDER_FAILED_HOLD_SECONDS = 600.0
+
+
 def record_provider_failure(model: str) -> None:
-    health.provider_failed_until[model] = time.time() + 120
+    """A provider request failed. Transient until it keeps happening.
+
+    Not for throttling: a 429 is recorded by ``record_rate_limit``, and only a
+    daily-quota one affects readiness.
+    """
+    health.provider_failures += 1
+    health.provider_failure_streak[model] += 1
+    if health.provider_failure_streak[model] >= PROVIDER_FAILURE_STREAK:
+        health.provider_failed_until[model] = time.time() + PROVIDER_FAILED_HOLD_SECONDS
 
 
 def record_provider_success(model: str) -> None:
     health.provider_blocked_until.pop(model, None)
     health.provider_failed_until.pop(model, None)
+    health.provider_failure_streak.pop(model, None)
 
 
 class SafeServerException(logging.Filter):

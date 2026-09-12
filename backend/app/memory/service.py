@@ -20,6 +20,31 @@ from app.memory.schemas import (
     SharedMemoryUpdate,
 )
 
+#: The source recorded for memories a person saved explicitly. Anything else is
+#: automatic extraction, labelled with the agent that proposed it.
+USER_SOURCE = "user"
+#: Fields that change what a fact says. Editing one of these is the person
+#: stating something; pinning or flagging is not.
+CONTENT_FIELDS = frozenset({"key", "value", "category"})
+
+
+def _existing(db: Session, user_id: str, candidate: Candidate):
+    """The row an automatic write would replace, if any."""
+    if candidate.scope == "shared":
+        return db.scalar(
+            select(SharedMemory).where(
+                SharedMemory.user_id == user_id, SharedMemory.key == candidate.key
+            )
+        )
+    return db.scalar(
+        select(AgentMemory).where(
+            AgentMemory.user_id == user_id,
+            AgentMemory.agent_id == candidate.agent_id,
+            AgentMemory.key == candidate.key,
+        )
+    )
+
+
 # --- shared ---------------------------------------------------------------
 
 
@@ -69,8 +94,15 @@ def update_shared(
     )
     if row is None:
         return None
-    for field, value in data.model_dump(exclude_unset=True).items():
+    changed = data.model_dump(exclude_unset=True)
+    for field, value in changed.items():
         setattr(row, field, value)
+    if CONTENT_FIELDS & changed.keys():
+        # Editing what a fact SAYS is an explicit statement, exactly like saving
+        # one: record it as the user's so a later inference cannot quietly undo
+        # it. Pinning or flagging says nothing about the wording, so it leaves
+        # the source alone — otherwise pinning a fact would also freeze it.
+        row.source = USER_SOURCE
     db.flush()
     return row
 
@@ -138,8 +170,11 @@ def update_agent(
     )
     if row is None:
         return None
-    for field, value in data.model_dump(exclude_unset=True).items():
+    changed = data.model_dump(exclude_unset=True)
+    for field, value in changed.items():
         setattr(row, field, value)
+    if CONTENT_FIELDS & changed.keys():  # see update_shared
+        row.source = USER_SOURCE
     db.flush()
     return row
 
@@ -169,9 +204,20 @@ def context_for_agent(
 def apply_candidates(
     db: Session, user_id: str, candidates: list[Candidate], *, source: str
 ) -> list[Candidate]:
-    """Persist the storable candidates; return the full list (with stored flags)."""
+    """Persist the storable candidates; return the full list (with stored flags).
+
+    Automatic extraction never overrides the user. A memory saved by hand
+    (source "user") is left exactly as it is, even when a later message implies
+    a different value: the user's explicit statement outranks an inference. The
+    candidate is reported as not stored so the reply can say so.
+    """
     for c in candidates:
         if not c.stored:
+            continue
+        existing = _existing(db, user_id, c)
+        if existing is not None and existing.source == USER_SOURCE:
+            c.stored = False
+            c.reason = "you saved this yourself; not overwritten automatically"
             continue
         if c.scope == "shared":
             upsert_shared(
@@ -184,6 +230,9 @@ def apply_candidates(
                     source=source,
                     confidence=c.confidence,
                     sensitive=c.sensitive,
+                    # Keep the pin the user set; an automatic update must not
+                    # quietly unpin something they chose to keep in view.
+                    pinned=bool(existing is not None and getattr(existing, "pinned", False)),
                 ),
             )
         elif c.scope == "agent" and c.agent_id:

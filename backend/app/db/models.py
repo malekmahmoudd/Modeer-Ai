@@ -86,7 +86,9 @@ class Conversation(UUIDMixin, TimestampMixin, Base):
     messages: Mapped[list[Message]] = relationship(
         back_populates="conversation",
         cascade="all, delete-orphan",
-        order_by="Message.created_at",
+        # Same order as conversations.service.history: the id is only a
+        # tie-break for rows written before timestamps were kept distinct.
+        order_by="Message.created_at, Message.id",
     )
 
 

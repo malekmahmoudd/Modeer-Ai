@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from contextlib import aclosing
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -43,20 +44,35 @@ async def chat_stream(
     if agent is None:
         raise HTTPException(status_code=404, detail="Unknown agent")
 
+    # Resolve the account and the conversation BEFORE the stream starts. Inside
+    # the generator the response is already a 200, so a 401 could only be sent
+    # as an error event in the body — which a client reads as "the reply broke",
+    # not "sign in again", and a revoked session then retries forever.
+    db = SessionLocal()
+    try:
+        user = _resolve_user(db, x_user_id, request)
+        try:
+            convo = convo_service.get_or_create(db, user.id, agent_id, body.conversation_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="Conversation not found") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        db.commit()
+    except BaseException:
+        db.close()
+        raise
+
     async def event_source():
         scope_token = account_scope.set(x_user_id or "local-demo")
-        db = SessionLocal()
         try:
-            user = _resolve_user(db, x_user_id, request)
-            try:
-                convo = convo_service.get_or_create(db, user.id, agent_id, body.conversation_id)
-            except (KeyError, ValueError) as exc:
-                yield f'data: {{"type": "error", "error": "{exc}"}}\n\n'
-                return
-            db.commit()
             runtime = AgentRuntime()
-            async for event in runtime.run_stream(db, user, agent, convo, body.message):
-                yield event.as_sse()
+            # aclosing: when the client goes away, the runtime is closed here and
+            # saves what arrived before this session closes — not whenever the
+            # garbage collector gets round to it.
+            turn = runtime.run_stream(db, user, agent, convo, body.message, retry=body.retry)
+            async with aclosing(turn):
+                async for event in turn:
+                    yield event.as_sse()
         except Exception as exc:  # noqa: BLE001
             db.rollback()
             logging.getLogger(__name__).warning("Chat failure: %s", type(exc).__name__)
@@ -102,18 +118,23 @@ async def chat_sync(
         runtime = AgentRuntime()
         collected = {
             "content": "",
+            "completion": "completed",
+            "notice": "",
             "context": {},
             "memory_candidates": [],
             "conversation_id": convo.id,
             "context_used": False,
             "newly_onboarded": False,
         }
-        async for event in runtime.run_stream(db, user, agent, convo, body.message):
+        turn = runtime.run_stream(db, user, agent, convo, body.message, retry=body.retry)
+        async for event in turn:
             if event.type == "start":
                 collected["context"] = event.data.get("context", {})
             elif event.type == "end":
                 collected.update(
                     content=event.data["content"],
+                    completion=event.data["completion"],
+                    notice=event.data["notice"],
                     context_used=event.data["context_used"],
                     message_id=event.data["message_id"],
                 )

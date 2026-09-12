@@ -4,9 +4,100 @@ Written for an assistant picking this up with no prior conversation. Read this
 top to bottom before changing anything; it records constraints and failure modes
 that are not visible from the code alone.
 
-## Current update — 2026-09-11
+## Current update — review remediation (2026-09-12)
 
-Read `docs/launch-fixes.md` first. Earlier completion claims below are historical.
+An independent read-only review (`docs/production-readiness-review-2026-09-11.md`)
+found twelve defects and several gaps; all of the code findings are now fixed,
+each with a regression test. Read `launch-fixes.md` → "Review remediation —
+2026-09-12" for the list and the evidence. Highlights:
+
+- A correction made on the Memory page is now the person's and is never
+  overwritten by automatic extraction.
+- Failed, truncated and interrupted replies are announced to assistive
+  technology (a regression from the pass below).
+- A duplicate memory label answers 409 instead of a 500 that degraded readiness
+  and paged the operator.
+- A revoked session gets 401 from the chat stream, so the client sends the
+  person to sign in.
+- **Latent bug found while fixing those:** messages written in the same clock
+  tick ordered by a random id, so a reply could sort before its question.
+  `add_message` now assigns a strictly increasing time per conversation.
+- **Dependencies upgraded to FastAPI 0.141.1 / Starlette 1.6.0** after
+  `pip-audit` reported 14 advisories against Starlette 0.46.2; the audit is now
+  clean. Note FastAPI 0.141 keeps included routers nested, so `app.routes` no
+  longer lists them — `tests/test_auth.py` reads the generated schema instead.
+
+A second pass over that day's own changes caught three regressions it had
+introduced — the idle timeout also capping the first token, pinning a fact
+freezing it against updates, and logs losing the `/api` prefix — all fixed with
+tests. Re-check work you have just done; the first pass missed all three.
+
+Current numbers: **283 backend tests**, Ruff clean; the suite also passes inside
+the production image; the production rehearsal passes **19/19** in Chrome; the
+release-configuration quality run is complete at **12/13**
+(`docs/quality-release-2026-09-12.json`); the live journey's application steps
+all pass.
+
+**Answer quality: two measured defects, both fixed in the prompt and
+re-measured.** Study turned "final on the 20th" into "20 May", and answered
+"What should I revise first?" with a clarifying question alone. Rules 2 and 3 in
+`app/agents/context.py` were tightened and every agent's `prompt_version` bumped.
+On the live model neither recurred (0 of 4 samples each, and 0 of 13 in the
+suite); the suite held at 12/13. That is thin evidence — run
+`quality_check.py --samples 3` on fresh quota before treating quality as closed.
+While checking this, a keyword-based check in `journey_check.py` was found
+failing a good answer and was made deterministic: read §7 before trusting any
+keyword assertion.
+
+Still not verified: a real domain and public TLS, a restore from off-host
+storage, an alert reaching a person, a physical phone. Production readiness is
+still not claimed.
+
+## Earlier update — production-readiness pass (2026-09-11, evening)
+
+Read `docs/launch-fixes.md` → "Production-readiness pass" first. It records what
+changed, the evidence, the exact commands, the release configuration and the
+remaining gates. In short:
+
+- **Memory extraction fails closed.** Malformed candidates, unknown specialist
+  ids and invalid scopes are dropped, never widened to shared memory; the
+  model's sensitivity flag is not trusted alone; automatic extraction cannot
+  overwrite what a person saved by hand. `tests/test_prompt_isolation.py` proves
+  isolation at the provider's input through real HTTP requests.
+  `tools/memory_audit.py` (read-only) plus a documented, consent-based process
+  handle memories stored under the old rules.
+- **Every reply records how it ended** — completed, truncated, interrupted or
+  failed — from provider to database to API to screen, and survives a reload.
+  `retry: true` regenerates the latest unfinished turn in place, only on a
+  click. Blank messages are refused before any work.
+- **Release items:** hashed `backend/requirements.lock` and a digest-pinned base
+  image; Ask My Team off by default (`TEAM_ENABLED`); readiness degrades on
+  sustained provider failure, not one blip; CSP in `deploy/Caddyfile`; Markdown
+  link policy in `frontend/src/lib/links.ts`; API docs off in production.
+- **Evidence:** 263 backend tests; the suite also passes inside the production
+  image; a local production rehearsal (`deploy/tests/production-rehearsal/`)
+  passed 16/16 browser checks with zero CSP violations.
+- **Quality gate still open:** the release-configuration run stopped on the
+  daily quota at 27/39 (21 pass, 2 fail, 4 ungraded). Resume it on a fresh
+  budget with the command in launch-fixes.md; check `tools.provider_doctor`
+  first. Writing left a literal placeholder in one bio.
+
+The owner authorised scoped frontend changes for this pass only (completion,
+error and recovery states; link handling). Every frontend file touched is listed
+in launch-fixes.md. The standing rule is unchanged: **the owner edits the
+frontend; do not change it without being asked.**
+
+Not verified, and not to be claimed: a real domain and public TLS, a restore
+from genuinely off-host storage, an installed scheduler, delivery of an alert to
+a person, a physical phone. Production readiness is not claimed.
+
+Repo state: branch `fixes/launch-readiness-20260911`, based on `172f857`. All of
+this pass is **uncommitted** in the working tree (§3 below describes an older
+branch). Commit, push or merge only when the user asks.
+
+## Earlier update — 2026-09-11
+
+Earlier completion claims below are historical.
 This pass fixed export after a briefing, private exception/URL logging, provider
 readiness and alert cooldown/delivery handling. It added Account, public Privacy,
 and history deletion controls. Linux backup/restore and failure notifications
@@ -27,6 +118,8 @@ operator delivery and final public-domain journeys remain owner/deployment check
 Do not merge main or publish without the user. The local production frontend
 startup was rejected by automatic approval review with only "blocked by policy";
 do not relabel the successful development-browser checks as production checks.
+(Superseded that evening: the production images, frontend included, ran locally
+in the production rehearsal — see the update above.)
 
 ## Update: account limits and browser QA (2026-09-10)
 
@@ -105,11 +198,21 @@ explicitly — the venv is not auto-activated.
 ```sh
 # backend: tests, lint
 cd backend
-.venv/Scripts/python.exe -m pytest tests/ -q          # expect 101 passed
+.venv/Scripts/python.exe -m pytest tests/ -q          # expect 283 passed (2026-09-12)
 .venv/Scripts/python.exe -m ruff check .              # expect clean
 
 # frontend (do not modify; verify only)
 cd frontend && npm run build && npm run lint && npm run typecheck
+node tools/links-check.cjs                            # Markdown link policy
+
+# backend image: installed set == requirements.lock, then the suite inside it
+# (from the repository root; see docs/DEPLOYMENT.md)
+docker build -t modeer-backend:check backend
+docker run --rm -v "$PWD/backend/tests:/app/tests:ro" \
+  -v "$PWD/deploy/tests/image-check.sh:/image-check.sh:ro" modeer-backend:check sh /image-check.sh
+
+# read-only audit of automatic memories stored under the old extraction rules
+.venv/Scripts/python.exe -m tools.memory_audit --list
 
 # provider health + remaining token budget — RUN THIS BEFORE ANY LONG MODEL RUN
 cd backend && .venv/Scripts/python.exe -m tools.provider_doctor
@@ -146,7 +249,7 @@ Only keep files *you* touch format-clean.
   cookie flags, onboarding, LLM memory extraction, cross-agent recall, separate
   histories, mid-stream interruption, retry, no orphaned rows.
 - **Container stack**: images build; Alembic applies the schema to PostgreSQL 16
-  (nine tables); the documented bootstrap works; HTTPS, auth and the frontend
+  (nine tables at revision 0001, as it then was; ten since 0002); the documented bootstrap works; HTTPS, auth and the frontend
   serve through Caddy; data *and sessions* survive `down`/`up`.
 - **Streaming through Caddy is not buffered**: 288 SSE events over 0.95s with 40
   gaps above 10ms.

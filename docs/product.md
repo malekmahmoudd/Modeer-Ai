@@ -62,3 +62,8 @@ edit/delete it in "What my AI team knows about me". Covered end to end by
 Secondary. A minimal, explicit, user-controlled endpoint (`POST /api/team/ask`)
 where the user selects specialists, each answers through the shared runtime, and
 Modeer synthesises. Not automatic, not autonomous. Built after the core 1:1 chat.
+
+**Off for the initial release** (`TEAM_ENABLED=false`, the default): no screen
+calls it yet. Before switching it on, note that each specialist's answer — which
+may draw on that specialist's private notes — is passed to Modeer for the
+synthesis, so "only that agent sees them" stops holding for a consult.

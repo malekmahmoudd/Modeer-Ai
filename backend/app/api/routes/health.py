@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from functools import lru_cache
+from pathlib import Path
 
+from alembic.script import ScriptDirectory
 from fastapi import APIRouter, Response
 from sqlalchemy import text
 
@@ -11,6 +14,29 @@ from app.core.config import settings
 from app.core.observability import health as health_counters
 
 router = APIRouter(tags=["system"])
+
+#: backend/app/api/routes/health.py -> backend/ -> migrations/. The scripts ship
+#: inside the image (the Docker build context is backend/), so this is always
+#: the set of migrations the running code was built against.
+_MIGRATIONS = Path(__file__).resolve().parents[3] / "migrations"
+
+
+@lru_cache(maxsize=1)
+def expected_schema_revisions() -> frozenset[str]:
+    """The migration head(s) this build expects the database to be at.
+
+    Read from the migration scripts rather than written down. It used to be a
+    literal ``"0003"``, which meant the next migration would have left
+    production reporting degraded forever on a healthy app — and a watchdog
+    that alerts on nothing trains you to ignore it.
+
+    Empty if the scripts cannot be read. Production treats that as not ready:
+    a process that cannot tell which schema it expects cannot claim to be on it.
+    """
+    try:
+        return frozenset(ScriptDirectory(str(_MIGRATIONS)).get_heads())
+    except Exception:  # noqa: BLE001 - reported as not-ready, never raised
+        return frozenset()
 
 
 @router.get("/health")
@@ -44,19 +70,26 @@ def health_detail(db: DbSession, response: Response) -> dict:
         db_ok = False
 
     try:
-        applied = db.execute(text("SELECT version_num FROM alembic_version")).scalar()
+        # All rows, not the first: a branched history has one row per head.
+        applied = frozenset(
+            db.execute(text("SELECT version_num FROM alembic_version")).scalars().all()
+        )
     except Exception:  # noqa: BLE001 - SQLite dev databases never ran alembic
-        applied = None
+        applied = frozenset()
+    expected = expected_schema_revisions()
+    schema_current = bool(expected) and applied == expected
 
     counters = health_counters.snapshot()
     ready = db_ok and not _erroring(counters)
-    if settings.environment == "production" and applied != "0003":
+    if settings.environment == "production" and not schema_current:
         ready = False
     response.status_code = 200 if ready else 503
     return {
         "status": "ok" if ready else "degraded",
         "database": "ok" if db_ok else "error",
-        "schema_revision": applied,
+        "schema_revision": ", ".join(sorted(applied)) or None,
+        "expected_schema_revision": ", ".join(sorted(expected)) or None,
+        "schema_current": schema_current,
         "environment": settings.environment,
         "auth_required": settings.auth_required,
         **counters,
@@ -64,7 +97,10 @@ def health_detail(db: DbSession, response: Response) -> dict:
 
 
 def _erroring(counters: dict) -> bool:
-    """More than a handful of unhandled errors is degraded, not ok."""
+    """Sustained trouble only: a spent daily quota, a model failing request
+    after request, or a run of recent unhandled errors. A single provider
+    timeout is counted in ``provider.failure_streaks`` and left to the person
+    who saw it to retry; the database and schema checks sit outside this."""
     last = counters.get("last_error")
     recent = bool(
         last

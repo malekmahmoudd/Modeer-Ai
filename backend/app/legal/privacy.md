@@ -20,9 +20,13 @@ assume the more cautious reading and ask.
   has used, per minute and per day. These exist to stop one account exhausting
   the shared allowance. They record volume, never content.
 
-Some of what it remembers is sensitive by nature — health, money, work. Facts
-marked sensitive are stored only if the deployment has opted in
-(`MEMORY_STORE_SENSITIVE`), and are visible to you in Memory.
+Some of what it remembers is sensitive by nature — health, money, work. When
+Modeer recognises a fact as sensitive it does not store it automatically unless
+the deployment has opted in (`MEMORY_STORE_SENSITIVE`). **Recognising it is best
+effort**, not a guarantee: a health or money detail phrased in an ordinary way
+can be saved as an ordinary fact. Everything stored is visible to you in Memory,
+where you can edit or delete it — so it is worth a look now and then. Anything
+you save yourself is stored exactly as you wrote it, sensitive or not.
 
 ## Where it lives
 
@@ -41,10 +45,12 @@ that backup was taken.
   so they can read anything in it. Modeer is invite-only and self-hosted: trust
   in the operator is part of the arrangement, and no software here changes that.
 - **Your model provider.** To answer you, Modeer sends the specialist's
-  instructions, the relevant facts it remembers about you, and your message to
-  the configured provider — by default Groq. Your message text and your personal
-  context leave the server on every turn. What the provider does with it is
-  governed by their terms, not this document.
+  instructions, the relevant facts it remembers about you, the recent messages
+  of that conversation (up to the last 40) and your new message to the
+  configured provider — by default Groq. A second, separate request sends your
+  message again so the model can pick out any durable facts worth remembering.
+  Your message text and your personal context leave the server on every turn.
+  What the provider does with it is governed by their terms, not this document.
 - **Nobody else.** Other accounts on the same deployment cannot read your
   conversations, memories or goals; that isolation is enforced and tested.
 
@@ -61,7 +67,7 @@ that backup was taken.
 | You want to | How |
 |---|---|
 | See what it remembers | Memory, in the app — every stored fact, editable |
-| Correct or delete a single fact | Memory — edit or delete it |
+| Correct or delete a single fact | Memory — edit or delete it. An edit is yours: Modeer will not overwrite it automatically later |
 | Delete one conversation | Open conversation history, then choose its delete button |
 | Take everything with you | Account → Download my data — a JSON file, messages included |
 | Delete everything | Account → Delete my account → type DELETE |

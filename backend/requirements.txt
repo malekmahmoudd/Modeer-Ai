@@ -1,4 +1,6 @@
-fastapi>=0.115,<0.116
+# Starlette rides along with FastAPI; 0.46 (FastAPI 0.115) carries published
+# advisories, cleared from Starlette 1.3.1. See docs/DEPLOYMENT.md.
+fastapi>=0.141,<0.142
 uvicorn[standard]>=0.30,<0.35
 pydantic>=2.7,<3
 pydantic-settings>=2.3,<3

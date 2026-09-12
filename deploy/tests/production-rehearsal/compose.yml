@@ -1,0 +1,61 @@
+# Production rehearsal: the real production images on this machine only.
+#
+# The backend and frontend are built from the same Dockerfiles as deploy/compose.yml
+# and run with ENVIRONMENT=production behind Caddy using deploy/Caddyfile itself,
+# so the security headers, HTTPS, cookie flags and streaming are the shipped ones.
+# What differs: a throwaway database, public dummy secrets (like tools/qa_server.py),
+# a scripted model (fake_upstream.py), and a port bound to 127.0.0.1 only.
+# Never point this at real data or a real provider key. See README.md.
+name: modeer-rehearsal
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: modeer
+      POSTGRES_DB: modeer
+      POSTGRES_PASSWORD: rehearsal-only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U modeer"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  upstream:
+    image: python:3.12-slim
+    command: ["python", "/rehearsal/fake_upstream.py"]
+    volumes: ["./fake_upstream.py:/rehearsal/fake_upstream.py:ro"]
+  backend:
+    build: ../../../backend
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      AUTH_REQUIRED: "true"
+      AUTH_SECRET: rehearsal-signing-secret-not-for-production-0123
+      # Public keys "q"*40 (account A) and "r"*40 (account B).
+      AUTH_ACCESS_KEYS: >-
+        {"00000000-0000-4000-8000-00000000000a": "b74e475685fce884727c00c1016e240bbe5dab544453a34569cda1f9131859b8",
+         "00000000-0000-4000-8000-00000000000b": "ee1c0118a58f44380effab325f1207a8521074f086b746b3ed21f172e9f05853"}
+      DATABASE_URL: postgresql+psycopg://modeer:rehearsal-only@db:5432/modeer
+      FRONTEND_URL: https://localhost:8443
+      LLM_PROVIDER: openai
+      LLM_API_KEY: rehearsal-not-a-key
+      LLM_BASE_URL: http://upstream:9000/v1
+      LLM_MODEL: rehearsal-model
+      MEMORY_EXTRACTION: rules
+      # One run makes a few dozen requests; the account limits have their own
+      # tests (tests/test_usage.py) and are not what this rehearses.
+      ACCOUNT_REQUESTS_PER_MINUTE: "60"
+      ACCOUNT_DAILY_TOKEN_BUDGET: "10000000"
+    volumes: ["./seed_users.py:/rehearsal/seed_users.py:ro"]
+    depends_on:
+      db: {condition: service_healthy}
+      upstream: {condition: service_started}
+  frontend:
+    build: ../../../frontend
+    depends_on: [backend]
+  proxy:
+    image: caddy:2-alpine
+    environment:
+      DOMAIN: localhost
+    ports: ["127.0.0.1:8443:443"]
+    volumes: ["../../Caddyfile:/etc/caddy/Caddyfile:ro"]
+    depends_on: [frontend]

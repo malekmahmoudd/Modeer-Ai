@@ -148,18 +148,37 @@ Point any external uptime checker at `/api/health/detail` and alert on:
 
 - **not 200, or unreachable** for two consecutive checks;
 - `"status": "degraded"` — the database is unreachable, or unhandled errors have
-  recently accumulated, or an observed provider quota block is active;
-- `schema_revision` not matching the revision you deployed. This catches the
-  failure where a stale image migrated to its own idea of head and the app is
-  running against a schema it does not expect.
+  recently accumulated, or an observed provider quota block is active, or a
+  model has failed several requests in a row (see below);
+- `"schema_current": false` — the database is not at the migration head this
+  build expects. Readiness reports both sides: `schema_revision` is what the
+  database is at, `expected_schema_revision` is what the running code was built
+  against. This catches the failure where a stale image migrated to its own idea
+  of head and the app is running against a schema it does not expect.
 
-Readiness returns HTTP 503 when degraded, including a schema other than `0003`
-in production. Historical quota counters do not permanently mark the app down:
+Readiness returns HTTP 503 when degraded, including, in production, a database
+that is not at the expected head. The expected head is read from the migration
+scripts inside the image, so shipping a new migration moves it automatically —
+nothing to edit by hand. It was once a literal `0003`, which would have made the
+next migration report a healthy app as degraded indefinitely. Branched histories
+need every head applied. If the scripts cannot be read, production fails closed. Historical quota counters do not permanently mark the app down:
 a successful response from the affected model clears its block, or it expires
-after the provider’s retry interval. Other recent provider failures also degrade
-readiness for two minutes, cleared early by a successful reply from that model.
-Readiness observes actual requests; it does
+after the provider’s retry interval. Readiness observes actual requests; it does
 not send a synthetic AI request or guarantee unused provider credentials work.
+
+**Transient and sustained provider failures are separate** (changed 2026-09-11).
+A single timeout, dropped stream or 5xx is weather: the person who saw it gets a
+labelled reply and a Try again button, and readiness stays ok. It is still
+visible — `provider.failures` counts every one and `provider.failure_streaks`
+shows each model's current run of consecutive failures. Readiness degrades only
+when one model fails `PROVIDER_FAILURE_STREAK` (3) requests in a row with no
+success between; it then stays degraded for ten minutes after the latest
+failure, longer than the watchdog's five-minute cadence, and any success clears
+it at once. Throttling is not a failure: a per-minute 429 only moves
+`provider.rate_limits`, and a daily-quota 429 is the quota block above, which
+still degrades readiness and still sends its own alert. Database and schema
+problems are checked separately and are never softened by any of this.
+Constants: `app/core/observability.py`.
 
 An external checker matters more than anything in-process: a server that has
 stopped answering cannot tell you it has stopped answering.

@@ -79,7 +79,14 @@ def test_readiness_tracks_quota_and_recovers(client, monkeypatch):
     assert client.get("/api/health/detail").status_code == 200
     obs.health.provider_blocked_until["model-a"] = time.time() - 1
     assert client.get("/api/health/detail").status_code == 200
+    # One failure is transient: counted and visible, not a readiness failure.
     obs.record_provider_failure("model-a")
+    body = client.get("/api/health/detail")
+    assert body.status_code == 200
+    assert body.json()["provider"]["failure_streaks"] == {"model-a": 1}
+    # A run of failures with no success between is sustained.
+    for _ in range(obs.PROVIDER_FAILURE_STREAK - 1):
+        obs.record_provider_failure("model-a")
     assert client.get("/api/health/detail").status_code == 503
     obs.record_provider_success("model-a")
     assert client.get("/api/health/detail").status_code == 200

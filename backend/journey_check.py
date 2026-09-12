@@ -6,8 +6,8 @@ anything, or whether an interrupted stream leaves the database consistent. This
 walks the same path for real:
 
     sign in -> onboarding chat -> facts extracted -> follow-up recalls them
-    -> a second specialist has its own history -> interrupted reply
-    -> interrupted memory extraction -> retry succeeds
+    -> a second specialist has its own history -> the person hangs up mid-reply
+    -> every turn ends with a recorded completion state -> a retry succeeds
 
 It writes to its own SQLite file and its own user, never the development
 database, and prints one line per step so a failure says which step broke.
@@ -93,11 +93,13 @@ async def main() -> int:
 
     from fastapi.testclient import TestClient
 
+    from app.agents.rubric import review
     from app.agents.sync import sync_agents
     from app.core.config import settings
     from app.db.base import Base
     from app.db.models import User
     from app.db.session import SessionLocal, engine
+    from app.llm.base import COMPLETION_STATES
     from app.main import app
 
     Base.metadata.create_all(bind=engine)
@@ -151,13 +153,28 @@ async def main() -> int:
         stored = client.get("/api/memory/shared").json()
         journey.check("facts are readable back from the store", len(stored) >= 1)
 
-        # --- follow-up recalls the stored facts ------------------------------
+        # --- the follow-up uses what the team knows ---------------------------
+        # Deliberately not "does the reply contain the word thermodynamics": a
+        # good answer to "what should I revise first?" can name the First and
+        # Second Laws and never say the subject. Keyword scoring failed exactly
+        # that reply. What must hold is that the specialist answers instead of
+        # interviewing, and that the facts reached its prompt (checked below).
         follow_up = await journey.say("study", "What should I revise first?")
         text = (follow_up.get("content") or "").lower()
+        verdict = review(
+            {
+                "input": "What should I revise first?",
+                "shared_context": [{"value": "thermodynamics final on the 20th"}],
+                "expect": {"delivers": True},
+            },
+            follow_up.get("content") or "",
+        )
+        codes = [v.code for v in verdict.violations]
+        mentions = [w for w in ("thermodynamic", "mechanical", "engineering", "law") if w in text]
         journey.check(
-            "a different specialist recalls the shared facts",
-            any(word in text for word in ("thermodynamic", "mechanical", "engineering")),
-            follow_up.get("error", text[:80]),
+            "the follow-up answers rather than interviewing",
+            "withheld_deliverable" not in codes and bool(text.strip()),
+            follow_up.get("error") or f"rubric={codes or 'clean'}, mentions={mentions or 'none'}",
         )
         journey.check(
             "the specialist was told it had context",
@@ -181,12 +198,34 @@ async def main() -> int:
             f"{len(detail.get('messages', []))} messages",
         )
 
-        # --- interruption during the reply ------------------------------------
+        # --- the person hangs up mid-reply -------------------------------------
+        # This client runs the app in-process, where closing the response does
+        # not deliver a disconnect: the turn simply finishes. What a real server
+        # does with a dropped connection — keep the partial text, labelled
+        # "interrupted" — is covered by deploy/tests/production-rehearsal and by
+        # tests/test_reply_completion.py. What matters here is that the turn is
+        # never left unlabelled or lost.
         interrupted = _interrupt_stream(client, origin, "career", "What roles suit me?")
         journey.check(
-            "an interrupted stream is abandoned without a stored reply",
+            "the client can hang up mid-reply",
             interrupted["disconnected"],
             f"{interrupted['deltas']} deltas before disconnect",
+        )
+        with SessionLocal() as db:
+            from app.db.models import Conversation as _Conversation
+            from app.db.models import Message as _Message
+
+            replies = (
+                db.query(_Message)
+                .join(_Conversation)
+                .filter(_Conversation.agent_id == "career", _Message.role == "assistant")
+                .all()
+            )
+            states = [(m.meta or {}).get("completion") for m in replies]
+        journey.check(
+            "that turn is stored with a completion state, not lost",
+            bool(states) and all(s in COMPLETION_STATES for s in states),
+            ", ".join(f"{s}" for s in states) or "nothing stored",
         )
         await journey.pace()
 
@@ -202,12 +241,15 @@ async def main() -> int:
         with SessionLocal() as db:
             from app.db.models import Message
 
+            # An empty assistant row is allowed only as the record of a turn
+            # that failed — and it must say so. Anything else empty is the old
+            # "(no response)" bug coming back.
             orphans = [
                 m
                 for m in db.query(Message).filter(Message.role == "assistant").all()
-                if not (m.content or "").strip()
+                if not (m.content or "").strip() and (m.meta or {}).get("completion") != "failed"
             ]
-        journey.check("no empty assistant messages were persisted", not orphans)
+        journey.check("every stored reply is either real text or a labelled failure", not orphans)
 
         print()
         if journey.failures:

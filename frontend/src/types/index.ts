@@ -24,6 +24,9 @@ export interface AgentDetail extends Agent {
   model: { model: string | null; temperature: number; max_tokens: number };
 }
 
+/** How an assistant reply ended. Replies saved before this existed completed. */
+export type Completion = "completed" | "truncated" | "interrupted" | "failed";
+
 export interface Message {
   id: string;
   role: "user" | "assistant" | "system";
@@ -32,7 +35,9 @@ export interface Message {
     context?: ContextDiagnostics;
     provider?: string;
     model?: string;
+    notice?: string;
   };
+  completion?: Completion;
   created_at: string;
 }
 
@@ -141,6 +146,8 @@ export type ChatStreamEvent =
       conversation_id: string;
       message_id: string;
       content: string;
+      completion: Completion;
+      notice: string;
       context_used: boolean;
     }
   | {
@@ -149,4 +156,4 @@ export type ChatStreamEvent =
       memory_candidates: MemoryCandidate[];
       newly_onboarded: boolean;
     }
-  | { type: "error"; error: string };
+  | { type: "error"; error: string; status?: number; conversation_id?: string };

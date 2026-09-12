@@ -15,6 +15,7 @@ import re
 from dataclasses import dataclass
 
 from app.core.config import settings
+from app.memory.sensitivity import looks_sensitive
 
 SHARED = "shared"
 AGENT = "agent"
@@ -118,7 +119,12 @@ _CLIP = re.compile(
     r"\bright now\b|\bat\b|\band i\b|\band i'm\b)\b.*$",
     re.IGNORECASE,
 )
-_TRAILING_FILLER = re.compile(r"\b(?:the|a|an|my|at|for|and|to)$", re.IGNORECASE)
+#: Words that end a spoken sentence without adding to the fact: "I live in
+#: Alexandria now" is a location of "Alexandria", not "Alexandria now".
+_TRAILING_FILLER = re.compile(
+    r"\b(?:the|a|an|my|at|for|and|to|now|currently|today|these days|at the moment)$",
+    re.IGNORECASE,
+)
 
 
 def _clip(value: str) -> str:
@@ -153,7 +159,11 @@ def extract_candidates(text: str, *, agent_id: str) -> list[Candidate]:
         if scope == AGENT and agent_id not in (rule_agent, "modeer"):
             continue
 
-        sensitive = bool(_SENSITIVE.search(m.group(0)) or _SENSITIVE.search(text))
+        # The rule extractor has no model flag at all, so the shared backstop is
+        # the only signal. It checks the whole message: rule matches are coarse.
+        sensitive = bool(_SENSITIVE.search(text)) or looks_sensitive(
+            text, value, category=category
+        )
         base_conf = 0.8
         confidence = _confidence(text, base_conf)
 

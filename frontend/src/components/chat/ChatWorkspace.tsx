@@ -39,6 +39,9 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  // Spoken, not shown: a reply that failed or stopped short says so in the
+  // transcript, which a screen reader has no reason to revisit.
+  const [announcement, setAnnouncement] = useState("");
   const [savedFacts, setSavedFacts] = useState<MemoryCandidate[]>([]);
   const [justOnboarded, setJustOnboarded] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -110,20 +113,27 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     onStart: (cid) => {
       liveConversation.current = cid;
       setConversationId(cid);
+      // A retry replaces the unfinished reply after the latest message; the
+      // server has just removed it, so drop it here too.
+      setMessages((prev) => prev.slice(0, prev.map((m) => m.role).lastIndexOf("user") + 1));
       scrollDown();
     },
     onDelta: () => { if (followReply.current) scrollDown(false); },
-    onEnd: ({ content, context, contextUsed }) => {
+    onEnd: ({ content, context, contextUsed, completion, notice }) => {
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== "streaming"),
         {
           id: tmpId(),
           role: "assistant",
           content,
+          completion,
           created_at: new Date().toISOString(),
-          meta: { context: context ?? undefined, context_used: contextUsed },
+          meta: { context: context ?? undefined, context_used: contextUsed, notice },
         },
       ]);
+      if (completion !== "completed") {
+        setAnnouncement(notice || "This reply did not finish. Use the button above the message box.");
+      }
       refetchConvos();
       if (followReply.current) scrollDown(false);
     },
@@ -132,9 +142,18 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       if (stored.length) setSavedFacts(stored);
       if (newlyOnboarded) setJustOnboarded(true);
     },
-    onError: (m) => {
-      setErr(m);
+    onError: (m, unfinishedIn) => {
       setMessages((prev) => prev.filter((x) => x.id !== "streaming"));
+      setAnnouncement(m);
+      if (!unfinishedIn) {
+        setErr(m);
+        return;
+      }
+      // The server recorded how this turn ended; show its record rather than
+      // guessing — the transcript then says what happened and offers a retry.
+      apiFetch<ConversationDetail>(`/conversations/${unfinishedIn}`)
+        .then((c) => setMessages(c.messages))
+        .catch(() => setErr(m));
     },
   });
 
@@ -144,17 +163,28 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       if (!t || streaming) return;
       followReply.current = true;
       setErr(null);
+      setAnnouncement("");
       setSavedFacts([]);
       setInput("");
       setMessages((prev) => [
         ...prev,
-        { id: tmpId(), role: "user", content: t, created_at: new Date().toISOString(), meta: {} },
+        // local: shown before the server has it, so it is nothing to retry yet.
+        { id: tmpId(), role: "user", content: t, created_at: new Date().toISOString(), meta: { local: true } },
       ]);
       scrollDown();
       await send(t, conversationId);
     },
     [streaming, send, conversationId, scrollDown],
   );
+
+  const retry = useCallback(async () => {
+    if (streaming || !conversationId) return;
+    followReply.current = true;
+    setErr(null);
+    setAnnouncement("");
+    setSavedFacts([]);
+    await send(null, conversationId, true);
+  }, [streaming, send, conversationId]);
 
   useEffect(() => {
     if (seed && agent && !seededRef.current) {
@@ -181,6 +211,19 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const convos = conversations ?? [];
   const hasMessages = messages.length > 0;
   const shortName = agent?.name.replace(/ (Agent|Assistant)$/, "") ?? "";
+
+  // One explicit action when the latest turn has no finished reply. Nothing
+  // retries on its own: every provider call here starts with a click.
+  const latest = messages[messages.length - 1];
+  const latestEnded = latest?.role === "assistant" ? (latest.completion ?? "completed") : null;
+  const recovery =
+    streaming || !latest || !conversationId
+      ? null
+      : latestEnded === "truncated"
+        ? { label: "Continue", run: () => submit("Continue from where you stopped.") }
+        : latestEnded === "failed" || latestEnded === "interrupted" || (latest.role === "user" && !latest.meta.local)
+          ? { label: "Try again", run: retry }
+          : null;
 
   if (loading) {
     return (
@@ -337,6 +380,16 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
           {err && (
             <div className="mb-2.5">
               <ErrorNote message={err} />
+            </div>
+          )}
+          <p className="sr-only" role="status" aria-live="polite">
+            {announcement}
+          </p>
+          {recovery && (
+            <div className="mb-2.5 flex justify-end">
+              <button onClick={recovery.run} className="btn !min-h-[38px] !px-4 !text-[13px]">
+                {recovery.label}
+              </button>
             </div>
           )}
 

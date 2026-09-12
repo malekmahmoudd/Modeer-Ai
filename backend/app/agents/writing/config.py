@@ -69,5 +69,5 @@ CONFIG = AgentConfig(
         "to the Study Agent.",
     ],
     model=ModelConfig(model="qwen/qwen3.8-27b", temperature=0.3, max_tokens=1600),
-    prompt_version=2,
+    prompt_version=3,
 )

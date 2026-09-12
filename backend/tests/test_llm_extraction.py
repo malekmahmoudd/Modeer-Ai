@@ -82,14 +82,20 @@ async def test_agent_scope_routes_and_is_gated_by_current_agent():
     assert from_study == []
 
 
-async def test_unknown_agent_scope_falls_back_to_shared():
+async def test_unknown_agent_scope_is_rejected_not_widened_to_shared():
+    """A private note for an unknown specialist must never reach the shared layer.
+
+    This test used to assert the opposite — that such a note "falls back to
+    shared" — which is to say it pinned a leak in place: a fact the model meant
+    only one specialist to see became visible to all of them.
+    """
     out = await _run(
         _rows(
             {"scope": "agent", "agent_id": "astrology", "category": "general",
              "key": "sign", "value": "libra", "confidence": 0.9, "sensitive": False}
         )
     )
-    assert out and out[0].scope == "shared" and out[0].agent_id is None
+    assert out == []
 
 
 async def test_json_wrapped_in_prose_and_fences_is_recovered():

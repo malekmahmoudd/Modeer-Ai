@@ -18,10 +18,16 @@ from app.core.observability import (
     record_provider_success,
     record_rate_limit,
 )
-from app.llm.base import LLMMessage, LLMProvider
+from app.llm.base import INTERRUPTED, TRUNCATED, LLMMessage, LLMProvider, StreamEnded
 
 logger = logging.getLogger(__name__)
 _DEFAULT_BASE = {"groq": "https://api.groq.com/openai/v1", "openai": "https://api.openai.com/v1"}
+_DROPPED = "The connection to the AI provider dropped before this reply finished."
+_STALLED = "The AI provider stopped responding before this reply finished."
+_TOO_LONG = "This reply ran past the time limit and was cut short."
+#: Silence between stream events that means the provider has stopped sending,
+#: as opposed to a long reply still arriving. Capped by LLM_TIMEOUT_SECONDS.
+_IDLE_SECONDS = 15.0
 
 
 class ProviderError(RuntimeError):
@@ -74,6 +80,11 @@ class OpenAICompatProvider(LLMProvider):
         started = time.monotonic()
         emitted = False
         finished = False
+        truncated = False
+        interrupted = False
+        throttled = False
+        idle_guard: asyncio.Timeout | None = None
+        idle_seconds = min(_IDLE_SECONDS, settings.llm_timeout_seconds)
         try:
             async with asyncio.timeout(settings.llm_timeout_seconds):
                 async with httpx.AsyncClient(timeout=httpx.Timeout(15, read=20)) as client:
@@ -94,6 +105,7 @@ class OpenAICompatProvider(LLMProvider):
                             # Records the throttle and alerts the operator when
                             # the retry-after says the daily budget is spent.
                             record_rate_limit(_retry_after(response), model)
+                            throttled = True
                             wait = _retry_after(response)
                             advice = (
                                 f"Please try again in about {math.ceil(wait / 60)} "
@@ -109,65 +121,96 @@ class OpenAICompatProvider(LLMProvider):
                                 f"The AI provider could not respond (HTTP {response.status_code}). "
                                 "Please try again later."
                             )
-                        async for line in response.aiter_lines():
-                            if not line.startswith("data:"):
-                                continue
-                            data = line[5:].strip()
-                            if data == "[DONE]":
-                                finished = True
-                                break
-                            if not data:
-                                continue
-                            try:
-                                event = json.loads(data)
-                            except ValueError:
-                                continue
-                            if event.get("error"):
-                                raise ProviderError(
-                                    "The AI provider interrupted the reply. Please try again."
+                        # Two clocks, because they mean different things: the
+                        # outer one caps the whole reply, this one fires when the
+                        # provider goes quiet mid-stream. The notice below says
+                        # which happened instead of blaming the provider for both.
+                        #
+                        # It starts at the full budget on purpose: the wait for
+                        # the FIRST token is queueing, not silence, and a busy
+                        # free tier can sit there for a while. Only once words
+                        # are flowing does a gap mean the provider stopped.
+                        async with asyncio.timeout(settings.llm_timeout_seconds) as idle_guard:
+                            async for line in response.aiter_lines():
+                                idle_guard.reschedule(
+                                    asyncio.get_running_loop().time() + idle_seconds
                                 )
-                            choices = event.get("choices") or []
-                            if not choices:
-                                continue
-                            choice = choices[0]
-                            reason = choice.get("finish_reason")
-                            if reason == "length":
-                                # Keep what has already streamed. Discarding a
-                                # long, useful reply because the model ran to
-                                # its cap is worse for the reader than ending a
-                                # sentence early, and it is what made max_tokens
-                                # unusable as a length control. Only a cap hit
-                                # with nothing emitted is a real failure, and
-                                # that falls through to the check below.
-                                logger.info("provider=%s stopped at token cap", self.name)
-                                record_length_stop(model)
-                                finished = True
-                                break
-                            if reason:
-                                finished = True
-                            text = (choice.get("delta") or {}).get("content")
-                            if text:
-                                if not emitted:
-                                    logger.info(
-                                        "provider=%s first_text_seconds=%.2f",
-                                        self.name,
-                                        time.monotonic() - started,
-                                    )
-                                emitted = True
-                                yield text
-            if not emitted or not finished:
-                raise ProviderError("The AI reply was incomplete. Please try again.")
+                                if not line.startswith("data:"):
+                                    continue
+                                data = line[5:].strip()
+                                if data == "[DONE]":
+                                    finished = True
+                                    break
+                                if not data:
+                                    continue
+                                try:
+                                    event = json.loads(data)
+                                except ValueError:
+                                    continue
+                                if event.get("error"):
+                                    interrupted = True
+                                    break
+                                choices = event.get("choices") or []
+                                if not choices:
+                                    continue
+                                choice = choices[0]
+                                # Content first, finish reason second: the provider
+                                # may put the last words and the stop signal in the
+                                # same event, and handling the reason first dropped
+                                # those words — exactly at the end of a reply.
+                                text = (choice.get("delta") or {}).get("content")
+                                if text:
+                                    if not emitted:
+                                        logger.info(
+                                            "provider=%s first_text_seconds=%.2f",
+                                            self.name,
+                                            time.monotonic() - started,
+                                        )
+                                    emitted = True
+                                    yield text
+                                reason = choice.get("finish_reason")
+                                if reason == "length":
+                                    logger.info("provider=%s stopped at token cap", self.name)
+                                    record_length_stop(model)
+                                    truncated = True
+                                    break
+                                if reason:
+                                    finished = True
+            if not emitted:
+                # Nothing usable arrived, however it ended: a failure, not a reply.
+                raise ProviderError(
+                    "The AI provider interrupted the reply. Please try again."
+                    if interrupted
+                    else "The AI reply was empty. Please try again."
+                )
+            if truncated:
+                # The provider answered fine; the reply was just long. Keep it.
+                record_provider_success(model)
+                raise StreamEnded(
+                    TRUNCATED, "This reply reached its length limit and may be incomplete."
+                )
+            if interrupted or not finished:
+                record_provider_failure(model)
+                raise StreamEnded(INTERRUPTED, _DROPPED)
             record_provider_success(model)
+        except StreamEnded:
+            raise
         except ProviderError:
-            record_provider_failure(model)
+            if not throttled:  # throttling has its own record, above
+                record_provider_failure(model)
             raise
         except (TimeoutError, httpx.TimeoutException) as exc:
             record_provider_failure(model)
+            if emitted:
+                went_quiet = idle_guard is not None and idle_guard.expired()
+                raise StreamEnded(INTERRUPTED, _STALLED if went_quiet else _TOO_LONG) from exc
             raise ProviderError(
                 "The AI provider took too long to reply. Please try again."
             ) from exc
         except httpx.RequestError as exc:
             record_provider_failure(model)
+            if emitted:
+                raise StreamEnded(INTERRUPTED, _DROPPED) from exc
             raise ProviderError("Could not reach the AI provider. Please try again.") from exc
         finally:
             logger.info(

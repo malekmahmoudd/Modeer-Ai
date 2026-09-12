@@ -78,14 +78,27 @@ def _about_user(user: User) -> str:
     return "## About the user\n" + "\n".join(lines)
 
 
+#: Ceiling on one memory block. Facts are pasted into every prompt, so without a
+#: ceiling a single long one would crowd out the agent's own instructions. Rows
+#: arrive pinned-first, so what survives the cut is what the user marked as
+#: mattering most.
+MEMORY_BLOCK_CHARS = 6000
+
+
 def _memory_block(tag: str, rows: list) -> tuple[str, list[str]]:
     if not rows:
         return f"<<{tag}>>\n(none recorded yet)\n<</{tag}>>", []
     used: list[str] = []
     lines: list[str] = []
+    budget = MEMORY_BLOCK_CHARS
     for r in rows:
         label = f"{r.category}.{r.key}"
-        lines.append(f"- {label}: {r.value}")
+        line = f"- {label}: {r.value}"
+        if used and len(line) > budget:
+            lines.append(f"- ({len(rows) - len(used)} more not shown here)")
+            break
+        budget -= len(line) + 1
+        lines.append(line)
         used.append(label)
     return f"<<{tag}>>\n" + "\n".join(lines) + f"\n<</{tag}>>", used
 
@@ -166,7 +179,12 @@ def build_context(
         "2. DELIVER NOW. Asked for a plan, itinerary, draft or recommendation, your "
         "reply must contain one. Never answer with questions alone, and never close "
         "by promising to produce it once they reply — write a provisional version "
-        "from clearly labelled assumptions, then ask at most one question.\n"
+        "from clearly labelled assumptions, then ask at most one question. Open with "
+        "the answer, never with a question. A short or vague ask is still an ask: "
+        "'what should I revise first?' gets your best answer from what you already "
+        "know about them, with the reading you chose named in a single clause — not "
+        "a diagnostic interview, however reasonable the questions are. The one "
+        "question you may ask comes last, after something they can use today.\n"
         "3. NO INVENTED FACTS. Use only the supplied facts about this person. Do not "
         "invent their schedule, preferences, pronouns, achievements, metrics, "
         "employer activities, hobbies or contact details. Nor which model, version "
@@ -180,8 +198,11 @@ def build_context(
         "typical of their role — open-source contributions, mentoring, speaking, "
         "publications. Never derive a new constraint from one you were given: "
         "'cannot relocate' is not 'cannot afford to', a budget is not a salary, and "
-        "a deadline is not a level of stress. Asked for something you were not "
-        "told, say you do not know.\n"
+        "a deadline is not a level of stress. A date, time or place stays exactly as "
+        "you were given it: 'the 20th' is 'the 20th' — never '20 May', never 'May "
+        "20th', never a year they did not give you. Repeat their wording and let "
+        "them hold the calendar. Asked for something you were not told, say you do "
+        "not know.\n"
         "4. NO STALE CERTAINTY. You cannot see today's date, today's prices, or what "
         "is on sale now. That covers every market figure, not only products: "
         "property prices, rents, salaries, fares and interest rates all move, and "

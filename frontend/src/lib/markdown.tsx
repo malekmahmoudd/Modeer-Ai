@@ -1,5 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 
+import { safeHref } from "./links";
+
 /**
  * Small, dependency-free renderer for the GitHub-flavored markdown that chat
  * models produce: headings, bold/italic/code, ordered + unordered lists,
@@ -17,10 +19,11 @@ function inline(text: string, keyBase: string): ReactNode[] {
     if (/^\*[^*]+\*$/.test(p)) return <em key={key}>{p.slice(1, -1)}</em>;
     const link = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (link) {
-      const href = link[2];
-      const safe = /^(https?:|mailto:|\/)/.test(href) ? href : "#";
+      // A link the policy refuses keeps its words but loses its destination.
+      const href = safeHref(link[2]);
+      if (!href) return <Fragment key={key}>{link[1]}</Fragment>;
       return (
-        <a key={key} href={safe} target="_blank" rel="noopener noreferrer">
+        <a key={key} href={href} target="_blank" rel="noopener noreferrer">
           {link[1]}
         </a>
       );
