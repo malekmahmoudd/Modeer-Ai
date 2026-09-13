@@ -17,7 +17,7 @@
   --sun-deep: #f7c81f;
   --sun-pale: #ffeba6;
   --pink: #ff438a;
-  --pink-deep: #e6296f;
+  --pink-deep: #cc1757; /* text colour: 4.5:1 or better on every paper tone */
   --pink-pale: #ffd6e5;
 
   /* ink */
@@ -175,7 +175,7 @@ body {
   }
   .btn-pink {
     background: var(--pink);
-    color: #fff;
+    color: var(--ink); /* white on this pink is 3.3:1; ink is 5.5:1 */
   }
   .btn-sun {
     background: var(--sun);
@@ -262,7 +262,7 @@ body {
   }
   .chip-pink {
     background: var(--pink);
-    color: #fff;
+    color: var(--ink);
     border-color: var(--ink);
   }
 

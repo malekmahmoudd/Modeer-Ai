@@ -222,7 +222,7 @@ export function MemoryManager() {
                   onClick={() => setAgentId(on ? "" : a.id)}
                   aria-pressed={on}
                   className={`flex items-center gap-2 border-2 border-ink py-1.5 pl-1.5 pr-3 text-[13px] font-bold transition ${
-                    on ? "bg-pink text-white shadow-pop-xs" : "bg-paper-hi text-ink hover:bg-sun-pale"
+                    on ? "bg-pink text-ink shadow-pop-xs" : "bg-paper-hi text-ink hover:bg-sun-pale"
                   }`}
                 >
                   <AgentBadge slug={a.id} size={30} />

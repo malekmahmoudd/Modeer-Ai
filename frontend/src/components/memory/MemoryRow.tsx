@@ -130,7 +130,7 @@ export function MemoryRow({
         <button
           onClick={remove}
           disabled={busy}
-          className="btn-icon !h-11 !w-11 hover:!bg-pink hover:!text-white"
+          className="btn-icon !h-11 !w-11 hover:!bg-pink hover:!text-ink"
           aria-label={`Delete ${humanizeKey(memory.key)}`}
         >
           <Icon name="trash" size={17} />

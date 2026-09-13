@@ -179,7 +179,7 @@ function GoalItem({
 
       <span
         className={`shrink-0 border-2 border-ink px-2 py-0.5 text-[11.5px] font-black uppercase tracking-wide ${
-          isTop ? "bg-pink text-white" : "bg-paper-lo text-ink"
+          isTop ? "bg-pink text-ink" : "bg-paper-lo text-ink"
         }`}
       >
         {label}
@@ -187,7 +187,7 @@ function GoalItem({
 
       <button
         onClick={() => onRemove(goal.id)}
-        className="btn-icon !h-11 !w-11 shrink-0 hover:!bg-pink hover:!text-white"
+        className="btn-icon !h-11 !w-11 shrink-0 hover:!bg-pink hover:!text-ink"
         aria-label={`Delete goal "${goal.title}"`}
       >
         <Icon name="trash" size={17} />
