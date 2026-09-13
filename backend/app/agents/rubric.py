@@ -106,11 +106,13 @@ _ASSUMED_INTERVAL = re.compile(
 
 #: Money written with a currency: a symbol or code beside a figure, or a currency
 #: word after one. Shopping turned "under 700" into "under £700" in every sample.
+#: A code counts only beside a figure: Research's "SAR and SEM models" are
+#: spatial econometrics, not Saudi riyals.
+_CURRENCY_CODES = r"(?:USD|GBP|EUR|EGP|AED|SAR|CAD|AUD|INR|JPY|CHF)"
 _CURRENCY_AMOUNT = re.compile(
     r"[£$€¥₹]\s?\d|\d\s?[£$€¥₹]"
-    r"|\b(?:USD|GBP|EUR|EGP|AED|SAR|CAD|AUD|INR|JPY|CHF)\b"
-    r"|\d[\d,.]*\s?(?:k\s)?(?:dollars|pounds|euros|quid|bucks)\b",
-    re.I,
+    rf"|\b{_CURRENCY_CODES}\s?\d|\d[\d,.]*\s?[kKmM]?\s?{_CURRENCY_CODES}\b"
+    r"|\d[\d,.]*\s?(?:k\s)?(?i:dollars|pounds|euros|quid|bucks)\b",
 )
 #: Naming a currency at all, figure or not — "my budget is in euros" gives one.
 _CURRENCY_NAMED = re.compile(

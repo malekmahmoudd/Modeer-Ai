@@ -173,6 +173,15 @@ def test_a_remembered_place_makes_its_currency_fair():
     assert "invented_currency" not in _codes(case, "Aim for about €1,000 a month. " * 5)
 
 
+def test_a_currency_code_counts_only_beside_a_figure():
+    """Research's spatial econometrics ("SAR, SEM") was flagged as Saudi riyals."""
+    case = _case("Give me a reading-and-analysis plan for my dissertation topic.")
+    reply = "Week 4: methodology papers on SAR, SEM and spatial-Durbin models. " * 3
+    assert "invented_currency" not in _codes(case, reply)
+    assert "invented_currency" in _codes(case, "Budget about 2,500 SAR for fieldwork.")
+    assert "invented_currency" in _codes(case, "Set aside USD 300 for software.")
+
+
 def test_a_currency_the_person_named_is_theirs_to_use():
     case = _case("I have 1200 euros for a laptop. What should I get?")
     assert "invented_currency" not in _codes(case, "Spend up to €1,100 and keep €100 for a sleeve.")
