@@ -9,8 +9,8 @@ This module grades the reply instead of its vocabulary, in two layers:
 
 * :func:`review` — deterministic checks that need no provider, so they run in CI
   against the mock and stay cheap. They only cover what can be detected with high
-  precision: withheld plans, invented months, capability claims, unhedged prices,
-  unrequested rationale, verbosity, per-case forbidden phrases.
+  precision: withheld plans, invented months and currencies, capability claims,
+  unhedged prices, unrequested rationale, verbosity, per-case forbidden phrases.
 * :func:`judge` — an LLM judge for what a regex cannot see: facts invented about
   the user, stale specifics stated as current, ignored preferences. It quotes the
   offending span so a human can check the verdict rather than trust a score.
@@ -103,6 +103,23 @@ _ASSUMED_INTERVAL = re.compile(
     r"|\b\d{1,3}\s+(?:days|weeks)\s+(?:until|before|away|left|to go|out from)\b",
     re.I,
 )
+
+#: Money written with a currency: a symbol or code beside a figure, or a currency
+#: word after one. Shopping turned "under 700" into "under £700" in every sample.
+_CURRENCY_AMOUNT = re.compile(
+    r"[£$€¥₹]\s?\d|\d\s?[£$€¥₹]"
+    r"|\b(?:USD|GBP|EUR|EGP|AED|SAR|CAD|AUD|INR|JPY|CHF)\b"
+    r"|\d[\d,.]*\s?(?:k\s)?(?:dollars|pounds|euros|quid|bucks)\b",
+    re.I,
+)
+#: Naming a currency at all, figure or not — "my budget is in euros" gives one.
+_CURRENCY_NAMED = re.compile(
+    r"[£$€¥₹]|\b(?:USD|GBP|EUR|EGP|AED|SAR|CAD|AUD|INR|JPY|CHF"
+    r"|dollars?|pounds?|euros?|dirhams?|riyals?|rupees?|yen|francs?)\b",
+    re.I,
+)
+#: A remembered place is enough to infer a currency: Dublin means euros.
+_PLACE_KEY = re.compile(r"location|city|country|home|based|lives|region", re.I)
 
 #: Phrases that claim an action or lookup the assistant cannot perform. Every
 #: alternative needs a first-person subject: "Check current prices" is the agent
@@ -327,6 +344,25 @@ def review(case: dict, output: str, *, max_words: int = DEFAULT_MAX_WORDS) -> Re
                 "assumed_interval",
                 "counted the gap to a date it cannot place in the calendar",
                 interval.group(0),
+            )
+        )
+
+    # Shopping put a pound sign on a budget of "under 700" with nothing to say
+    # where the person lives. A stored place, or any currency they named, makes a
+    # currency fair to use — Dublin's euros and Manchester's pounds both pass.
+    rows = [*case.get("shared_context", []), *case.get("agent_memory", [])]
+    given = " ".join([case["input"], *_context_values(case)])
+    place_known = any(_PLACE_KEY.search(str(r.get("key", ""))) for r in rows)
+    if (
+        not place_known
+        and not _CURRENCY_NAMED.search(given)
+        and (money := _CURRENCY_AMOUNT.search(text))
+    ):
+        violations.append(
+            Violation(
+                "invented_currency",
+                "wrote a currency the person never gave and no place implies",
+                money.group(0),
             )
         )
 

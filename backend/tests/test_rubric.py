@@ -136,6 +136,48 @@ def test_month_is_allowed_when_the_context_supplied_one():
     assert "invented_month" not in _codes(case, reply)
 
 
+# --- invented currency -------------------------------------------------------
+
+
+_PHONE_CASE = {
+    "agent_memory": [
+        {"key": "ecosystem", "value": "already on iPhone and Apple Watch"},
+        {"key": "budget", "value": "under 700, keeps phones 4+ years"},
+    ],
+}
+
+
+def test_a_currency_added_to_a_bare_budget_fails():
+    """Shopping, three samples out of three: "stays under £700"."""
+    case = _case("Recommend a phone for me.", **_PHONE_CASE)
+    reply = "Pick: iPhone SE. It stays under £700 and gets years of updates. " + "Fits. " * 30
+    assert "invented_currency" in _codes(case, reply)
+
+
+def test_placing_an_option_against_the_budget_in_its_own_terms_passes():
+    case = _case("Recommend a phone for me.", **_PHONE_CASE)
+    reply = (
+        "Pick: iPhone SE — comfortably inside your 700, and supported well past four "
+        "years. Runner-up: a refurbished iPhone 13 mini, near the top of it. Check "
+        "the current price before buying."
+    )
+    assert "invented_currency" not in _codes(case, reply)
+
+
+def test_a_remembered_place_makes_its_currency_fair():
+    """Finance used euros for Dublin and Travel pounds for Manchester; both right."""
+    case = _case(
+        "Help me set a savings target.",
+        shared_context=[{"key": "location", "value": "Dublin"}],
+    )
+    assert "invented_currency" not in _codes(case, "Aim for about €1,000 a month. " * 5)
+
+
+def test_a_currency_the_person_named_is_theirs_to_use():
+    case = _case("I have 1200 euros for a laptop. What should I get?")
+    assert "invented_currency" not in _codes(case, "Spend up to €1,100 and keep €100 for a sleeve.")
+
+
 # --- capability honesty ------------------------------------------------------
 
 

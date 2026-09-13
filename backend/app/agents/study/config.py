@@ -54,5 +54,5 @@ CONFIG = AgentConfig(
         "to the Career or Research agent.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=800),
-    prompt_version=3,
+    prompt_version=4,
 )

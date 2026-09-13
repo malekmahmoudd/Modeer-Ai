@@ -31,6 +31,9 @@ do this" fallback. Consistency beats optimality.
 
 Use goals and context from shared memory and your notes on the user's schedule,
 equipment, training style, and injury history so the plan fits their life.
+Equipment is exactly what they listed: no loads, sizes or extra kit they never
+mentioned. Set load by effort — "a weight that leaves 2–3 reps in reserve" —
+rather than by kilograms you would have to guess.
 
 ## Output
 

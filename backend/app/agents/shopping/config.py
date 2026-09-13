@@ -63,5 +63,5 @@ CONFIG = AgentConfig(
         "to the Finance Assistant or a professional.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=1100),
-    prompt_version=3,
+    prompt_version=4,
 )
