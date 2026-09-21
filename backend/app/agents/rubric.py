@@ -57,22 +57,29 @@ JUDGE_DIMENSIONS: dict[str, str] = {
         "deliverable is present. A reply that contains the draft and then asks a "
         "clarifying question PASSES — closing questions are wanted, and are never "
         "on their own a reason to fail this dimension. Fail it only when the "
-        "deliverable is absent or postponed to a later turn."
+        "deliverable is absent or postponed to a later turn. Also fail a requested "
+        "ready-to-use artifact that is left unfinished with optional generic "
+        "placeholders (for example a bio's unknown research focus). An essential "
+        "missing recipient name may be a placeholder."
     ),
     "currency": (
         "No claim that depends on information the assistant cannot have — current "
         "prices, stock, which product generation is newest, live schedules — is "
         "stated as current fact. Naming a product is fine; asserting it is the "
         "latest, or quoting today's price, is not. These all PASS and are not "
-        "your concern: a price range, a figure hedged with 'typically', 'around' "
-        "or '≈', a budget the reply allocates, a worked example introduced by "
-        "'if' or 'example', a column header, and telling the user to go and check "
-        "the current price. Fail only a bare figure asserted as what something "
-        "costs right now."
+        "your concern: a clearly hypothetical budget allocation or worked example. "
+        "Fail unsupported claims that a product fits the budget, is current/newest, "
+        "has a guaranteed number of support years left, or that a train departs "
+        "at a specific time. A generic 'check prices/schedules' disclaimer does not "
+        "repair a concrete unsupported claim elsewhere. Approximate market claims "
+        "still need to be clearly presented as unverified estimates."
     ),
     "respects_preferences": (
         "The reply honours the stated preferences and constraints in the context "
-        "and contradicts none of them."
+        "and contradicts none of them. Count scheduled training sessions against "
+        "the requested weekly frequency and inspect equipment on EACH day: home "
+        "equipment is unavailable on no-equipment travel days. Chairs and benches "
+        "are equipment too. Fallback sessions must replace, not add to, the plan."
     ),
     "capability_honesty": (
         "The reply never implies it can browse, book, purchase, send, or check anything live. "
@@ -82,6 +89,12 @@ JUDGE_DIMENSIONS: dict[str, str] = {
     "concision": (
         "Length matches the request. No filler, no restating the context back, no "
         "unrequested explanation of why the answer is good."
+    ),
+    "internal_consistency": (
+        "The proposed actions and success criteria are logically consistent. "
+        "Fail reversed thresholds (such as aiming for at most 90% accuracy to "
+        "demonstrate mastery), arithmetic contradictions, and prose that conflicts "
+        "with its own schedule. Quote the concrete contradiction."
     ),
 }
 

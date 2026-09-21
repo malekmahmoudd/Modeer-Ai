@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Notice that Modeer has stopped answering, and say so.
+# Notice that CrewAi has stopped answering, and say so.
 #
 # The application alerts on its own errors and on provider quota, but a process
 # that has died cannot tell you it has died. This is the outside check.
@@ -65,9 +65,9 @@ fi
 
 if [ "$current" != "$previous" ]; then
   case "$current" in
-    up)       send "Modeer RECOVERED: $URL is answering normally again." ;;
-    degraded) send "Modeer DEGRADED: $URL answered but reports a problem. Check /api/health/detail." ;;
-    down)     send "Modeer DOWN: $URL did not answer within ${TIMEOUT}s." ;;
+    up)       send "CrewAi RECOVERED: $URL is answering normally again." ;;
+    degraded) send "CrewAi DEGRADED: $URL answered but reports a problem. Check /api/health/detail." ;;
+    down)     send "CrewAi DOWN: $URL did not answer within ${TIMEOUT}s." ;;
   esac
 fi
 

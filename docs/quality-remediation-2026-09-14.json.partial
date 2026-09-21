@@ -1,0 +1,236 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "samples": 3,
+  "generated_with": {
+    "code_revision": "1ed17eb-dirty",
+    "source_sha256": "c4c4a80e3fe7fe45bcefdc7c870e4e8547560791ebff2b31fef70c04f4576eab",
+    "agents": {
+      "modeer": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.55,
+        "max_tokens": 650,
+        "prompt_version": 4
+      },
+      "study": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.5,
+        "max_tokens": 800,
+        "prompt_version": 5
+      },
+      "career": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.55,
+        "max_tokens": 650,
+        "prompt_version": 5
+      },
+      "research": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.4,
+        "max_tokens": 800,
+        "prompt_version": 6
+      },
+      "writing": {
+        "model": "qwen/qwen3.8-27b",
+        "temperature": 0.3,
+        "max_tokens": 1600,
+        "prompt_version": 5
+      },
+      "travel": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.6,
+        "max_tokens": 800,
+        "prompt_version": 8
+      },
+      "shopping": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.5,
+        "max_tokens": 1100,
+        "prompt_version": 5
+      },
+      "finance": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.4,
+        "max_tokens": 800,
+        "prompt_version": 4
+      },
+      "fitness": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.5,
+        "max_tokens": 800,
+        "prompt_version": 6
+      },
+      "email": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.6,
+        "max_tokens": 1000,
+        "prompt_version": 3
+      }
+    },
+    "provider": "groq",
+    "judge_model": "qwen/qwen3.8-27b",
+    "judge_temperature": 0.0,
+    "judge_max_tokens": 700,
+    "reasoning_effort": "low",
+    "llm_timeout_seconds": 35.0
+  },
+  "summary": {
+    "modeer-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "truncated": 0,
+      "deterministic_passes": 1,
+      "judge_available": 1,
+      "judge_passes": 1,
+      "evaluated": 1,
+      "passes": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "judge_model": "qwen/qwen3.8-27b",
+  "judge_version": 2,
+  "results": [
+    {
+      "generated_with": {
+        "code_revision": "1ed17eb-dirty",
+        "source_sha256": "c4c4a80e3fe7fe45bcefdc7c870e4e8547560791ebff2b31fef70c04f4576eab",
+        "agents": {
+          "modeer": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.55,
+            "max_tokens": 650,
+            "prompt_version": 4
+          },
+          "study": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.5,
+            "max_tokens": 800,
+            "prompt_version": 5
+          },
+          "career": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.55,
+            "max_tokens": 650,
+            "prompt_version": 5
+          },
+          "research": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.4,
+            "max_tokens": 800,
+            "prompt_version": 6
+          },
+          "writing": {
+            "model": "qwen/qwen3.8-27b",
+            "temperature": 0.3,
+            "max_tokens": 1600,
+            "prompt_version": 5
+          },
+          "travel": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.6,
+            "max_tokens": 800,
+            "prompt_version": 8
+          },
+          "shopping": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.5,
+            "max_tokens": 1100,
+            "prompt_version": 5
+          },
+          "finance": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.4,
+            "max_tokens": 800,
+            "prompt_version": 4
+          },
+          "fitness": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.5,
+            "max_tokens": 800,
+            "prompt_version": 6
+          },
+          "email": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.6,
+            "max_tokens": 1000,
+            "prompt_version": 3
+          }
+        },
+        "provider": "groq",
+        "judge_model": "qwen/qwen3.8-27b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "modeer",
+      "sample": 1,
+      "prompt_version": 4,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "modeer-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "seconds": 1.45,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 150,
+        "violations": []
+      },
+      "output": "Focus this week on two high\u2011impact blocks:\n\n1. **Programming exam prep** \u2013 allocate the bulk of your study time (\u2248\u202f60\u202f% of your weekly hours). Prioritise the topics you\u2019ve struggled with most in past quizzes, and finish any remaining practice problems. End each study session with a 5\u2011minute recap to cement key concepts.\n\n2. **Internship CV** \u2013 dedicate the remaining time (\u2248\u202f40\u202f%). Start by drafting the \u201cExperience\u201d and \u201cProjects\u201d sections, using concise bullet points that highlight measurable outcomes. Then polish the \u201cSummary\u201d and \u201cSkills\u201d sections to align with the roles you\u2019re targeting.\n\n**Next actions you can take today**\n- Block three 90\u2011minute study slots for exam topics you\u2019ve identified as weak.  \n- Write a rough outline of the CV (headings only) and fill in one experience entry.  \n\nDo you have any fixed commitments this week that would limit the time you can devote to these two blocks?",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "environment": "disposable Docker Linux worker and PostgreSQL 16",
+  "offhost_note": "Second directory on this machine, not physical off-host storage",
+  "checks": [
+    "backup refuses missing encryption key or destination",
+    "plaintext cleaned; both destinations expire archives and preserve unrelated files",
+    "wrong key rejected; copied archive restores successfully",
+    "503 readiness triggers one alert per state change",
+    "failed alert delivery retries; successful recovery updates state",
+    "nightly job reports backup failure to a local test webhook",
+    "nightly job backs up and immediately restores the copied archive",
+    "schema 0004 restore matches every source table, including credentials and consent",
+    "clean restore over populated scratch database recovers exact source rows",
+    "unreachable application produces a failing check"
+  ]
+}

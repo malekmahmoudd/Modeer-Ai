@@ -65,29 +65,38 @@ export function useApi<T>(path: string | null, deps: unknown[] = []) {
   const [loading, setLoading] = useState(Boolean(path));
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
+  const requestId = useRef(0);
 
   const load = useCallback(async () => {
-    if (!path) return;
+    const request = ++requestId.current;
+    if (!mounted.current) return;
+    if (!path) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const result = await apiFetch<T>(path);
-      if (mounted.current) setData(result);
+      if (mounted.current && request === requestId.current) setData(result);
     } catch (err) {
-      if (mounted.current) {
+      if (mounted.current && request === requestId.current) {
         setError(err instanceof Error ? err.message : "Request failed");
       }
     } finally {
-      if (mounted.current) setLoading(false);
+      if (mounted.current && request === requestId.current) setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path]);
 
   useEffect(() => {
+    const requests = requestId;
     mounted.current = true;
     load();
     return () => {
       mounted.current = false;
+      ++requests.current;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load, ...deps]);

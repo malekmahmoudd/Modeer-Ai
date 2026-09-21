@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # --- General ---
-    app_name: str = "Modeer Personal AI Team"
+    app_name: str = "CrewAi Personal AI Team"
     environment: str = Field(default="development")
     debug: bool = Field(default=True)
     auth_required: bool = False

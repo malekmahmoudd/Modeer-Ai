@@ -57,7 +57,7 @@ export function GoalsManager() {
       <PageHeader
         eyebrow="Your next chapter"
         title="Make room for what matters."
-        lede="Modeer and your team use these to shape advice and your daily briefing. Keep it short — a handful of things that actually matter."
+        lede="Leo and your team use these to shape advice and your daily briefing. Keep it short — a handful of things that actually matter."
       />
 
       <div className="goal-summary" role="group" aria-label="Goal progress"><span><strong>{active.length}</strong> in progress</span><span><strong>{done.length}</strong> completed</span><p className="hand">One step at a time.</p></div>

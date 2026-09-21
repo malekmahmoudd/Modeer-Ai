@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import threading
+import uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 root = Path("/qa")
@@ -72,6 +73,47 @@ assert "backup or restore failed" in state["alerts"][-1]["text"]
 passed("nightly job reports backup failure to a local test webhook")
 run("nightly-backup.sh", watch)
 passed("nightly job backs up and immediately restores the copied archive")
+# Compare every table in the restored schema, including password hashes,
+# recovery-code consumption, session epochs and consent. Report equality only,
+# never credential material. Other test writers must be stopped during this check.
+compose = ["docker", "compose", "-f", "/qa/compose.yml", "exec", "-T", "db"]
+def db_command(*args):
+    return subprocess.run([*compose, *args], check=True, capture_output=True, text=True).stdout.strip()
+
+def snapshot(database):
+    tables = db_command("psql", "-U", "modeer", "-d", database, "-tAc",
+                        "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename").splitlines()
+    return {table: db_command("psql", "-U", "modeer", "-d", database, "-tAc",
+            f'SELECT count(*) || \':\' || md5(coalesce(string_agg(row_to_json(t)::text, \'\' ORDER BY row_to_json(t)::text), \'\')) FROM "{table}" t')
+            for table in tables}
+
+scratch = "modeer_ops_" + uuid.uuid4().hex
+archive = max((root / "offhost").glob("modeer-*.dump.enc"), key=lambda p: p.stat().st_mtime)
+plain = root / "verification.dump"
+container_dump = "/tmp/" + scratch + ".dump"
+container = subprocess.run(["docker", "compose", "-f", "/qa/compose.yml", "ps", "-q", "db"],
+                           capture_output=True, text=True, check=True).stdout.strip()
+try:
+    subprocess.run(["openssl", "enc", "-d", "-aes-256-cbc", "-pbkdf2", "-iter", "240000",
+                    "-pass", "file:/qa/key", "-in", str(archive), "-out", str(plain)], check=True)
+    subprocess.run(["docker", "cp", str(plain), container + ":" + container_dump], check=True)
+    db_command("createdb", "-U", "modeer", scratch)
+    db_command("pg_restore", "-U", "modeer", "-d", scratch, "--exit-on-error", "--no-owner", container_dump)
+    assert snapshot("modeer") == snapshot(scratch)
+    assert db_command("psql", "-U", "modeer", "-d", scratch, "-tAc",
+                      "SELECT version_num FROM alembic_version") == "0004"
+    passed("schema 0004 restore matches every source table, including credentials and consent")
+    db_command("psql", "-U", "modeer", "-d", scratch, "-c",
+               "UPDATE users SET display_name='populated restore sentinel'")
+    assert snapshot("modeer") != snapshot(scratch)
+    db_command("pg_restore", "-U", "modeer", "-d", scratch, "--clean", "--if-exists",
+               "--exit-on-error", "--no-owner", container_dump)
+    assert snapshot("modeer") == snapshot(scratch)
+    passed("clean restore over populated scratch database recovers exact source rows")
+finally:
+    db_command("dropdb", "-U", "modeer", "--if-exists", scratch)
+    db_command("rm", "-f", container_dump)
+    plain.unlink(missing_ok=True)
 server.shutdown()
 run("watchdog.sh", {**watch, "MODEER_URL": "http://127.0.0.1:8098"}, ok=False)
 passed("unreachable application produces a failing check")

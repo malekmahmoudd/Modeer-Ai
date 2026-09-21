@@ -160,5 +160,6 @@ export type ChatStreamEvent =
       conversation_id: string;
       memory_candidates: MemoryCandidate[];
       newly_onboarded: boolean;
+      error?: string;
     }
   | { type: "error"; error: string; status?: number; conversation_id?: string };

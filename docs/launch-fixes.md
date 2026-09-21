@@ -720,12 +720,10 @@ Frontend files touched, all new UI using the existing classes and colours:
 - **Names, roles, labels, landmarks, headings:** no violations. The one item
   axe flagged for review — an `aria-label` on a plain `div` in the Goals summary,
   which screen readers ignore — now has `role="group"`. Invisible change.
-- **Colour contrast — not changed, owner's call.** White text on the pink
-  buttons (`#ffffff` on `#ff438a`) is **3.27:1**, below the 4.5:1 AA minimum for
-  14px bold text; it appears on Login, Signup, Recover and two Account buttons.
-  One pink link on Team (`#e6296f` on `#fffcf2`) is **4.16:1**. Darker pink,
-  dark text on pink, or larger button text (18.66px bold counts as large, 3:1)
-  would each pass.
+- **Colour contrast — found here, fixed later the same day (below).** White
+  text on the pink buttons (`#ffffff` on `#ff438a`) was **3.27:1**, below the
+  4.5:1 AA minimum for 14px bold text; one pink link on Team (`#e6296f` on
+  `#fffcf2`) was **4.16:1**.
 - **Not done:** a pass with a real screen reader (NVDA or VoiceOver). Automated
   scans catch perhaps a third of real problems; this is evidence, not sign-off.
 
@@ -763,16 +761,73 @@ run on a new day's quota.
 | `npm audit --omit=dev` | **0 vulnerabilities** (was the `postcss` advisory) |
 | Backend lock | unchanged since `ee5328d` (audit clean then) |
 
+## Follow-up — 2026-09-13 (later)
+
+**Colour contrast — fixed** (`80cf49a`, the owner chose dark text on the same
+pink). White text on `#ff438a` becomes ink `#151714` (**5.5:1**) everywhere text
+sits on a pink fill: `.btn-pink`, `.chip-pink`, the top-priority goal label, the
+selected agent filter on Memory and the delete-button hovers — as the home Send
+button already did. `--pink-deep` text moves from `#e6296f` to `#cc1757`, which
+reaches 4.5:1 on every paper tone it is used on (`#d81b60` was considered and
+fails on the recessed and pale-yellow papers). The accessibility check now
+reports **0 violations** on every page at both widths
+(`docs/accessibility-results.json`), and the rehearsal still passes 23/23.
+Frontend files touched: `src/app/globals.css`,
+`src/components/goals/GoalsManager.tsx`,
+`src/components/memory/MemoryManager.tsx`,
+`src/components/memory/MemoryRow.tsx`.
+
+**Screen-reader pass — attempted, cancelled by the owner.** A portable NVDA
+2026.2 (signature checked, nothing installed, speech set to silent, speech
+logged) was run against a visible Chrome with real keystrokes. It proved
+workable — NVDA heard the injected keys, and its log showed, for example, the
+login page announcing "Welcome back., heading level 1", "Email, edit,
+required", "Password, edit, protected, required" and each link and button by
+name. But NVDA still plays its mode-switch and error tones with speech silent,
+and a desktop-wide screen reader competes with whoever is using the machine; two
+driver keystrokes also reached another window while focus was elsewhere
+(cursor movement and two letters, nothing saved). The owner stopped it. The
+NVDA copy and its log (which recorded unrelated desktop activity) were deleted,
+and nothing from that log is kept beyond the lines quoted here. **A screen-reader
+pass remains open**, best done by a person, or on a dedicated machine or VM.
+
+**Answer quality — invented currencies, prices and kit details** (`682f6cf`,
+`1ed17eb`). Looking at the failing replies closely showed more than the two
+judge failures: Shopping wrote "under **£**700" for a budget of "under 700" in
+all three samples — its own prompt asked for prices as "typically £X–Y" — and
+the judge passed it every time. Changes:
+
+- Shared rule 3: an amount stays as given; a currency only when the context
+  names one or a place that uses it; no added detail to what someone owns; a
+  stated assumption repeats what was given. Every `prompt_version` bumped.
+- Shopping places options against the budget in the person's own terms instead
+  of quoting prices; an unstated preference is the question, not an assumption.
+- Fitness uses exactly the equipment listed and sets load by reps in reserve.
+- New deterministic check `invented_currency`: a currency beside a figure when
+  neither the input, nor the context, nor a stored place gives one. Regraded
+  against every saved reply it flags exactly the five Shopping pound signs and
+  none of Finance's euros for Dublin or Travel's pounds for Manchester. Its
+  first live use flagged Research's "SAR, SEM" (spatial econometrics); currency
+  codes now count only beside a figure, with that reply as a test.
+
+**Evidence reconciliation and subsequent remediation:** the six saved responses
+in `quality-release-2026-09-13b.json.partial` remain historical evidence: 5/6
+stored passes, 6/6 under the corrected deterministic rubric, out of 39 planned.
+Regrading is not a new model run. A separate fresh three-sample run and exact
+results are documented in [quality-evidence-2026-09-13.md](quality-evidence-2026-09-13.md).
+The new runner records source-content hashes and effective agent settings on
+every row and rejects mismatched resumes by default. Earlier partials are retained.
+
 ## Remaining launch gates
 
 Production readiness is **not** claimed. Status after the 2026-09-13 pass:
 
-1. **Answer quality — two grounding lapses remain.** The three-sample run
-   (partial, 32/36) found an invented equipment detail and an unsupported price;
-   the rubric does not catch prices. Decide whether to tighten grounding for
-   Fitness and Shopping, then finish or re-run the three-sample suite on fresh
-   quota. Free-provider quotas remain shared across all users and can stop
-   replies even when the app works correctly.
+1. **Answer quality — acceptance remains gated.** The historical 32/36 partial
+   motivated the grounding fixes in `682f6cf`; it does not measure those fixes.
+   Use [current quality evidence](quality-evidence-2026-09-13.md) for the fresh
+   run, actual failures and limitations, then adjudicate and set release criteria.
+   Free-provider quotas remain shared across all users and can stop replies
+   even when the app works correctly. Repeat the real-runtime journey separately.
 2. **Real host and domain — not verified (owner).** TLS from a public CA, secure
    cookies, cross-account denial, streaming and interrupted reconnection on the
    real domain. The local rehearsal covered the same checks with Caddy's local
@@ -783,14 +838,73 @@ Production readiness is **not** claimed. Status after the 2026-09-13 pass:
 4. **Operator delivery — not verified (owner).** Configure a real recipient and
    confirm receipt of outage, recovery, backup-failure and test notifications.
 5. **Physical phone and a screen reader — not verified.** The 390px checks ran
-   in desktop Chrome. The automated accessibility scan and keyboard pass are
-   done; a pass with NVDA or VoiceOver is not.
-6. **Colour contrast (owner).** Pink buttons at 3.27:1 and one Team link at
-   4.16:1 fail WCAG AA; see Accessibility above. A design decision.
-7. **Memory remediation** — run `tools.memory_audit` on any database that held
+   in desktop Chrome. The automated accessibility scan (now 0 violations) and
+   keyboard pass are done; a pass with NVDA or VoiceOver by a person is not.
+6. **Memory remediation** — run `tools.memory_audit` on any database that held
    data before this change, and follow the process above.
-8. **Backup round-trip on schema 0004** — rerun once; the last one was on 0003.
+7. **Backup round-trip on schema 0004** — rerun once; the last one was on 0003.
 
 The account model is now the operator's choice: invitation keys only
 (`SIGNUP_ENABLED=false`, the default) or open signup with passwords and recovery
 codes. There is no email-based reset by design.
+
+## Follow-up to independent review — 2026-09-13
+
+Implemented in the working tree based on `1ed17eb`:
+
+- Database serialization for recovery, password changes, recovery-code replacement
+  and sign-out-everywhere; conditional unused-code consumption and atomic epoch
+  increments. Cookies issued after credential changes use the committed epoch.
+- Visible and announced memory-update failures after an otherwise completed reply.
+- Validation of the merged profile, goal-detail write limits, and bounded prompt
+  context even for oversized legacy data. Existing stored data is preserved.
+- Content-hashed quality evidence with effective settings and provenance on each
+response; mismatched resumes fail by default. Historical partials remain intact.
+
+Fresh live quality measurement: **39/39 responses completed, 33 passed / six
+failed**, all judges available and no provider errors. All rows share the same
+source hash. Failures and additional judge blind spots are recorded in
+[quality evidence](quality-evidence-2026-09-13.md); measurement is complete,
+but answer-quality acceptance remains open.
+
+Checks: **326 backend tests passed**, Ruff passed, frontend typecheck/build passed,
+lint **0 errors / 13 existing warnings**, scripted stream-hook and link checks
+passed. The stream check is not a browser test. PostgreSQL concurrency and the
+other launch gates above still need their deployment environment.
+
+See the [review remediation appendix](production-readiness-review-2026-09-13.md),
+[quality evidence](quality-evidence-2026-09-13.md),
+[current project report](PROJECT-REPORT.md) and [mobile plan](MOBILE-ROADMAP.md).
+This pass changes no artwork or page layout and performs no deployment.
+
+## Application-review remediation — 2026-09-14
+
+R14-01–04 are fixed: newest-request-only data loading, explicit-null rejection
+for required PATCH fields, visible/announced new-conversation failures with retry,
+and accurate sensitive-filtering language. Layout and artwork are unchanged.
+
+Verification: **351 backend tests passed**, Ruff, frontend typecheck/build and
+data/stream/link checks passed. The targeted Chrome regression replay confirms
+that reordered shared-memory responses no longer hide the new fact, creation
+failure preserves the draft and can be retried, and the privacy copy fits at
+390px. See [review and remediation](production-readiness-review-2026-09-14.md)
+for reproducible commands and the outstanding deployment verification gates.
+No live AI response evaluation or deployment occurred in this pass.
+
+## Local production rehearsal — 2026-09-14 (subsequent pass)
+
+The dated local rehearsal closes the PostgreSQL recovery-race and schema `0004`
+backup round-trip gates: 351 backend tests in the locked production image, 23
+HTTPS browser checks, 25 automated accessibility scans and ten operations
+checks pass. Migration rollback/upgrade passed on a disposable database; backup
+restoration matches every source table including credentials and consent.
+Real hosting, real remote storage, scheduled operation, operator receipt and
+physical devices remain open. No frontend design changed.
+
+Six specialist prompts and the judge were revised. The completed live quality
+run records 27 automated passes, 11 failures and one unavailable grade across
+39 responses; a grading-only retry also failed to parse. The separate live
+application journey passed all 13 checks. Answer-quality acceptance is still gated;
+see [current quality evidence](quality-evidence-2026-09-15.md) and
+[the current rehearsal report](launch-rehearsal-2026-09-14.md) for evidence and
+the remaining release work. Earlier quality results above remain historical.

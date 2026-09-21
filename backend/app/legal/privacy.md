@@ -1,6 +1,6 @@
-# What Modeer stores about you
+# What CrewAi stores about you
 
-Modeer is a personal assistant with a team of specialists that share what they
+CrewAi is a personal assistant with a team of specialists that share what they
 know about you. That only works because it remembers things — so this page says
 exactly what it keeps, where that lives, and who can reach it.
 
@@ -10,7 +10,7 @@ assume the more cautious reading and ask.
 ## What it keeps
 
 - **Your messages and the replies**, in full, for every specialist you talk to.
-- **Facts it learns about you.** As you chat, Modeer extracts durable personal
+- **Facts it learns about you.** As you chat, CrewAi extracts durable personal
   facts — what you study, where you work, what you are training for, what you
   can afford, what you are avoiding. Some are shared across the whole team; some
   stay with one specialist.
@@ -30,7 +30,7 @@ assume the more cautious reading and ask.
   address, not the address itself, and exist to stop guessing.
 
 Some of what it remembers is sensitive by nature — health, money, work. When
-Modeer recognises a fact as sensitive it does not store it automatically unless
+CrewAi recognises a fact as sensitive it does not store it automatically unless
 the deployment has opted in (`MEMORY_STORE_SENSITIVE`). **Recognising it is best
 effort**, not a guarantee: a health or money detail phrased in an ordinary way
 can be saved as an ordinary fact. Everything stored is visible to you in Memory,
@@ -51,9 +51,9 @@ that backup was taken.
 
 - **You.**
 - **Whoever runs the server.** They hold the database and the backup passphrase,
-  so they can read anything in it. Modeer is self-hosted: trust
+  so they can read anything in it. CrewAi is self-hosted: trust
   in the operator is part of the arrangement, and no software here changes that.
-- **Your model provider.** To answer you, Modeer sends the specialist's
+- **Your model provider.** To answer you, CrewAi sends the specialist's
   instructions, the relevant facts it remembers about you, the recent messages
   of that conversation (up to the last 40) and your new message to the
   configured provider — by default Groq. While automatic learning is on, a
@@ -65,10 +65,10 @@ that backup was taken.
 - **Nobody else.** Other accounts on the same deployment cannot read your
   conversations, memories or goals; that isolation is enforced and tested.
 
-## What Modeer does not do
+## What CrewAi does not do
 
 - No advertising, profiling for advertising, or selling data.
-- No training of any model on your conversations by Modeer itself.
+- No training of any model on your conversations by CrewAi itself.
 - No sharing between accounts.
 - No logging of your message content in server logs — logs record timings,
   status codes and error types only.
@@ -78,8 +78,8 @@ that backup was taken.
 | You want to | How |
 |---|---|
 | See what it remembers | Memory, in the app — every stored fact, editable |
-| Stop it learning from your messages | Account → What Modeer learns → switch off "Learn from my messages automatically". Nothing already saved is removed, and you can still save facts yourself |
-| Correct or delete a single fact | Memory — edit or delete it. An edit is yours: Modeer will not overwrite it automatically later |
+| Stop it learning from your messages | Account → What Leo learns → switch off "Learn from my messages automatically". Nothing already saved is removed, and you can still save facts yourself |
+| Correct or delete a single fact | Memory — edit or delete it. An edit is yours: CrewAi will not overwrite it automatically later |
 | Delete one conversation | Open conversation history, then choose its delete button |
 | Take everything with you | Account → Download my data — a JSON file, messages included |
 | Delete everything | Account → Delete my account → type DELETE |
@@ -93,7 +93,7 @@ backup retention schedule, 30 days by default.
 ## Sessions and access
 
 You sign in with your email and password, or with an invitation key if the
-operator gave you one. Modeer stores only hashes of passwords, keys and recovery
+operator gave you one. CrewAi stores only hashes of passwords, keys and recovery
 codes, never the secrets themselves. A session is a signed, HttpOnly,
 SameSite=Strict cookie that expires after seven days.
 

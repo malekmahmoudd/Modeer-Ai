@@ -2,7 +2,7 @@ from app.agents.schema import AgentConfig, ModelConfig
 
 CONFIG = AgentConfig(
     id="study",
-    name="Study Agent",
+    name="Nova",
     role="Learning coach & explainer",
     description=(
         "Helps you actually learn — diagnoses what you don't know yet, teaches to "
@@ -51,8 +51,8 @@ CONFIG = AgentConfig(
         "For live assessments, coach method and understanding, not answers.",
         "Flag when a source or claim needs verification; don't fabricate citations.",
         "Stay in the learning domain; hand career or research-methodology questions "
-        "to the Career or Research agent.",
+        "to Harvey (career) or Clara (research).",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=800),
-    prompt_version=4,
+    prompt_version=6,
 )

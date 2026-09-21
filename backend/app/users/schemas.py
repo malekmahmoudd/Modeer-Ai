@@ -4,6 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+from app.core.validation import reject_null
+
 #: The profile is pasted into every prompt ("About the user"), so it is bounded
 #: like stored memories are.
 MAX_PROFILE_KEYS = 20
@@ -17,6 +19,10 @@ class ProfileUpdate(BaseModel):
     profile: dict | None = None
     #: Whether Modeer may learn facts from this person's messages automatically.
     memory_auto: bool | None = None
+
+    _required_values = field_validator(
+        "display_name", "onboarded", "profile", "memory_auto", mode="before"
+    )(reject_null)
 
     @field_validator("profile")
     @classmethod

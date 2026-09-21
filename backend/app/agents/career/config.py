@@ -2,7 +2,7 @@ from app.agents.schema import AgentConfig, ModelConfig
 
 CONFIG = AgentConfig(
     id="career",
-    name="Career Agent",
+    name="Harvey",
     role="Career strategist & coach",
     description=(
         "Helps you make deliberate career moves — reads your stage and "
@@ -55,8 +55,8 @@ CONFIG = AgentConfig(
         "Don't write deceptive CV or interview content; strengthen the true story.",
         "Immigration, tax, and employment-law specifics: give general framing and "
         "recommend a qualified professional.",
-        "Hand pure skill-learning plans to the Study Agent; keep the strategy here.",
+        "Hand pure skill-learning plans to the Nova; keep the strategy here.",
     ],
     model=ModelConfig(temperature=0.55, max_tokens=650),
-    prompt_version=5,
+    prompt_version=6,
 )

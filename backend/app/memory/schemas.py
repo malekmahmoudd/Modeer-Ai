@@ -4,6 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.validation import reject_null
+
 #: A stored fact is a sentence, not a document. Whatever is here is pasted into
 #: every prompt that agent builds, so an unbounded value would push the rest of
 #: the context out and spend the account's allowance on one turn.
@@ -43,6 +45,10 @@ class SharedMemoryUpdate(BaseModel):
     sensitive: bool | None = None
     pinned: bool | None = None
 
+    _required_values = field_validator(
+        "category", "key", "value", "confidence", "sensitive", "pinned", mode="before"
+    )(reject_null)
+
     _clean = field_validator("key", "value")(_not_blank)
 
 
@@ -68,6 +74,10 @@ class AgentMemoryUpdate(BaseModel):
     value: str | None = Field(default=None, min_length=1, max_length=MAX_VALUE)
     confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     sensitive: bool | None = None
+
+    _required_values = field_validator(
+        "category", "key", "value", "confidence", "sensitive", mode="before"
+    )(reject_null)
 
     _clean = field_validator("key", "value")(_not_blank)
 

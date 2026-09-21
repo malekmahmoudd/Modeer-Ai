@@ -14,7 +14,7 @@ const display = Archivo_Black({
   variable: "--font-display",
   display: "swap",
 });
-/* Brush wordmark — "MODEER" only */
+/* Brush wordmark — "CrewAi" only */
 const brush = Permanent_Marker({
   subsets: ["latin"],
   weight: "400",
@@ -30,9 +30,9 @@ const hand = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "Modeer — Personal AI Team",
+  title: "CrewAi — Personal AI Team",
   description:
-    "Modeer, your personal assistant, plus a team of specialist AI agents that share your context.",
+    "Leo, your personal assistant, plus a team of specialist AI agents that share your context.",
 };
 
 export const viewport: Viewport = {

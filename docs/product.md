@@ -2,16 +2,16 @@
 
 ## What it is
 
-A personal AI assistant, **Modeer**, plus a user-chosen team of nine specialist
+A personal AI assistant, **Leo**, plus a user-chosen team of nine specialist
 AI agents that **share personal context**. The user opens the app, sees the team,
 picks who to talk to, and chats with that specialist directly. Going through
-Modeer is never required.
+Leo is never required.
 
 ## The team
 
 | Agent | Role |
 |---|---|
-| **Modeer** | Personal assistant & context keeper (onboarding, shared context, goals, daily briefing, routing) |
+| **Leo** | Personal assistant & context keeper (onboarding, shared context, goals, daily briefing, routing) |
 | Study | Learning coach & explainer |
 | Career | Career strategist & coach |
 | Research | Research analyst & sense-maker |
@@ -22,16 +22,16 @@ Modeer is never required.
 | Fitness | Training & habit coach (non-medical) |
 | Email | Email drafting & correspondence coach |
 
-Implementation depth is concentrated first on **Modeer, Study, Career, Research,
+Implementation depth is concentrated first on **Leo, Study, Career, Research,
 Writing**; all nine run on the same runtime with no duplicated backend.
 
-## What Modeer is and isn't
+## What Leo is and isn't
 
-Modeer **does**: onboard the user, learn durable personal facts, maintain shared
+Leo **does**: onboard the user, learn durable personal facts, maintain shared
 context, help define goals, give general help, produce a daily briefing from
 stored data, and suggest a specialist when one fits.
 
-Modeer **does not**: silently route every request, gate access to specialists,
+Leo **does not**: silently route every request, gate access to specialists,
 take autonomous actions, or perform a fictional-character persona. The JARVIS
 inspiration is about awareness and usefulness, not impersonation.
 
@@ -52,7 +52,7 @@ vector databases.
 
 ## First milestone
 
-Modeer learns a durable fact → it enters shared context → Career and Study each
+Leo learns a durable fact → it enters shared context → Career and Study each
 use it in their own domain, with independent histories → the user can view and
 edit/delete it in "What my AI team knows about me". Covered end to end by
 `backend/tests/test_milestone_flow.py`.
@@ -61,7 +61,7 @@ edit/delete it in "What my AI team knows about me". Covered end to end by
 
 Secondary. A minimal, explicit, user-controlled endpoint (`POST /api/team/ask`)
 where the user selects specialists, each answers through the shared runtime, and
-Modeer synthesises. Not automatic, not autonomous. Built after the core 1:1 chat.
+Leo synthesises. Not automatic, not autonomous. Built after the core 1:1 chat.
 
 **Off for the initial release** (`TEAM_ENABLED=false`, the default): no screen
 calls it yet. Since 2026-09-13 a consult keeps "only that agent sees them" true:
@@ -69,5 +69,5 @@ each specialist answers from the shared context and the conversation alone, with
 none of its private notes in the prompt, and a consult teaches no one anything
 (no memory extraction). Answers may be a little less personal than a 1:1 chat
 with the same specialist; that is the price of the synthesis step not carrying
-private notes to Modeer. `tests/test_prompt_isolation.py` reads the provider's
+private notes to Leo. `tests/test_prompt_isolation.py` reads the provider's
 input to prove it.

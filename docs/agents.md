@@ -1,7 +1,7 @@
 # Agent design system
 
 Specialists must **not** differ only by a flavour line like "You are an expert
-Study Agent." Each has an explicit **domain reasoning framework** — an ordered
+Nova." Each has an explicit **domain reasoning framework** — an ordered
 method it runs internally — plus behavioural rules, safety boundaries, and model
 settings.
 
@@ -38,23 +38,23 @@ options, and rationale — never a private reasoning trace.
 
 | Agent | Reasoning framework (internal) |
 |---|---|
-| **Modeer** | clarify intent → recall what's known → pick mode (onboard/capture/plan/advise/route) → route if a specialist fits → answer directly → note durable facts → concrete next step |
-| **Study** | objective → assess current knowledge → find the gap/misconception → choose strategy → explain at right depth → concrete example + check → next practice step → record preferences |
-| **Career** | objective/decision → career stage → constraints → real options (incl. unstated) → use personal background → challenge weak assumptions → concrete next actions → record targets/CV state |
-| **Research** | pin the question → scope + success criteria → known/contested/unknown → structure sub-questions + evidence types → reason from evidence → weigh quality → calibrated synthesis with confidence |
-| **Writing** | purpose/audience/effect → core message → diagnose top-down (structure→para→line) → work in the user's voice → cut and strengthen → teach the 2–3 changes that matter |
-| **Travel** | frame trip (purpose/dates/party/budget) → travel style → destination/season fit → shape before detail → sequence logistics → budget split → time-sensitive calls → record preferences |
-| **Shopping** | real need + use → budget/constraints → 3–5 ranked criteria → viable categories → compare incl. total cost of ownership → check over/under-buying → pick + runner-up with the trade-off |
-| **Finance** | decision + horizon → picture the user shares → real constraint (cash flow/risk/time) → options with mechanics + rules of thumb → downside stress-test → framework + next steps → when to see a professional |
-| **Fitness** | goal → training age + limitations → real constraints (days/time/equipment) → fit program structure → progression + deload → design for adherence → review points → record schedule/equipment/injuries |
-| **Email** | goal (know/feel/do) → relationship + power dynamic → constraints → structure (BLUF) → draft in voice at register → pressure-test tone → subject line + call to action |
+| **Leo** | clarify intent → recall what's known → pick mode (onboard/capture/plan/advise/route) → route if a specialist fits → answer directly → note durable facts → concrete next step |
+| **Nova (Study)** | objective → assess current knowledge → find the gap/misconception → choose strategy → explain at right depth → concrete example + check → next practice step → record preferences |
+| **Harvey (Career)** | objective/decision → career stage → constraints → real options (incl. unstated) → use personal background → challenge weak assumptions → concrete next actions → record targets/CV state |
+| **Clara (Research)** | pin the question → scope + success criteria → known/contested/unknown → structure sub-questions + evidence types → reason from evidence → weigh quality → calibrated synthesis with confidence |
+| **Alex (Writing)** | purpose/audience/effect → core message → diagnose top-down (structure→para→line) → work in the user's voice → cut and strengthen → teach the 2–3 changes that matter |
+| **Tessa (Travel)** | frame trip (purpose/dates/party/budget) → travel style → destination/season fit → shape before detail → sequence logistics → budget split → time-sensitive calls → record preferences |
+| **Nate (Shopping)** | real need + use → budget/constraints → 3–5 ranked criteria → viable categories → compare incl. total cost of ownership → check over/under-buying → pick + runner-up with the trade-off |
+| **Emma (Finance)** | decision + horizon → picture the user shares → real constraint (cash flow/risk/time) → options with mechanics + rules of thumb → downside stress-test → framework + next steps → when to see a professional |
+| **Maddie (Fitness)** | goal → training age + limitations → real constraints (days/time/equipment) → fit program structure → progression + deload → design for adherence → review points → record schedule/equipment/injuries |
+| **Nora (Email)** | goal (know/feel/do) → relationship + power dynamic → constraints → structure (BLUF) → draft in voice at register → pressure-test tone → subject line + call to action |
 
 Full text is in each `prompt.md`.
 
 ## Shared context each agent requests
 
 `shared_context_fields` on the config filters which shared-memory categories are
-injected (empty = all; Modeer sees everything). E.g. Career pulls
+injected (empty = all; Leo sees everything). E.g. Career pulls
 `career, education, goals, context`; Email pulls `career, context`. Pinned
 memories are always included.
 

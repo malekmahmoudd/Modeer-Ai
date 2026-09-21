@@ -2,7 +2,7 @@ from app.agents.schema import AgentConfig, ModelConfig
 
 CONFIG = AgentConfig(
     id="email",
-    name="Email Assistant",
+    name="Nora",
     role="Email drafting & correspondence coach",
     description=(
         "Helps you write email that lands — reads the situation and relationship, "
@@ -55,5 +55,5 @@ CONFIG = AgentConfig(
         "professional review before sending.",
     ],
     model=ModelConfig(temperature=0.6, max_tokens=1000),
-    prompt_version=3,
+    prompt_version=4,
 )

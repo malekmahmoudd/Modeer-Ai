@@ -2,7 +2,7 @@ from app.agents.schema import AgentConfig, ModelConfig
 
 CONFIG = AgentConfig(
     id="research",
-    name="Research Agent",
+    name="Clara",
     role="Research analyst & sense-maker",
     description=(
         "Helps you investigate a question rigorously — scopes it, structures the "
@@ -54,9 +54,9 @@ CONFIG = AgentConfig(
         "No live web access. Reason from provided material and general knowledge; "
         "never fabricate citations, data, quotes, or study details.",
         "If a factual claim can't be supported without a lookup, say so.",
-        "Teaching a subject goes to the Study Agent; drafting the write-up goes to "
-        "the Writing Agent.",
+        "Teaching a subject goes to the Nova; drafting the write-up goes to "
+        "the Alex.",
     ],
     model=ModelConfig(temperature=0.4, max_tokens=800),
-    prompt_version=5,
+    prompt_version=7,
 )

@@ -71,7 +71,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   modeer: {
     image: "/art/sunshine/modeer-hero.webp",
     imagePosition: "78% 25%",
-    alt: "Modeer — a person with dark tousled hair and a warm, attentive smile",
+    alt: "Leo — a person with dark tousled hair and a warm, attentive smile",
     art: {
       uid: "modeer",
       skin: SKIN.fair[0],
@@ -95,7 +95,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   },
   study: {
     image: "/art/sunshine/study.webp",
-    alt: "The Study specialist — a person with dark hair in a bun, bright and encouraging, among books",
+    alt: "Nova, the study specialist — a person with dark hair in a bun, bright and encouraging, among books",
     art: {
       uid: "study",
       skin: SKIN.olive[0],
@@ -118,7 +118,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   },
   career: {
     image: "/art/sunshine/career.webp",
-    alt: "The Career specialist — a person with a short fade and glasses in a smart jacket, city behind",
+    alt: "Harvey, the career specialist — a person with a short fade and glasses in a smart jacket, city behind",
     art: {
       uid: "career",
       skin: SKIN.deep[0],
@@ -143,7 +143,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   },
   research: {
     image: "/art/sunshine/research.webp",
-    alt: "The Research specialist — a person with voluminous curly hair, thoughtful, beside a bookshelf",
+    alt: "Clara, the research specialist — a person with voluminous curly hair, thoughtful, beside a bookshelf",
     art: {
       uid: "research",
       skin: SKIN.light[0],
@@ -166,7 +166,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   },
   writing: {
     image: "/art/sunshine/writing.webp",
-    alt: "The Writing specialist — a person with glasses and a side parting at a desk of notes",
+    alt: "Alex, the writing specialist — a person with glasses and a side parting at a desk of notes",
     art: {
       uid: "writing",
       skin: SKIN.olive[0],
@@ -190,7 +190,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   },
   travel: {
     image: "/art/sunshine/travel.webp",
-    alt: "The Travel specialist — a person with long wavy hair at a cafe table with a map and camera",
+    alt: "Tessa, the travel specialist — a person with long wavy hair at a cafe table with a map and camera",
     art: {
       uid: "travel",
       skin: SKIN.tan[0],
@@ -213,7 +213,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   },
   shopping: {
     image: "/art/sunshine/shopping.webp",
-    alt: "The Shopping specialist — a person with cropped hair beside a set of shopping bags",
+    alt: "Nate, the shopping specialist — a person with cropped hair beside a set of shopping bags",
     art: {
       uid: "shopping",
       skin: SKIN.fair[0],
@@ -236,7 +236,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   },
   finance: {
     image: "/art/sunshine/finance.webp",
-    alt: "The Finance specialist — a person with a neat bob with a calculator and budgeting notebook",
+    alt: "Emma, the finance specialist — a person with a neat bob with a calculator and budgeting notebook",
     art: {
       uid: "finance",
       skin: SKIN.light[0],
@@ -259,7 +259,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   },
   fitness: {
     image: "/art/sunshine/fitness.webp",
-    alt: "The Fitness specialist — a person with a high ponytail beside dumbbells and a weight plate",
+    alt: "Maddie, the fitness specialist — a person with a high ponytail beside dumbbells and a weight plate",
     art: {
       uid: "fitness",
       skin: SKIN.brown[0],
@@ -281,8 +281,8 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     },
   },
   email: {
-    image: "/art/sunshine/email.webp",
-    alt: "The Email specialist — a person with short coils at a laptop holding an envelope",
+    image: "/art/sunshine/email-nora-v3.png",
+    alt: "Nora, the email specialist — a woman with wavy chestnut hair in a purple blouse at a laptop holding an envelope",
     art: {
       uid: "email",
       skin: SKIN.deep[0],

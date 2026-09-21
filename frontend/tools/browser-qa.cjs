@@ -28,7 +28,7 @@ const base = process.env.QA_URL || 'http://localhost:3001';
     await page.waitForURL(base + '/');
     check('browser login and session');
     // The QA database may already contain an earlier diagnostic conversation.
-    const onboarding = page.getByRole('link', {name:'Start with Modeer'});
+    const onboarding = page.getByRole('link', {name:'Start with Leo'});
     if (await onboarding.isVisible()) await onboarding.click();
     else await page.goto(base + '/agents/modeer?onboarding=1');
     await send('I live in Cairo. I am studying computer science. My native language is Arabic.');

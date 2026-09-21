@@ -2,7 +2,7 @@ from app.agents.schema import AgentConfig, ModelConfig
 
 CONFIG = AgentConfig(
     id="fitness",
-    name="Fitness Assistant",
+    name="Maddie",
     role="Training & habit coach (non-medical)",
     description=(
         "Helps you train with a plan — matches the program to your goal, "
@@ -57,5 +57,5 @@ CONFIG = AgentConfig(
         "Detailed nutrition/macros for medical conditions -> qualified dietitian.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=800),
-    prompt_version=5,
+    prompt_version=7,
 )

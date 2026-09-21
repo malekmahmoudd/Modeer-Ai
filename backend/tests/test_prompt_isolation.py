@@ -132,9 +132,9 @@ def test_a_specialists_private_notes_never_reach_another_specialists_prompt(
     _chat(client, origin, "career", "What should my next job be?")
 
     # Positive control: the note Study owns is in Study's prompt.
-    assert "STUDY-PRIVATE-MARKER" in recorder.prompt_for("Study Agent")
+    assert "STUDY-PRIVATE-MARKER" in recorder.prompt_for("Nova")
     # And nowhere near Career's.
-    assert "STUDY-PRIVATE-MARKER" not in recorder.prompt_for("Career Agent")
+    assert "STUDY-PRIVATE-MARKER" not in recorder.prompt_for("Harvey")
 
 
 def test_one_accounts_data_never_reaches_another_accounts_prompt(client, recorder, accounts):
@@ -166,10 +166,10 @@ def test_one_specialists_conversation_history_stays_in_its_own_prompt(client, re
     _chat(client, origin, "study", "And after that?", study_convo)
     _chat(client, origin, "career", "What should my next job be?")
 
-    study_calls = [c for c in recorder.calls if c["agent"] == "Study Agent"]
+    study_calls = [c for c in recorder.calls if c["agent"] == "Nova"]
     # Positive control: Study's second turn carried its own history.
     assert "STUDY-HISTORY-MARKER" in study_calls[-1]["messages"]
-    assert "STUDY-HISTORY-MARKER" not in recorder.prompt_for("Career Agent")
+    assert "STUDY-HISTORY-MARKER" not in recorder.prompt_for("Harvey")
 
 
 def test_ask_my_team_uses_no_private_notes_at_all(client, recorder, accounts, monkeypatch):
@@ -189,7 +189,7 @@ def test_ask_my_team_uses_no_private_notes_at_all(client, recorder, accounts, mo
         headers=origin,
     )
     assert response.status_code == 200, response.text
-    assert recorder.prompt_for("Study Agent") and recorder.prompt_for("Career Agent")
+    assert recorder.prompt_for("Nova") and recorder.prompt_for("Harvey")
     consult = recorder.everything()
     assert "STUDY-PRIVATE-MARKER" not in consult
     assert "CAREER-PRIVATE-MARKER" not in consult

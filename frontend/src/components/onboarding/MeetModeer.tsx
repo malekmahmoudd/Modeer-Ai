@@ -23,7 +23,7 @@ export function MeetModeer() {
             <h1 className="display mt-2 text-[clamp(42px,9vw,78px)] text-ink">
               Meet
               <br />
-              Modeer
+              Leo
             </h1>
             <p className="mt-4 max-w-[44ch] text-[clamp(16px,2vw,19px)] font-semibold leading-snug text-ink">
               Tell me a little about yourself — what you&apos;re studying or working on, what
@@ -31,7 +31,7 @@ export function MeetModeer() {
             </p>
 
             <Link href="/agents/modeer?onboarding=1" className="btn btn-pink mt-7 !text-[15px]">
-              Start with Modeer
+              Start with Leo
               <Icon name="arrow-right" size={17} />
             </Link>
 

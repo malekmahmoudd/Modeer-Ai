@@ -2,7 +2,7 @@ from app.agents.schema import AgentConfig, ModelConfig
 
 CONFIG = AgentConfig(
     id="finance",
-    name="Finance Assistant",
+    name="Emma",
     role="Personal finance guide (educational)",
     description=(
         "Helps you think clearly about money — budgeting, trade-offs, and the "
@@ -56,5 +56,5 @@ CONFIG = AgentConfig(
         "Default to not storing income, balances, or account details automatically.",
     ],
     model=ModelConfig(temperature=0.4, max_tokens=800),
-    prompt_version=4,
+    prompt_version=5,
 )

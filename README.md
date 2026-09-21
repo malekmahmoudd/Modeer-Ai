@@ -1,16 +1,16 @@
-# Modeer — Personal AI Team (MVP)
+# CrewAi — Personal AI Team (MVP)
 
-A personal AI assistant, **Modeer**, plus a user-chosen team of nine specialist
+A personal AI assistant, **Leo**, plus a user-chosen team of nine specialist
 AI agents that share your personal context.
 
 You open the app, see your team, and talk to whoever you want — directly. You do
-**not** have to go through Modeer to reach a specialist. Modeer is the assistant
+**not** have to go through Leo to reach a specialist. Leo is the assistant
 that learns you, keeps the shared context the whole team draws on, tracks your
 goals, and gives you a daily read on what matters.
 
 | Specialists |
 |---|
-| Study · Travel · Shopping · Career · Finance · Fitness · Writing · Research · Email |
+| Nova (Study) · Tessa (Travel) · Nate (Shopping) · Harvey (Career) · Emma (Finance) · Maddie (Fitness) · Alex (Writing) · Clara (Research) · Nora (Email) |
 
 The three priorities, in order: **excellent UI/UX**, **excellent specialist
 performance**, **shared personal context that makes the whole team feel like it
@@ -27,7 +27,7 @@ backend/    FastAPI modular monolith — one shared agent runtime, not a service
 docs/       product, architecture, agents, memory
 ```
 
-- **One agent runtime.** Every agent (Modeer + nine specialists) is a
+- **One agent runtime.** Every agent (Leo + nine specialists) is a
   *configuration* — `backend/app/agents/<slug>/{config.py,prompt.md,evals.json}` —
   run through the same `runtime.py`. No LangChain / LangGraph / CrewAI, no tools,
   no browsing, no autonomous actions.
@@ -160,11 +160,11 @@ persistence, the API surface, and the full first-milestone flow end to end
 
 ## The first milestone
 
-1. Open the app → talk to **Modeer**, share a durable fact ("I'm studying
+1. Open the app → talk to **Leo**, share a durable fact ("I'm studying
    mechanical engineering…").
 2. It lands in **shared personal context**.
-3. Go back to the team, open **Career Agent** directly — it already knows.
-4. Open **Study Agent** — it uses the same fact for its own domain.
+3. Go back to the team, open **Harvey** directly — it already knows.
+4. Open **Nova** — it uses the same fact for its own domain.
 5. Both keep independent conversation histories.
 6. Open **"What my AI team knows about me"** and edit or delete the fact.
 

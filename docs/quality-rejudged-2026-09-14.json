@@ -1,0 +1,27 @@
+{
+  "source_artifact": "quality-remediation-2026-09-14b.json",
+  "source_sha256": "f77bf299af1e2515b9d5f4817f601fc60ad9205ad00df5d5a922931c7bf4d1eb",
+  "source_artifact_sha256": "ccd584d59238756f0ad48296786d6fc44b54ad883f541a40b7a7b253fb6c67a6",
+  "rejudge_script_sha256": "9edd8b6c8b062802db26a455b25b701a8db58a6724323ed011906592462ad8b0",
+  "reasoning_effort": "low",
+  "timeout_seconds": 35.0,
+  "provider": "groq",
+  "judge_model": "qwen/qwen3.8-27b",
+  "judge_temperature": 0,
+  "judge_max_tokens": 1200,
+  "note": "Only unavailable judgments retried. Original answers and scores remain unchanged.",
+  "results": [
+    {
+      "agent": "fitness",
+      "case_id": "fitness-personalization-1",
+      "sample": 2,
+      "judge": {
+        "passed": false,
+        "available": false,
+        "dimensions": {},
+        "worst_problem": "",
+        "error": "unparsable judge JSON: Expecting ',' delimiter: line 1 column 658 (char 657)"
+      }
+    }
+  ]
+}

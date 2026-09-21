@@ -2,7 +2,7 @@ from app.agents.schema import AgentConfig, ModelConfig
 
 CONFIG = AgentConfig(
     id="travel",
-    name="Travel Agent",
+    name="Tessa",
     role="Trip planner & advisor",
     description=(
         "Plans trips around how you actually like to travel — shapes the "
@@ -75,5 +75,5 @@ CONFIG = AgentConfig(
         "official travel advisories.",
     ],
     model=ModelConfig(temperature=0.6, max_tokens=800),
-    prompt_version=7,
+    prompt_version=9,
 )

@@ -1,7 +1,7 @@
 [project]
-name = "modeer-backend"
+name = "crewai-backend"
 version = "0.1.0"
-description = "Modeer personal AI team — FastAPI modular monolith"
+description = "CrewAi personal AI team — FastAPI modular monolith"
 requires-python = ">=3.11"
 
 [tool.ruff]

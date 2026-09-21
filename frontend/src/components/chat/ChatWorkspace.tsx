@@ -46,6 +46,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const [justOnboarded, setJustOnboarded] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState("");
+  const creatingConversation = useRef(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const seededRef = useRef(false);
@@ -137,7 +138,11 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       refetchConvos();
       if (followReply.current) scrollDown(false);
     },
-    onMemory: ({ candidates, newlyOnboarded }) => {
+    onMemory: ({ candidates, newlyOnboarded, error }) => {
+      if (error) {
+        setErr(error);
+        setAnnouncement(error);
+      }
       const stored = candidates.filter((c) => c.stored);
       if (stored.length) setSavedFacts(stored);
       if (newlyOnboarded) setJustOnboarded(true);
@@ -195,16 +200,29 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   }, [seed, agent, submit, router, agentId]);
 
   async function newConversation() {
-    if (!agent) return;
-    const c = await apiFetch<ConversationDetail>("/conversations", {
-      method: "POST",
-      body: JSON.stringify({ agent_id: agent.id }),
-    });
-    setConversationId(c.id);
-    setMessages([]);
-    setSavedFacts([]);
-    setHistoryOpen(false);
-    refetchConvos();
+    if (!agent || streaming || creatingConversation.current) return;
+    creatingConversation.current = true;
+    setErr(null);
+    setHistoryError("");
+    setAnnouncement("");
+    try {
+      const c = await apiFetch<ConversationDetail>("/conversations", {
+        method: "POST",
+        body: JSON.stringify({ agent_id: agent.id }),
+      });
+      setConversationId(c.id);
+      setMessages([]);
+      setSavedFacts([]);
+      setHistoryOpen(false);
+      refetchConvos();
+    } catch {
+      const notice = "Could not start a new conversation. Your current conversation is unchanged. Please try again.";
+      setErr(notice);
+      setHistoryError(notice);
+      setAnnouncement(notice);
+    } finally {
+      creatingConversation.current = false;
+    }
   }
 
   const starters = useMemo(() => agent?.starters ?? [], [agent]);
@@ -300,7 +318,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
             <div className="anim-in mb-6 flex flex-wrap items-center gap-3 border-2 border-ink bg-sun px-4 py-3 shadow-pop-sm">
               <Icon name="check" size={18} className="shrink-0 text-ink" />
               <p className="flex-1 text-[14px] font-bold text-ink">
-                Your team is set up — everyone shares what you told Modeer.
+                Your team is set up — everyone shares what you told Leo.
               </p>
               <Link href="/team" className="btn btn-pink !min-h-[38px] !px-4 !text-[13px]">
                 Meet your team
@@ -319,7 +337,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
               </div>
               <h2 className="display mt-6 max-w-[22ch] text-[clamp(21px,3.4vw,29px)] leading-tight text-ink">
                 {onboarding && agent.id === "modeer"
-                  ? "Hi — I'm Modeer. What are you working on right now?"
+                  ? "Hi — I'm Leo. What are you working on right now?"
                   : agent.empty_prompt}
               </h2>
               {onboarding && agent.id === "modeer" && (

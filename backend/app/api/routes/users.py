@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, DbSession
@@ -35,6 +35,10 @@ def patch_me(data: ProfileUpdate, user: CurrentUser, db: DbSession) -> UserRead:
         return update_profile(db, user, data)
     except EmailChangeRefused as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=422, detail="; ".join(e["msg"] for e in exc.errors())
+        ) from exc
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(status_code=409, detail="That email is already in use.") from exc

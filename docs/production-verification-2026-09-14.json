@@ -1,0 +1,50 @@
+{
+  "date": "2026-09-14",
+  "base_commit": "1ed17eb5748d948a541f0e76a7fabcddd094534d",
+  "working_tree": true,
+  "images": {
+    "modeer-rehearsal-20260914-backend": "sha256:b6d945fb6444fd96f6054235fce65728e61abd512058c6526c2e6d1a5a6c8930",
+    "modeer-rehearsal-20260914-frontend": "sha256:9706186e3eba781b47a290ea4d3a6c1198ab6f98032c8fa35adb65b7859ff293",
+    "postgres:16-alpine": "sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685",
+    "caddy:2-alpine": "sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648"
+  },
+  "backend_tests": {
+    "passed": 351,
+    "seconds": 13.84,
+    "runtime": "production Python 3.12 image; 33 locked packages; separate test-tool directory",
+    "recovery_races": "PostgreSQL 16, unique temporary schema per case; same code one success/one 401, distinct codes epochs 1 and 2",
+    "other_tests": "SQLite isolated test database",
+    "warning": "Starlette TestClient httpx deprecation"
+  },
+  "migration": {
+    "database": "disposable PostgreSQL 16 database modeer_migration_20260914",
+    "checks": [
+      "empty database -> 0004",
+      "0004 -> 0003 -> 0004",
+      "sentinel user/session epoch retained",
+      "recovery_codes table recreated"
+    ],
+    "limitation": "Downgrade removes password/recovery information; backup restore is required to retain it."
+  },
+  "api_docs": {
+    "/docs": 404,
+    "/redoc": 404,
+    "/openapi.json": 404,
+    "tested": "direct backend container port, bypassing Caddy"
+  },
+  "legacy_memory_audit": {
+    "scope": "existing configured local SQLite database only",
+    "automatic_shared_scanned": 0,
+    "automatic_private_scanned": 0,
+    "flagged": 0,
+    "read_only": true,
+    "limitation": "Other databases and previous backups not audited; cannot detect past overwritten/widened records."
+  },
+  "limits": [
+    "Local Caddy CA accepted by test browser, not public-domain certificate verification",
+    "Scripted provider for browser checks, separate live model evidence",
+    "Backup destination is a second local directory",
+    "Alerts sent only to local synthetic receiver",
+    "No physical-device or human screen-reader result"
+  ]
+}

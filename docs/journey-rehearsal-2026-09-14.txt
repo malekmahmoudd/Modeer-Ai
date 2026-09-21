@@ -1,0 +1,18 @@
+provider=groq model=openai/gpt-oss-120b db=journey-rehearsal-20260914.db
+
+PASS  login sets a session cookie
+PASS  session cookie is HttpOnly and scoped to /api — modeer_session=cefee9c3-25f8-4d96-91be-e0308c6b1027.0.1790017276.c2985a1a0316288
+PASS  onboarding reply arrives from the live model — 651 chars
+PASS  facts were extracted from the first message — field_of_study, location, thermodynamics_final, training_frequency
+PASS  facts are readable back from the store
+PASS  the follow-up answers rather than interviewing — rubric=clean, mentions=['law']
+PASS  the specialist was told it had context
+PASS  each specialist keeps its own conversation — modeer, study
+PASS  history persists with both turns — 2 messages
+PASS  the client can hang up mid-reply — 3 deltas before disconnect
+PASS  that turn is stored with a completion state, not lost — completed
+PASS  a retry after an interruption succeeds
+PASS  every stored reply is either real text or a labelled failure
+
+All journey steps passed.
+Removed journey-rehearsal-20260914.db

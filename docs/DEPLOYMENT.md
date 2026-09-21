@@ -1,12 +1,18 @@
 # Private deployment runbook
 
+**Verification update — 2026-09-14:** local production images, HTTPS browser
+journeys, PostgreSQL recovery races/migrations and schema `0004` encrypted
+restoration have been rechecked. See [dated evidence and remaining gates](launch-rehearsal-2026-09-14.md).
+The real host/domain, remote storage, scheduled jobs and operator receipt are
+still unverified; the historical rehearsal descriptions below do not close them.
+
 This prepares either an invite-only deployment (the default) or one with open
 signup (`SIGNUP_ENABLED=true`). No hosting account or domain has been selected
 and nothing has been published.
 
 ## Current release checks — 2026-09-13
 
-The current schema is **0004** (eleven application tables plus Alembic metadata).
+The current schema is **0004** (ten application tables plus Alembic metadata).
 0004 adds `users.password_hash`, `users.memory_auto` (defaults to on for existing
 accounts) and the `recovery_codes` table. It has been applied to PostgreSQL 16 in
 the production rehearsal, and on SQLite through upgrade, `alembic check`,
@@ -31,7 +37,7 @@ checks. Account controls are now available in the application, with a public
 |---|---|---|
 | `ENVIRONMENT` | `production` (set by `deploy/compose.yml`) | Also turns off `/docs`, `/redoc` and `/openapi.json` in the app itself, not only by Caddy's routing. |
 | `TEAM_ENABLED` | unset / `false` (the default) | Ask My Team has no screen yet and is the most expensive route. The code is kept and tested; set `TEAM_ENABLED=true` in `deploy/.env` and restart the backend to switch it on once a UI exists. While off, `POST /api/team/ask` answers 404 to signed-in callers and 401 to anonymous ones. |
-| `MEMORY_STORE_SENSITIVE` | unset / `false` (the default) | Automatic extraction does not store sensitive facts (health, money, identity numbers, beliefs, …). People can still save any fact themselves on the Memory page. |
+| `MEMORY_STORE_SENSITIVE` | unset / `false` (the default) | Automatic extraction filters classified sensitive facts using model output and a keyword/category backstop. This is best effort and can miss sensitive wording. People can still save facts themselves on the Memory page; approved stored context may reach the reply provider. |
 | `LLM_MODEL` | `openai/gpt-oss-120b` | Writing keeps its own `qwen/qwen3.8-27b` override in its agent config. |
 | `SIGNUP_ENABLED` | `false` for invite-only; `true` to let anyone create an account | Adds `/signup`: email, password (10–128 characters, scrypt-hashed) and ten single-use recovery codes, shown once and stored as SHA-256 hashes. Signup is limited to 5 per client address per hour and password sign-in to 10 attempts per email per 15 minutes. Behind Caddy the client address is the connecting IP (Caddy replaces any `X-Forwarded-For` the client sends). With it off, `POST /api/auth/signup` answers 404. |
 | `AUTH_ACCESS_KEYS` | `{}` is allowed | Invitation keys still work alongside passwords, but are no longer required for the backend to start; `AUTH_SECRET` (32+ characters) is. |
@@ -152,7 +158,7 @@ evidence about a real domain, a phone, a screen reader, or the real model.
 
 ## Historical usage-limit migration
 
-Before starting this version, run `alembic upgrade head` using the existing deployment migration procedure. Revision 0002 adds `usage_buckets`; the schema now has ten application tables. Configure `ACCOUNT_REQUESTS_PER_MINUTE` and `ACCOUNT_DAILY_TOKEN_BUDGET` for the size of the invite list; see [usage-limits.md](usage-limits.md). The prior container/backup verification was on revision 0001 (nine tables). The new migration has been rehearsed on SQLite and an isolated PostgreSQL 16 container, including downgrade/re-upgrade, concurrent quota admission, and persistence across separate processes.
+Before starting this version, run `alembic upgrade head` using the existing deployment migration procedure. Revision 0002 adds `usage_buckets`; the schema now has ten application tables. Configure `ACCOUNT_REQUESTS_PER_MINUTE` and `ACCOUNT_DAILY_TOKEN_BUDGET` for the size of the invite list; see [usage-limits.md](usage-limits.md). The prior container/backup verification was on revision 0001 (eight application tables plus Alembic metadata). The new migration has been rehearsed on SQLite and an isolated PostgreSQL 16 container, including downgrade/re-upgrade, concurrent quota admission, and persistence across separate processes.
 
 **Rerun with revision 0002 (2026-09-10):** the container stack and the full
 backup round-trip have now been verified on the ten-table schema. `usage_buckets`

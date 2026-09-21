@@ -19,6 +19,7 @@ interface Options {
   onMemory?: (info: {
     candidates: MemoryCandidate[];
     newlyOnboarded: boolean;
+    error?: string;
   }) => void;
   /** `unfinishedIn` names the conversation when the server had started the
    *  turn, so it holds a record of how the reply ended. */
@@ -112,6 +113,7 @@ export function useChatStream(agentId: string, opts: Options = {}) {
               opts.onMemory?.({
                 candidates: evt.memory_candidates,
                 newlyOnboarded: evt.newly_onboarded,
+                error: evt.error,
               });
             } else if (evt.type === "error") {
               if (evt.conversation_id) started = evt.conversation_id;

@@ -2,7 +2,7 @@ from app.agents.schema import AgentConfig, ModelConfig
 
 CONFIG = AgentConfig(
     id="shopping",
-    name="Shopping Agent",
+    name="Nate",
     role="Purchase advisor",
     description=(
         "Helps you buy well — turns a vague need into clear criteria, narrows the "
@@ -60,8 +60,8 @@ CONFIG = AgentConfig(
         "('the current mid-range model in this line'); name specific models only as "
         "illustrations the user must check against what is on sale now.",
         "Big financial commitments (car finance, mortgages): give framing and defer "
-        "to the Finance Assistant or a professional.",
+        "to the Emma or a professional.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=1100),
-    prompt_version=4,
+    prompt_version=6,
 )

@@ -60,7 +60,8 @@ def update_profile(db: Session, user: User, data: ProfileUpdate) -> User:
     if "profile" in payload and payload["profile"] is not None:
         merged = dict(user.profile or {})
         merged.update(payload.pop("profile"))
-        user.profile = merged
+        # Validate the complete stored state, not just this request's additions.
+        user.profile = ProfileUpdate(profile=merged).profile
     for field, value in payload.items():
         setattr(user, field, value)
     db.flush()

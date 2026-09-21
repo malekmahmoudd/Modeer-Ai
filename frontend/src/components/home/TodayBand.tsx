@@ -58,7 +58,7 @@ export function TodayBand() {
 
         {loading && (
           <p className="mt-5 flex items-center gap-2 text-[14px] font-semibold text-ink-soft">
-            <ThinkingDots /> Modeer is reading your priorities…
+            <ThinkingDots /> Leo is reading your priorities…
           </p>
         )}
 

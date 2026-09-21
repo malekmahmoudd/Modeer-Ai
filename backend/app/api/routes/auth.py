@@ -18,12 +18,12 @@ import hmac
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, DbSession
 from app.core import passwords
-from app.core.auth import COOKIE, key_user, sign_session
+from app.core.auth import COOKIE, key_user, session_epoch_matches, sign_session
 from app.core.config import settings
 from app.core.usage import BudgetExceeded, charge
 from app.db.base import utcnow
@@ -139,10 +139,10 @@ def _client_address(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def _set_session(response: Response, account: User) -> None:
+def _set_session(response: Response, account: User, *, epoch: int | None = None) -> None:
     response.set_cookie(
         COOKIE,
-        sign_session(account.id, account.session_epoch or 0),
+        sign_session(account.id, (account.session_epoch or 0) if epoch is None else epoch),
         max_age=settings.session_seconds,
         httponly=True,
         secure=settings.environment == "production",
@@ -169,6 +169,25 @@ def _codes_left(account: User) -> int:
 
 def _by_email(db, email: str) -> User | None:
     return db.scalar(select(User).where(User.email == _normalise_email(email)))
+
+
+def _lock_credentials(db, account: User, request: Request | None = None) -> None:
+    """Serialize credential mutations in the database, including on SQLite.
+
+    A no-op UPDATE takes the account's write lock until commit/rollback. Refresh
+    after acquiring it: a concurrent recovery may have changed the credentials
+    while this request was waiting. All credential mutations use this lock.
+    """
+    result = db.execute(
+        update(User).where(User.id == account.id).values(session_epoch=User.session_epoch),
+        execution_options={"synchronize_session": False},
+    )
+    if result.rowcount != 1:
+        raise HTTPException(401, "Please sign in")
+    db.refresh(account)
+    db.expire(account, ["recovery_codes"])
+    if request is not None and not session_epoch_matches(request, account):
+        raise HTTPException(401, "Please sign in")
 
 
 # --- routes -------------------------------------------------------------------------
@@ -241,6 +260,8 @@ def recover(body: Recover, request: Request, response: Response, db: DbSession):
     _throttle("login", email, ATTEMPTS_PER_EMAIL, 900)
 
     account = _by_email(db, email)
+    if account is not None:
+        _lock_credentials(db, account)
     wanted = passwords.hash_recovery_code(body.code)
     match = None
     for code in account.recovery_codes if account else []:
@@ -250,13 +271,20 @@ def recover(body: Recover, request: Request, response: Response, db: DbSession):
     if account is None or match is None:
         raise HTTPException(401, WRONG_RECOVERY)
 
-    match.used_at = utcnow()
+    claimed = db.execute(
+        update(RecoveryCode)
+        .where(RecoveryCode.id == match.id, RecoveryCode.used_at.is_(None))
+        .values(used_at=utcnow())
+    )
+    if claimed.rowcount != 1:
+        raise HTTPException(401, WRONG_RECOVERY)
     account.password_hash = passwords.hash_password(body.new_password)
     # A lost password may be a stolen one: end every other session.
     account.session_epoch = (account.session_epoch or 0) + 1
+    issued_epoch = account.session_epoch
     db.commit()
 
-    _set_session(response, account)
+    _set_session(response, account, epoch=issued_epoch)
     return {"signed_in": True, "recovery_codes_left": _codes_left(account)}
 
 
@@ -279,9 +307,11 @@ def change_password(
     Setting a first password also issues recovery codes, since the account can
     now be locked out by forgetting it.
     """
+    # Throttling uses a separate transaction, so it must precede the write lock.
+    _throttle("login", _normalise_email(user.email or user.id), ATTEMPTS_PER_EMAIL, 900)
+    _lock_credentials(db, user, request)
     first_password = user.password_hash is None
     if not first_password:
-        _throttle("login", _normalise_email(user.email or user.id), ATTEMPTS_PER_EMAIL, 900)
         if not passwords.verify_password(body.current_password or "", user.password_hash):
             # 403, not 401: the session is fine, only this confirmation failed —
             # and a 401 would send the person to the login page mid-form.
@@ -291,10 +321,11 @@ def change_password(
 
     user.password_hash = passwords.hash_password(body.new_password)
     user.session_epoch = (user.session_epoch or 0) + 1  # other devices sign in again
+    issued_epoch = user.session_epoch
     codes = _issue_codes(db, user) if first_password else None
     db.commit()
 
-    _set_session(response, user)  # this device stays signed in
+    _set_session(response, user, epoch=issued_epoch)  # this device stays signed in
     return {"changed": True, "recovery_codes": codes}
 
 
@@ -303,9 +334,10 @@ def regenerate_recovery_codes(
     body: ConfirmPassword, request: Request, user: CurrentUser, db: DbSession
 ):
     """A fresh set of codes; every earlier code stops working."""
+    _throttle("login", _normalise_email(user.email or user.id), ATTEMPTS_PER_EMAIL, 900)
+    _lock_credentials(db, user, request)
     if user.password_hash is None:
         raise HTTPException(400, "Set a password first; recovery codes recover a password.")
-    _throttle("login", _normalise_email(user.email or user.id), ATTEMPTS_PER_EMAIL, 900)
     if not passwords.verify_password(body.password, user.password_hash):
         raise HTTPException(403, "That password is not right.")  # see change_password
     codes = _issue_codes(db, user)
@@ -320,7 +352,7 @@ def logout(response: Response):
 
 
 @router.post("/sign-out-everywhere")
-def sign_out_everywhere(user: CurrentUser, db: DbSession, response: Response):
+def sign_out_everywhere(user: CurrentUser, db: DbSession, response: Response, request: Request):
     """End every session for this account, on every device.
 
     Bumps the account's session generation, which the signature covers, so
@@ -331,6 +363,7 @@ def sign_out_everywhere(user: CurrentUser, db: DbSession, response: Response):
     not enough — the key still works. Rotate it with
     ``python provision_user.py --rotate``.
     """
+    _lock_credentials(db, user, request)
     user.session_epoch = (user.session_epoch or 0) + 1
     db.commit()
     response.delete_cookie(COOKIE, path="/api")

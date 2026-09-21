@@ -18,7 +18,7 @@ export default function TeamPage() {
       <PageHeader
         eyebrow="Your AI team"
         title="Choose who to talk to"
-        lede="Modeer keeps everyone in sync with what your team knows about you. Each specialist keeps its own conversation and its own private notes — you pick who you need."
+        lede="Leo keeps everyone in sync with what your team knows about you. Each specialist keeps its own conversation and its own private notes — you pick who you need."
       />
 
       {/* ---------- Modeer, featured ---------- */}
@@ -31,13 +31,13 @@ export default function TeamPage() {
         >
           <div className="p-5 sm:p-7">
             <span className="tab-label">Personal assistant</span>
-            <h2 className="display mt-3 text-[clamp(26px,4vw,40px)] text-ink">Modeer</h2>
+            <h2 className="display mt-3 text-[clamp(26px,4vw,40px)] text-ink">Leo</h2>
             <p className="mt-2 max-w-[46ch] text-[14.5px] font-semibold leading-snug text-ink">
               Learns you, keeps the shared context, plans your day, and points you to the right
               specialist.
             </p>
             <span className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-black text-pink-deep">
-              Talk to Modeer
+              Talk to Leo
               <Icon name="arrow-right" size={16} className="transition group-hover:translate-x-1" />
             </span>
           </div>

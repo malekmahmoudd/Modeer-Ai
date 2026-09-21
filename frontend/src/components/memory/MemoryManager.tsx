@@ -143,7 +143,7 @@ export function MemoryManager() {
       <PageHeader
         eyebrow="Your memory book"
         title="A little more you."
-        lede="Everything here is yours — inspect, edit or delete anything. Modeer never saves sensitive details (health, finances, IDs) on its own."
+        lede="Inspect, edit or delete anything saved here. Leo tries to filter sensitive details, but can miss them. Turn off automatic learning in Account."
       />
 
       {/* ---------- shared ---------- */}
@@ -162,7 +162,7 @@ export function MemoryManager() {
 
         {!loading && !error && (shared ?? []).length === 0 && (
           <EmptyState title="Nothing shared yet">
-            Tell Modeer something lasting about yourself and it shows up here.
+            Tell Leo something lasting about yourself and it shows up here.
           </EmptyState>
         )}
 

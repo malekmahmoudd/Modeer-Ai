@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import subprocess
 import sys
@@ -195,6 +196,7 @@ async def main() -> int:
         keyword_passed, keyword_checks = _score(case, text)
         verdict = review(case, text)
         row = {
+            "generated_with": args.generated_with,
             "agent": slug,
             "sample": sample,
             "prompt_version": agent.prompt_version,
@@ -260,9 +262,40 @@ def code_revision() -> str:
         return "unknown"
 
 
+def source_fingerprint(root: Path | None = None) -> str:
+    """Hash executable sources, prompts, fixtures and the runtime dependency lock.
+
+    Deliberately excludes .env, output artifacts and docs: no secrets are read,
+    and writing a report cannot invalidate a run's content identity.
+    """
+    root = root or Path(__file__).resolve().parent
+    paths = sorted(
+        p for p in (root / "app").rglob("*") if p.is_file() and p.suffix in {".py", ".md", ".json"}
+    )
+    paths += [root / name for name in ("quality_check.py", "requirements.lock")]
+    digest = hashlib.sha256()
+    for path in paths:
+        digest.update(path.relative_to(root).as_posix().encode() + b"\0")
+        digest.update(path.read_bytes() + b"\0")
+    return digest.hexdigest()
+
+
 def settings_fingerprint(args) -> dict:
     return {
         "code_revision": code_revision(),
+        "source_sha256": source_fingerprint(),
+        "agents": {
+            slug: {
+                **require_agent(slug).model.model_dump(mode="json"),
+                "model": args.model or resolve_model(require_agent(slug).model.model),
+                "prompt_version": require_agent(slug).prompt_version,
+            }
+            for slug in args.agents
+        },
+        "provider": settings.llm_provider,
+        "judge_model": None if args.no_judge else args.judge_model,
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
         "reasoning_effort": settings.llm_reasoning_effort,
         "llm_timeout_seconds": settings.llm_timeout_seconds,
     }
@@ -280,12 +313,14 @@ def resume_rows(path: Path, args, cases) -> list[dict]:
         raise ValueError("Resume settings differ from the saved run")
     saved = data.get("generated_with")
     now = args.generated_with
-    if saved is not None and saved != now and not args.allow_code_change:
+    if saved != now and not args.allow_code_change:
         raise ValueError(
             f"Saved rows were generated with {saved}, this run would use {now}. "
             "Start a new --out, or pass --allow-code-change to mix them knowingly."
         )
     rows = data["results"]
+    # Never relabel resumed rows with the new run's provenance.
+    rows = [{**row, "generated_with": row.get("generated_with", saved)} for row in rows]
     if len(rows) > len(cases):
         raise ValueError("Resume case list differs")
     for row, (slug, case, sample) in zip(rows, cases, strict=False):

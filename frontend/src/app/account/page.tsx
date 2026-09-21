@@ -27,12 +27,12 @@ export default function AccountPage() {
   const hasPassword = security?.has_password ?? false;
   return <div className="max-w-2xl space-y-7 pb-8">
     <div><p className="eyebrow">Your account</p><h1 className="display mt-2 text-4xl sm:text-5xl">You’re in control.</h1>
-      <p className="mt-4 text-ink-soft">Manage what Modeer learns, how you sign in, your data and your devices.</p></div>
+      <p className="mt-4 text-ink-soft">Manage what Leo learns, how you sign in, your data and your devices.</p></div>
     {error && <p role="alert" className="border-2 border-ink bg-paper-hi p-4 text-pink-deep">{error}</p>}
     {notice && <p role="status" className="border-2 border-ink bg-sun-pale p-4">{notice}</p>}
     <section className="border-2 border-ink bg-paper-hi p-5 shadow-pop-xs">
-      <h2 className="display text-2xl">What Modeer learns.</h2>
-      <p className="my-3 text-ink-soft">When this is on, Modeer picks up lasting facts from what you tell your team. When it is off, nothing is learned from your messages. What you save or edit on the Memory page still works, and nothing already saved is removed.</p>
+      <h2 className="display text-2xl">What Leo learns.</h2>
+      <p className="my-3 text-ink-soft">When this is on, Leo picks up lasting facts from what you tell your team. When it is off, nothing is learned from your messages. What you save or edit on the Memory page still works, and nothing already saved is removed.</p>
       <label className="flex items-center gap-3 font-bold">
         <input type="checkbox" className="h-5 w-5 accent-pink" disabled={!me || !!busy} checked={me?.memory_auto ?? true} onChange={e => {
           if (!me) return;
@@ -42,7 +42,7 @@ export default function AccountPage() {
             try {
               const updated = await apiFetch<UserProfile>("/users/me", {method: "PATCH", body: JSON.stringify({memory_auto: on})});
               setMe(updated);
-              setNotice(on ? "Modeer will learn from your messages again." : "Modeer will no longer learn from your messages.");
+              setNotice(on ? "Leo will learn from your messages again." : "Leo will no longer learn from your messages.");
             } catch (err) { setMe({...me, memory_auto: !on}); throw err; }
           });
         }} />
@@ -108,7 +108,7 @@ export default function AccountPage() {
     </section>
     <section className="border-2 border-ink bg-paper-hi p-5 shadow-pop-xs">
       <h2 className="display text-2xl">Delete my account.</h2>
-      <p className="my-3 text-ink-soft">Permanently remove your account, chats, memories and goals from Modeer’s live database. This cannot be undone. Existing backups expire on the operator’s retention schedule, normally within 30 days.</p>
+      <p className="my-3 text-ink-soft">Permanently remove your account, chats, memories and goals from CrewAi’s live database. This cannot be undone. Existing backups expire on the operator’s retention schedule, normally within 30 days.</p>
       <form onSubmit={e => { e.preventDefault(); if (confirm !== "DELETE") return; void run("delete", async () => {
         await apiFetch("/users/me/delete", {method:"POST", body:JSON.stringify({confirm})}); window.location.assign("/login?deleted=1");
       }); }}>

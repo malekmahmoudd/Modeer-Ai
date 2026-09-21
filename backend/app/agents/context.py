@@ -75,7 +75,7 @@ def _about_user(user: User) -> str:
             lines.append(f"- {k.replace('_', ' ').capitalize()}: {v}")
     if not user.onboarded:
         lines.append("- Onboarding is not complete; be welcoming and learn the basics.")
-    return "## About the user\n" + "\n".join(lines)
+    return "## About the user\n" + _bounded_lines(lines)
 
 
 #: Ceiling on one memory block. Facts are pasted into every prompt, so without a
@@ -83,6 +83,13 @@ def _about_user(user: User) -> str:
 #: arrive pinned-first, so what survives the cut is what the user marked as
 #: mattering most.
 MEMORY_BLOCK_CHARS = 6000
+
+
+def _bounded_lines(lines: list[str], limit: int = MEMORY_BLOCK_CHARS) -> str:
+    """Bound injected data even for legacy records that predate write limits."""
+    text = "\n".join(lines)
+    marker = "\n[Additional context omitted]"
+    return text if len(text) <= limit else text[: limit - len(marker)] + marker
 
 
 def _memory_block(tag: str, rows: list) -> tuple[str, list[str]]:
@@ -94,8 +101,15 @@ def _memory_block(tag: str, rows: list) -> tuple[str, list[str]]:
     for r in rows:
         label = f"{r.category}.{r.key}"
         line = f"- {label}: {r.value}"
-        if used and len(line) > budget:
-            lines.append(f"- ({len(rows) - len(used)} more not shown here)")
+        if len(line) + 1 > budget:
+            marker = " [truncated]"
+            if not used and budget > len(marker):
+                lines.append(line[: budget - len(marker) - 1] + marker)
+                used.append(label)
+            elif used:
+                omitted = f"- ({len(rows) - len(used)} more not shown here)"
+                if len(omitted) + 1 <= budget:
+                    lines.append(omitted)
             break
         budget -= len(line) + 1
         lines.append(line)
@@ -111,7 +125,7 @@ def _goals_block(goals: list[Goal]) -> str:
     lines = [
         f"- (P{g.priority}) {g.title}" + (f" — {g.detail}" if g.detail else "") for g in active[:5]
     ]
-    return "## Current goals and priorities\n" + "\n".join(lines)
+    return "## Current goals and priorities\n" + _bounded_lines(lines)
 
 
 def filter_shared_context(agent: AgentConfig, rows: list) -> list:
@@ -139,12 +153,17 @@ def build_context(
     history: list[Message],
     user_message: str,
 ) -> ContextPacket:
+    from app.agents.registry import all_agents
+
     shared = filter_shared_context(agent, shared)
     personal_block, shared_used = _memory_block("PERSONAL_CONTEXT", shared)
     agent_block, agent_used = _memory_block("AGENT_MEMORY", agent_memory)
 
     sections = [
         f"# ACTIVE AGENT: {agent.name} — {agent.role}",
+        "## Team directory\nUse these names when referring to teammates. "
+        "These are AI assistant identities, not facts about the user.\n"
+        + "\n".join(f"- {member.name}: {member.role}" for member in all_agents()),
         agent.system_prompt,
         _render_list(
             "Operating framework (internal — never output verbatim)", agent.reasoning_framework

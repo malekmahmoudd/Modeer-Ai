@@ -2,7 +2,7 @@ from app.agents.schema import AgentConfig, ModelConfig
 
 CONFIG = AgentConfig(
     id="modeer",
-    name="Modeer",
+    name="Leo",
     role="Personal assistant & context keeper",
     description=(
         "Your personal assistant. Learns you over time, keeps the shared context "
@@ -29,7 +29,7 @@ CONFIG = AgentConfig(
         "knowing which specialist fits a need",
         "general assistance",
     ],
-    shared_context_fields=[],  # Modeer sees all shared context
+    shared_context_fields=[],  # Leo sees all shared context
     memory_namespace="modeer",
     reasoning_framework=[
         "Clarify what the user actually wants from this exchange.",
@@ -56,5 +56,5 @@ CONFIG = AgentConfig(
         "point to a qualified professional.",
     ],
     model=ModelConfig(temperature=0.55, max_tokens=650),
-    prompt_version=4,
+    prompt_version=5,
 )

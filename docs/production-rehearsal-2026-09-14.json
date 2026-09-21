@@ -1,0 +1,31 @@
+{
+  "url": "https://localhost:8443",
+  "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+  "checks": [
+    "pages carry a per-request nonce CSP with no inline allowance for scripts; API keeps the fallback",
+    "sign-in over HTTPS sets an httpOnly, Secure, SameSite=Strict session",
+    "ten pages render with scripts, styles, fonts and images allowed and no CSP violations",
+    "onboarding fact saved, shown in Memory, and in a specialist's prompt",
+    "reply streams progressively through Caddy (14 visible steps)",
+    "truncated reply keeps its text, says so after reload, and Continue asks for the rest",
+    "interrupted reply is labelled, and Try again replaces it without duplicating the message",
+    "failed reply is recorded, and one Try again recovers it",
+    "only safe Markdown links become links; the rest stay as plain words",
+    "after a dropped connection, a reload shows what arrived and Try again finishes it",
+    "blank messages are refused (422 from the API; send disabled in the UI)",
+    "deleting a conversation removes it for good",
+    "switching accounts shows each person only their own memory and conversations",
+    "a revoked session is sent to sign in",
+    "an unfinished reply is announced to assistive technology",
+    "a duplicate memory label is refused without paging the operator",
+    "readiness: production and schema current for an admin; anonymous callers learn only up or down",
+    "open signup creates a signed-in account and shows ten recovery codes once",
+    "sign-in with email and password",
+    "account page: a wrong password is answered in place, and automatic memory switches off",
+    "a recovery code resets the password; the old one stops working",
+    "390px: no overflow, and the completion notice and recovery action fit",
+    "no CSP violations and no uncaught page errors across the run"
+  ],
+  "cspViolations": [],
+  "pageErrors": []
+}

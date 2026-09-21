@@ -131,7 +131,7 @@ def test_an_admin_sees_the_dashboard_and_its_metrics(client, make_user, monkeypa
     page = client.get("/api/admin/dashboard")
     assert page.status_code == 200
     assert "text/html" in page.headers["content-type"]
-    assert "Modeer operations" in page.text
+    assert "CrewAi operations" in page.text
     assert "Account usage today" in page.text
 
     data = client.get("/api/admin/metrics").json()
