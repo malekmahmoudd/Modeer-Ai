@@ -1,0 +1,431 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "samples": 2,
+  "generated_with": {
+    "code_revision": "0ec76af-dirty",
+    "source_sha256": "3e3ff9e3aad7e0145abedfcce5426e9804adff1a3b0dafb82e28638205310ea9",
+    "agents": {
+      "modeer": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.55,
+        "max_tokens": 650,
+        "prompt_version": 10
+      },
+      "finance": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.4,
+        "max_tokens": 800,
+        "prompt_version": 11
+      }
+    },
+    "provider": "groq",
+    "judge_model": "openai/gpt-oss-120b",
+    "judge_temperature": 0.0,
+    "judge_max_tokens": 700,
+    "reasoning_effort": "low",
+    "llm_timeout_seconds": 35.0
+  },
+  "summary": {
+    "modeer-personalization-1": {
+      "attempts": 2,
+      "responses": 2,
+      "provider_errors": 0,
+      "truncated": 0,
+      "deterministic_passes": 2,
+      "judge_available": 2,
+      "judge_passes": 2,
+      "evaluated": 2,
+      "passes": 2,
+      "pass_rate": 1.0
+    },
+    "finance-personalization-1": {
+      "attempts": 2,
+      "responses": 2,
+      "provider_errors": 0,
+      "truncated": 0,
+      "deterministic_passes": 2,
+      "judge_available": 2,
+      "judge_passes": 1,
+      "evaluated": 2,
+      "passes": 1,
+      "pass_rate": 0.5
+    }
+  },
+  "judge_model": "openai/gpt-oss-120b",
+  "judge_version": 3,
+  "results": [
+    {
+      "generated_with": {
+        "code_revision": "0ec76af-dirty",
+        "source_sha256": "3e3ff9e3aad7e0145abedfcce5426e9804adff1a3b0dafb82e28638205310ea9",
+        "agents": {
+          "modeer": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.55,
+            "max_tokens": 650,
+            "prompt_version": 10
+          },
+          "finance": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.4,
+            "max_tokens": 800,
+            "prompt_version": 11
+          }
+        },
+        "provider": "groq",
+        "judge_model": "openai/gpt-oss-120b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "modeer",
+      "sample": 1,
+      "prompt_version": 10,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "modeer-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "seconds": 1.2,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 233,
+        "violations": []
+      },
+      "output": "**Focus for the coming week**\n\n| Day | Main focus | Quick action |\n|-----|------------|--------------|\n| Mon | Internship CV | Draft the \u201cExperience\u201d section (2\u20113 bullet points per role). |\n| Tue | Programming exam | Review the first two chapters of the exam syllabus; do 5 practice problems. |\n| Wed | Internship CV | Polish the \u201cSkills\u201d and \u201cProjects\u201d sections; align wording with the job description. |\n| Thu | Programming exam | Work through a timed coding exercise; note any gaps. |\n| Fri | Internship CV | Write a concise \u201cSummary\u201d headline and get a peer to review the whole draft. |\n| Sat | Programming exam | Do a full mock test under exam conditions; review incorrect answers. |\n| Sun | Light review & rest | Briefly skim notes, update a to\u2011do list for next week, and relax. |\n\n**Why this mix works**  \n- The CV is a concrete deliverable; breaking it into sections lets you finish it by Friday.  \n- The exam is only 10\u202fdays away; daily practice keeps the material fresh and highlights weak spots before the final mock on Saturday.  \n\n**Next step**  \nStart today by opening a fresh document for your CV and jotting the first bullet for your most recent role. Let me know if you\u2019d like a more detailed outline for any section or if another priority should be added.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "generated_with": {
+        "code_revision": "0ec76af-dirty",
+        "source_sha256": "3e3ff9e3aad7e0145abedfcce5426e9804adff1a3b0dafb82e28638205310ea9",
+        "agents": {
+          "modeer": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.55,
+            "max_tokens": 650,
+            "prompt_version": 10
+          },
+          "finance": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.4,
+            "max_tokens": 800,
+            "prompt_version": 11
+          }
+        },
+        "provider": "groq",
+        "judge_model": "openai/gpt-oss-120b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "finance",
+      "sample": 1,
+      "prompt_version": 11,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "finance-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Help me set a savings target.",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "save for a flat deposit in 3 years"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Dublin"
+        }
+      ],
+      "seconds": 1.58,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'deposit' / '3 years' / 'three years' / 'Dublin'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 369,
+        "violations": []
+      },
+      "output": "**Assumptions**  \n- Goal: a down\u2011payment for a flat in Dublin\u202f\u2014\u202fyou\u2019ve said you want it in\u202f3\u202fyears.  \n- You\u2019ll be saving from regular cash flow (salary or other recurring income).  \n- No other large, fixed obligations have been mentioned, so the main constraint is **cash\u2011flow** (how much of each paycheck you can set aside).\n\n**How to size the target**\n\n1. **Estimate the deposit amount** \u2013 research the typical price range for the type of flat you want and apply the usual 10\u201120\u202f% deposit rule. (In Dublin many buyers aim for\u202f15\u202f% of the purchase price.)  \n2. **Turn the total into a monthly saving goal**:  \n   \\[\n   \\text{Monthly target} = \\frac{\\text{Desired deposit}}{36\\text{ months}}\n   \\]  \n   Round up to a round number that fits your budget.\n\n3. **Check the cash\u2011flow test** \u2013 compare the monthly target to your net income after fixed costs (rent, utilities, transport, minimum debt payments). A common rule of thumb is to keep **savings \u2264\u202f20\u202f% of net income**; if the target exceeds that, you\u2019ll need to either extend the horizon, increase income, or trim other expenses.\n\n**Downside check** \u2013 If you lose a month\u2019s income or face an unexpected \u20ac1,000 bill, you should still have at least a 1\u2011month buffer of the target amount in an easily accessible emergency fund (\u2248\u202f3\u20116\u202fmonths of essential expenses). That prevents the deposit plan from derailing.\n\n**Next steps you can take this week**\n\n1. **Research the price range** for flats you\u2019d consider in Dublin and calculate 15\u202f% of the low\u2011end figure \u2013 that\u2019s your minimum deposit target.  \n2. **Map your net monthly cash flow**: list net income, then subtract all fixed outflows. See what 20\u202f% of the remainder is; that\u2019s a realistic ceiling for your monthly savings.  \n3. **Set up an automatic transfer** of the smaller of the two numbers (deposit\u2011derived target vs. 20\u202f% cash\u2011flow) into a separate high\u2011interest savings account, and start building a 1\u2011month emergency\u2011fund buffer if you don\u2019t have one already.\n\nIf the numbers don\u2019t line up, consider either extending the timeline or looking for ways to boost income or reduce discretionary spend. For a fully personalised plan, a licensed financial adviser can help you model the exact figures safely.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "generated_with": {
+        "code_revision": "0ec76af-dirty",
+        "source_sha256": "3e3ff9e3aad7e0145abedfcce5426e9804adff1a3b0dafb82e28638205310ea9",
+        "agents": {
+          "modeer": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.55,
+            "max_tokens": 650,
+            "prompt_version": 10
+          },
+          "finance": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.4,
+            "max_tokens": 800,
+            "prompt_version": 11
+          }
+        },
+        "provider": "groq",
+        "judge_model": "openai/gpt-oss-120b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "modeer",
+      "sample": 2,
+      "prompt_version": 10,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "modeer-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "What should I focus on this week?",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "finish the internship CV"
+        },
+        {
+          "category": "education",
+          "key": "preparing_for",
+          "value": "programming exam in 10 days"
+        }
+      ],
+      "seconds": 0.95,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'CV' / 'exam' / 'programming' / 'internship'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 168,
+        "violations": []
+      },
+      "output": "**Focus for the coming week**\n\n1. **Programming exam prep** \u2013\u202fAllocate at least\u202f4\u202fhours each weekday to review core topics, do timed practice problems, and identify any weak areas.  \n2. **Internship CV** \u2013\u202fSpend\u202f2\u202fhours on Monday, Wednesday, and Friday polishing one section at a time (header\u202f\u2192\u202fexperience\u202f\u2192\u202fskills). Aim to have a complete draft by Thursday and a final edit on Friday.  \n3. **Brief rest & review** \u2013\u202fOn Saturday, run a full\u2011length mock exam (2\u202fhrs) and then review the CV one last time. Use Sunday for light review or a break to recharge.\n\n**Why this mix works**  \nYour exam is only\u202f10\u202fdays away, so daily study keeps the material fresh. Splitting CV work into short, focused blocks prevents burnout and lets you iterate quickly. A mock exam and final CV polish at week\u2019s end give you concrete checkpoints.\n\n**Next step**  \nDo you want a detailed daily schedule (time slots) for these activities, or any help drafting a specific CV section?",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "generated_with": {
+        "code_revision": "0ec76af-dirty",
+        "source_sha256": "3e3ff9e3aad7e0145abedfcce5426e9804adff1a3b0dafb82e28638205310ea9",
+        "agents": {
+          "modeer": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.55,
+            "max_tokens": 650,
+            "prompt_version": 10
+          },
+          "finance": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.4,
+            "max_tokens": 800,
+            "prompt_version": 11
+          }
+        },
+        "provider": "groq",
+        "judge_model": "openai/gpt-oss-120b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "finance",
+      "sample": 2,
+      "prompt_version": 11,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "finance-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Help me set a savings target.",
+      "context": [
+        {
+          "category": "goals",
+          "key": "stated_goal",
+          "value": "save for a flat deposit in 3 years"
+        },
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Dublin"
+        }
+      ],
+      "seconds": 1.46,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'deposit' / '3 years' / 'three years' / 'Dublin'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 277,
+        "violations": []
+      },
+      "output": "**Assumptions**  \n- Goal: deposit for a flat in Dublin\u202f\u2014\u202fyou\u2019ve said you want it in\u202f3\u202fyears.  \n- You haven\u2019t given a price range, so we\u2019ll work with a **percentage\u2011based target** that you can apply to any price you later decide on.  \n\n**Mechanics**  \nIn most Irish markets a 20\u202f% down\u2011payment is the norm for a mortgage that gets the best rates. If you aim for a larger deposit (e.g., 25\u202f%) you\u2019ll reduce the loan\u2011to\u2011value ratio, lower monthly repayments and improve your borrowing power.  \n\n**Rule of thumb**  \n- **Target deposit\u202f=\u202f20\u202f%\u202f\u00d7\u202fdesired purchase price**  \n- To hit that in 3\u202fyears you need to save **\u2248\u202f0.67\u202f% of the purchase price each month** (20\u202f% \u00f7\u202f36\u202fmonths).  \n\n**Downside test**  \nIf a month\u2019s net cash flow drops (e.g., a short\u2011term loss of income or an unexpected bill), the plan still works as long as you have an emergency buffer of 3\u20136\u202fmonths of essential expenses; otherwise you\u2019d need to pause the deposit savings temporarily and resume when cash flow recovers.  \n\n**Next\u2011step checklist**  \n\n1. **Pick a price range** for the flat you\u2019d like (e.g., \u20ac300\u202fk\u2013\u20ac350\u202fk). Multiply by\u202f20\u202f% to get the deposit amount you need.  \n2. **Calculate the monthly saving amount**: Deposit \u00f7\u202f36\u202fmonths. Write that figure in your budget.  \n3. **Build/maintain an emergency fund** of 3\u20136\u202fmonths of essential outgoings before you start the deposit savings, or keep it separate if you already have one.  \n\nIf you\u2019d like help structuring a simple budget to fit this monthly saving amount, just let me know! (For personalized, high\u2011stakes advice you may want to speak with a licensed financial adviser.)",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": false,
+            "evidence": "To hit that in 3\u202fyears you need to save \u2248\u202f0.67\u202f% of the purchase price each month (20\u202f% \u00f7\u202f36\u202fmonths)."
+          }
+        },
+        "worst_problem": "The monthly saving percentage calculation is mathematically incorrect.",
+        "error": ""
+      },
+      "passed": false
+    }
+  ]
+}

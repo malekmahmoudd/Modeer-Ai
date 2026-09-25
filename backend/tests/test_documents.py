@@ -191,6 +191,11 @@ def test_upload_limits(client, monkeypatch):
     assert _upload(client, "two.md", CV.encode()).status_code == 409
 
 
+def test_a_file_given_to_leo_is_shared_with_the_team(client):
+    doc = _upload(client, "notes.md", CV.encode(), agent="modeer").json()
+    assert doc["shared"] is True
+
+
 def test_share_rename_and_delete(client, db):
     doc = _upload(client, "cv.md", CV.encode()).json()
     shared = client.patch(

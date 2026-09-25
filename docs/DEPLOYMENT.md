@@ -63,11 +63,14 @@ packages plus pip), and the full backend suite passes inside that image.
 `tqdm`). There are now 46 locked packages. Their hashes were taken from the
 wheels downloaded from PyPI for Linux x86_64, Linux aarch64 and macOS arm64.
 `pip-audit -r requirements.lock --require-hashes --disable-pip` reported no
-known vulnerabilities on 2026-09-25. The lock has **not yet been built into an
-image** (no Docker on the machine it was made on). Before deploying, rebuild the
-image and run the suite inside it. The image build also downloads the embedding
-model (118 MB) through `app/documents/fetch_model.py`, which verifies its
-SHA-256. The image grows by roughly 250 MB.
+known vulnerabilities on 2026-09-25. Verified the same day on Colima with
+Rosetta, for `linux/amd64`:
+- `docker build` completes.
+- `deploy/tests/image-check.sh` reports `lock=46 installed=47 extra=[] missing=[] wrong=[]`.
+- All 446 backend tests pass inside the image, including the retrieval eval
+  with the real model.
+- The model loads, and `tzdata` resolves zones.
+- The image is 801 MB and runs as `app`.
 
 **Check for published advisories** whenever the lock changes — this is how the
 Starlette problem below was found:

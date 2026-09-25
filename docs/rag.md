@@ -110,6 +110,13 @@ and MRR ≥ 0.75, and no leaks either way.
 
 No OCR, images, spreadsheets, `.eml`, web pages, Google Drive or Gmail import;
 no reranker or query rewriting; no pgvector (not needed at 5 files × a few
-hundred chunks). The upload and document-list screens are for the owner to
-design; the API and a typed `uploadDocument` helper (with progress and cancel)
-exist in `frontend/src/lib/api.ts`.
+hundred chunks).
+
+## Screens
+
+- **Memory page → "Files your team can read"** (`DocumentsPanel.tsx`):
+  - upload with progress and cancel, choosing the teammate
+  - an optional "share with the whole team"
+  - a status for each file (Reading… / Ready / Failed with the reason)
+  - share or make private, and delete
+- **Chat:** a reply that used files shows "From your files: cv.md p.2".

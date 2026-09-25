@@ -34,7 +34,10 @@ At runtime `context.py` composes the system message:
 ```
 
 The shared rules were ~7k characters (half of every prompt) until 2026-09-25.
-They are now one numbered block of ~2.5k characters with the same content.
+They are now one numbered block of ~3.3k characters. A first cut to ~2.5k lost
+specifics that live evals showed gpt-oss needs spelled out: named sections to
+avoid, no "typical" or "illustrative" prices, no example metrics. Those were
+restored.
 Rule 7 (dates) has two forms. In the live app the agent is given today's date
 and resolves relative dates ("next Thursday (2 October)"). Without a date, as
 in the evals, it is told it does not know today's date and must keep dates as

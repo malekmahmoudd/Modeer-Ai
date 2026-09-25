@@ -1,0 +1,259 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "samples": 1,
+  "generated_with": {
+    "code_revision": "0ec76af-dirty",
+    "source_sha256": "335e064def2bd2bd116c2ed3381de94ab19f81a832d1117ff08c2502c6ef98a0",
+    "agents": {
+      "travel": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.6,
+        "max_tokens": 800,
+        "prompt_version": 13
+      },
+      "shopping": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.5,
+        "max_tokens": 1100,
+        "prompt_version": 10
+      }
+    },
+    "provider": "groq",
+    "judge_model": "openai/gpt-oss-120b",
+    "judge_temperature": 0.0,
+    "judge_max_tokens": 700,
+    "reasoning_effort": "low",
+    "llm_timeout_seconds": 35.0
+  },
+  "summary": {
+    "travel-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "truncated": 0,
+      "deterministic_passes": 1,
+      "judge_available": 1,
+      "judge_passes": 1,
+      "evaluated": 1,
+      "passes": 1,
+      "pass_rate": 1.0
+    },
+    "shopping-personalization-1": {
+      "attempts": 1,
+      "responses": 1,
+      "provider_errors": 0,
+      "truncated": 0,
+      "deterministic_passes": 0,
+      "judge_available": 1,
+      "judge_passes": 0,
+      "evaluated": 1,
+      "passes": 0,
+      "pass_rate": 0.0
+    }
+  },
+  "judge_model": "openai/gpt-oss-120b",
+  "judge_version": 2,
+  "results": [
+    {
+      "generated_with": {
+        "code_revision": "0ec76af-dirty",
+        "source_sha256": "335e064def2bd2bd116c2ed3381de94ab19f81a832d1117ff08c2502c6ef98a0",
+        "agents": {
+          "travel": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.6,
+            "max_tokens": 800,
+            "prompt_version": 13
+          },
+          "shopping": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.5,
+            "max_tokens": 1100,
+            "prompt_version": 10
+          }
+        },
+        "provider": "groq",
+        "judge_model": "openai/gpt-oss-120b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "travel",
+      "sample": 1,
+      "prompt_version": 13,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 1.76,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 312,
+        "violations": []
+      },
+      "output": "**Long\u2011weekend escape: Porto, Portugal** \u2013 a compact, caf\u00e9\u2011rich city with a relaxed vibe, great food, and easy afternoon arrivals from Manchester.\n\n**Day\u202f1 \u2013 Arrival & settle**  \nFly out of Manchester late morning (e.g., 11\u202fam) to Porto; arrive early afternoon, take a taxi or Metro to a centrally located boutique hotel (Ribeira district). Unwind with a stroll along the Douro riverfront and a coffee at Caf\u00e9 Majestic.\n\n**Day\u202f2 \u2013 Explore the historic core**  \nMorning: leisurely walk through S\u00e3o\u202fBento Train Station to admire the azulejo tiles.  \nMidday: lunch at a local tasca in the Ribeira.  \nAfternoon: wander the narrow streets of the historic centre, visit Livraria Lello and the Cl\u00e9rigos Tower (optional climb). Evening: sunset drinks at a riverside bar.\n\n**Day\u202f3 \u2013 Food & wine immersion**  \nMorning: brunch at a caf\u00e9 in the Foz neighbourhood.  \nMidday: take the tram to Vila Nova de Gaia for a guided port\u2011wine cellar tour (most tours start after 1\u202fpm).  \nAfternoon: return to Porto for a relaxed walk in the Crystal Palace Gardens. Evening: dinner at a traditional restaurant in the Baixa district.\n\n**Day\u202f4 \u2013 Chill & depart**  \nLate morning: leisurely breakfast at a caf\u00e9 near your hotel, pick up any souvenirs.  \nEarly afternoon: head to the airport for a mid\u2011afternoon flight back to Manchester (no early\u2011morning departure).\n\n**Key points for you**  \n- **Pace:** No early flights, plenty of time for caf\u00e9s and strolling.  \n- **Base:** One city, no day\u2011trips.  \n- **Transport:** Direct flights from Manchester to Porto (typically 2\u202fh\u202f15\u202fm).  \n- **Budget drivers:** Airfare, mid\u2011range boutique hotel, port\u2011wine tour, meals at caf\u00e9s/restaurants.  \n\n**Time\u2011sensitive actions**  \n- **Book now:** Manchester\u2011Porto round\u2011trip flight (to lock in a late\u2011morning departure).  \n- **Decide later:** Hotel choice (pick a boutique spot in Ribeira or Baixa) and the specific port\u2011wine tour (many run daily).  \n\n*Anything else you\u2019d like to tweak\u2014e.g., specific dates or a different vibe?*",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "generated_with": {
+        "code_revision": "0ec76af-dirty",
+        "source_sha256": "335e064def2bd2bd116c2ed3381de94ab19f81a832d1117ff08c2502c6ef98a0",
+        "agents": {
+          "travel": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.6,
+            "max_tokens": 800,
+            "prompt_version": 13
+          },
+          "shopping": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.5,
+            "max_tokens": 1100,
+            "prompt_version": 10
+          }
+        },
+        "provider": "groq",
+        "judge_model": "openai/gpt-oss-120b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "shopping",
+      "sample": 1,
+      "prompt_version": 10,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "shopping-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Recommend a phone for me.",
+      "context": [
+        {
+          "category": "preferences",
+          "key": "ecosystem",
+          "value": "already on iPhone and Apple Watch"
+        },
+        {
+          "category": "preferences",
+          "key": "budget",
+          "value": "under 700, keeps phones 4+ years"
+        }
+      ],
+      "seconds": 1.48,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'iPhone' / 'Apple' / '700' / 'long'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": false,
+        "words": 266,
+        "violations": [
+          {
+            "code": "invented_currency",
+            "detail": "wrote a currency the person never gave and no place implies",
+            "evidence": "$7"
+          }
+        ]
+      },
+      "output": "**Pick \u2013 iPhone SE (3rd\u202fgen, 2022)**  \n- **Why it fits:** It stays in the Apple ecosystem you already use, offers the same processor (A15 Bionic) as the iPhone\u202f13 line, and receives iOS updates for many years\u2014good for your 4\u2011year phone\u2011keep habit. At a new\u2011retail price it sits comfortably under your\u202f$700 ceiling, and the compact design keeps it lightweight and pocket\u2011friendly.  \n- **Key trade\u2011off:** You sacrifice a larger display and multiple\u2011camera system, but you gain a solid, future\u2011proof chipset and a price that leaves room for accessories or a case.\n\n**Runner\u2011up \u2013 Refurbished iPhone\u202f13 mini**  \n- **Why it\u2019s a contender:** The 13\u202fmini gives a bigger OLED screen, dual\u2011camera setup, and the same A15 chip, while still fitting comfortably in a pocket. A reputable certified\u2011refurbished unit typically lands just under your budget ceiling, extending the life you want without a brand\u2011new price tag.  \n- **Key trade\u2011off:** You\u2019ll be buying a used device, so you rely on the refurbisher\u2019s warranty and the battery may have modest wear compared with a brand\u2011new SE.\n\n**Next steps**  \n1. Check Apple\u2019s refurbished store (or other certified refurbishers) for the iPhone\u202f13\u202fmini price and warranty details.  \n2. Compare the new iPhone\u202fSE price at Apple or authorized retailers to confirm it stays below your budget.  \n3. Decide whether screen size/camera versatility (13\u202fmini) outweighs the lower cost and brand\u2011new condition of the SE.\n\n**One question that would most change the pick:**  \nDo you need a larger screen and dual\u2011camera system for photography or media consumption, or would you be satisfied with the SE\u2019s 4.7\u2011inch display and single\u2011lens camera?",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": false,
+            "evidence": "At a new\u2011retail price it sits comfortably under your\u202f$700 ceiling"
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "Makes unsupported claims about current retail prices being under the $700 budget.",
+        "error": ""
+      },
+      "passed": false
+    }
+  ]
+}

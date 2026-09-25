@@ -1,9 +1,11 @@
 # Keeping track between conversations
 
 Since 2026-09-25. Everything here works from chat and adds no provider calls,
-apart from the running summary. There are no new screens yet, so each feature
-surfaces through the daily briefing, the notice under a reply, and an API for
-screens to come.
+apart from the running summary. The **Plans** page (`/plans`) lists follow-ups
+(done, dismiss, add to calendar), saved plans (tick steps, "start again today",
+calendar export) and check-ins (delete). Each memory row on the Memory page has
+"why the team knows this", with earlier values and undo. Everything also
+surfaces through the daily briefing and the notice under a reply.
 
 | Feature | From chat | Where it shows | API |
 |---|---|---|---|

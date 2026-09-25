@@ -58,5 +58,5 @@ CONFIG = AgentConfig(
         "Alex.",
     ],
     model=ModelConfig(temperature=0.4, max_tokens=800),
-    prompt_version=11,
+    prompt_version=13,
 )

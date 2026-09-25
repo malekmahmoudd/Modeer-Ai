@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AgentBadge } from "@/components/art/AgentPortrait";
+import { DocumentsPanel } from "@/components/memory/DocumentsPanel";
 import { MemoryRow } from "@/components/memory/MemoryRow";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyState, PageHeader, SectionHead, Spinner } from "@/components/ui/primitives";
@@ -176,6 +177,8 @@ export function MemoryManager() {
                 <li key={m.id} className="border-b border-ink/20 last:border-b-0">
                   <MemoryRow
                     memory={m}
+                    scope="shared"
+                    onChanged={refetch}
                     onSave={async (patch) => {
                       await apiFetch(`/memory/shared/${m.id}`, {
                         method: "PATCH",
@@ -205,6 +208,9 @@ export function MemoryManager() {
           }}
         />
       </section>
+
+      {/* ---------- files ---------- */}
+      <DocumentsPanel />
 
       {/* ---------- specialist ---------- */}
       <section className="memory-private">
@@ -260,6 +266,8 @@ export function MemoryManager() {
                     <li key={m.id} className="border-b border-ink/20 last:border-b-0">
                       <MemoryRow
                         memory={m}
+                        scope="agent"
+                        onChanged={() => loadAgent(agentId)}
                         onSave={async (patch) => {
                           await apiFetch(`/memory/agent/${m.id}`, {
                             method: "PATCH",

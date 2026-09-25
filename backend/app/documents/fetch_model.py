@@ -29,7 +29,12 @@ FILES = {
         "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
     ),
 }
-DEFAULT_DIR = Path(__file__).resolve().parents[2] / "models" / "multilingual-e5-small"
+
+
+def default_dir() -> Path:
+    """backend/models/multilingual-e5-small, for local development. Worked out
+    when needed: the Dockerfile runs this file on its own from /tmp."""
+    return Path(__file__).resolve().parents[2] / "models" / "multilingual-e5-small"
 
 
 def _sha256(path: Path) -> str:
@@ -40,7 +45,7 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def fetch(target: Path = DEFAULT_DIR) -> None:
+def fetch(target: Path) -> None:
     target.mkdir(parents=True, exist_ok=True)
     for name, (remote, expected) in FILES.items():
         path = target / name
@@ -61,4 +66,4 @@ def fetch(target: Path = DEFAULT_DIR) -> None:
 
 
 if __name__ == "__main__":
-    fetch(Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_DIR)
+    fetch(Path(sys.argv[1]) if len(sys.argv) > 1 else default_dir())

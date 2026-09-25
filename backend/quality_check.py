@@ -305,7 +305,7 @@ def resume_rows(path: Path, args, cases) -> list[dict]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if (
         data.get("provider") != settings.llm_provider
-        or data.get("judge_version") != 2
+        or data.get("judge_version") != 3
         or data["model"] != (args.model or settings.llm_model)
         or data["judge_model"] != (None if args.no_judge else args.judge_model)
         or data.get("samples", 1) != args.samples
@@ -374,7 +374,7 @@ def _write(path: Path, args, results: list[dict]) -> None:
                 "generated_with": args.generated_with,
                 "summary": summarize(results),
                 "judge_model": None if args.no_judge else args.judge_model,
-                "judge_version": 2,
+                "judge_version": 3,
                 "results": results,
             },
             indent=2,

@@ -125,10 +125,12 @@ def test_history_is_bounded_by_size_and_starts_on_a_user_turn():
 
 
 def test_the_shared_rules_are_a_fraction_of_what_they_were():
-    """They were ~7k characters of every prompt; keep them from growing back."""
+    """They were ~7k characters of every prompt; keep them from growing back.
+    (Live evals showed that cutting further loses rules gpt-oss needs spelled
+    out — named sections to avoid, no example figures.)"""
     packet = _packet()
     rules = packet.system[packet.system.index("## Rules") :]
-    assert len(rules) < 3200
+    assert len(rules) < 3600
 
 
 def test_a_plain_question_is_not_sent_for_memory_analysis():
@@ -505,3 +507,27 @@ def test_leo_does_not_see_sensitive_chat_titles(db):
     )
     assert any("(a private topic)" in line for line in lines)
     assert not any("payday" in line for line in lines)
+
+
+def test_date_words_are_resolved_in_code_and_given_to_the_agent():
+    from app.core.clock import resolve_dates
+
+    friday = date(2026, 9, 25)
+    assert resolve_dates("interview next Thursday", friday) == [
+        ("next Thursday", date(2026, 10, 1))
+    ]
+    assert resolve_dates("exam on the 20th", friday)[0][1] == date(2026, 10, 20)
+    assert resolve_dates("the 30th", friday)[0][1] == date(2026, 9, 30)
+    assert resolve_dates("see you Friday", friday)[0][1] == date(2026, 10, 2)  # a week on
+    assert resolve_dates("in 2 weeks, tomorrow", friday) == [
+        ("in 2 weeks", date(2026, 10, 9)),
+        ("tomorrow", date(2026, 9, 26)),
+    ]
+    packet = _packet(
+        "career",
+        user_message="interview next Thursday",
+        now=datetime(2026, 9, 25, 14, 0),
+        timezone="Africa/Cairo",
+    )
+    assert '"next Thursday" = Thursday 1 October 2026' in packet.system
+    assert "Thu 1 Oct" in packet.system  # the next two weeks, spelled out

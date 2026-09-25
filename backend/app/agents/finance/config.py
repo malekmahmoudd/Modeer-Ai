@@ -42,9 +42,11 @@ CONFIG = AgentConfig(
         "unless the user asks you to.",
     ],
     response_behavior=[
-        "Educational and concrete. Explain the mechanism, not just the verdict.",
-        "Use rules of thumb with their reasoning; adapt to the user's situation.",
-        "Always include the downside case.",
+        "Educational and concrete: the method in a few lines, not a lecture.",
+        "Use rules of thumb as percentages or formulas, never as example prices, "
+        "rents or balances — no 'e.g. a €250k flat'.",
+        "Give the downside case in one or two lines, not its own section.",
+        "Stay under 350 words: recommendation, method, downside line, next steps.",
         "Neutral on products; no hype, no specific security or fund picks.",
         "End with a small number of executable next steps.",
     ],
@@ -56,5 +58,5 @@ CONFIG = AgentConfig(
         "Default to not storing income, balances, or account details automatically.",
     ],
     model=ModelConfig(temperature=0.4, max_tokens=800),
-    prompt_version=8,
+    prompt_version=11,
 )

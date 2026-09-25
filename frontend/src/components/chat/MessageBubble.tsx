@@ -3,7 +3,19 @@ import Link from "next/link";
 import { AgentBadge } from "@/components/art/AgentPortrait";
 import { ThinkingDots } from "@/components/ui/primitives";
 import { renderMarkdown } from "@/lib/markdown";
-import type { Agent, Completion, Message } from "@/types";
+import type { Agent, Completion, Message, RetrievedPassage } from "@/types";
+
+/** "cv.pdf p.2, p.3" — one entry per file, its pages in order. */
+function sourcesOf(passages: RetrievedPassage[]): string[] {
+  const pages = new Map<string, Set<number>>();
+  for (const p of passages) {
+    if (!pages.has(p.filename)) pages.set(p.filename, new Set());
+    if (p.page) pages.get(p.filename)!.add(p.page);
+  }
+  return [...pages].map(([file, set]) =>
+    set.size ? `${file} ${[...set].sort((a, b) => a - b).map((n) => `p.${n}`).join(", ")}` : file,
+  );
+}
 
 // Shown under a reply that did not finish, when the server gave no notice.
 const UNFINISHED: Record<Exclude<Completion, "completed">, string> = {
@@ -58,6 +70,18 @@ export function MessageBubble({
         {!streaming && ended !== "completed" && (
           <p className="mt-2.5 text-[12.5px] font-semibold text-ink-soft">
             {message.meta?.notice || UNFINISHED[ended]}
+          </p>
+        )}
+
+        {!streaming && (ctx?.documents?.length ?? 0) > 0 && ended !== "failed" && (
+          <p className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11.5px] font-bold uppercase tracking-wide text-ink-soft">
+            <span className="h-2 w-2 rounded-full bg-sun" aria-hidden />
+            From your files:
+            {sourcesOf(ctx?.documents ?? []).map((s) => (
+              <span key={s} className="normal-case tracking-normal text-ink">
+                {s}
+              </span>
+            ))}
           </p>
         )}
 

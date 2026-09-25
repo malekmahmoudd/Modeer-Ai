@@ -54,6 +54,8 @@ export interface ContextDiagnostics {
   personal_context_count: number;
   history_messages: number;
   system_chars: number;
+  /** Passages from the person's files this reply was given. */
+  documents?: RetrievedPassage[];
 }
 
 export interface MemoryCandidate {
@@ -239,4 +241,59 @@ export interface RetrievedPassage {
   filename: string;
   page: number | null;
   score: number;
+}
+
+/** A dated thing the team follows up on. */
+export interface FollowUp {
+  id: string;
+  agent_id: string;
+  title: string;
+  due_on: string;
+  status: "pending" | "done" | "dismissed";
+  asked_at: string | null;
+  source_message_id: string | null;
+}
+
+export interface PlanStep {
+  id: string;
+  position: number;
+  text: string;
+  due_on: string | null;
+  done: boolean;
+}
+
+/** A plan an agent wrote that the person kept as a checklist. */
+export interface SavedPlan {
+  id: string;
+  agent_id: string;
+  goal_id: string | null;
+  title: string;
+  status: "active" | "done" | "archived";
+  starts_on: string;
+  done: number;
+  steps: PlanStep[];
+}
+
+export interface CheckIn {
+  id: string;
+  agent_id: string;
+  text: string;
+  amount: number | null;
+  unit: string | null;
+  logged_on: string;
+}
+
+/** Why the team knows a fact: the message it came from and earlier values. */
+export interface MemorySource {
+  id: string;
+  source: string;
+  saved_by_you: boolean;
+  learned_from: {
+    message_id: string;
+    conversation_id: string;
+    agent_id: string;
+    said_at: string | null;
+    excerpt: string;
+  } | null;
+  history: { value: string; source: string; replaced_at: string; replaced_by?: string }[];
 }

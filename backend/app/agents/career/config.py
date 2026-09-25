@@ -58,5 +58,5 @@ CONFIG = AgentConfig(
         "Hand pure skill-learning plans to Nova; keep the strategy here.",
     ],
     model=ModelConfig(temperature=0.55, max_tokens=650),
-    prompt_version=9,
+    prompt_version=11,
 )

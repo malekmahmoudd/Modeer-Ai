@@ -76,7 +76,9 @@ def create(
     doc = Document(
         user_id=user_id,
         agent_id=agent_id,
-        shared=shared,
+        # Leo reads shared files only (he briefs the whole team), so a file
+        # given to him is a file given to the team.
+        shared=shared or agent_id == "modeer",
         filename=name,
         kind=kind,
         size_bytes=len(data),

@@ -14,6 +14,7 @@ const NAV = [
   { href: "/team", label: "Team", icon: "team" as const },
   { href: "/memory", label: "Memory", icon: "memory" as const },
   { href: "/goals", label: "Goals", icon: "goals" as const },
+  { href: "/plans", label: "Plans", icon: "calendar" as const },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -95,7 +96,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* ---------- mobile tab bar ---------- */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t-2 border-ink bg-paper pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t-2 border-ink bg-paper pb-[env(safe-area-inset-bottom)] md:hidden"
         aria-label="Main"
       >
         {NAV.map((item) => {

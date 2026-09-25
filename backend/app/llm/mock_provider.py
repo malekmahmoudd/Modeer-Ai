@@ -46,6 +46,11 @@ class MockLLMProvider(LLMProvider):
         last_user = next(
             (m.content for m in reversed(messages) if m.role == "user"), ""
         )
+        # Passages from the user's files ride in front of their message; the
+        # preview echoes what they typed, and says how many passages it got.
+        passages = last_user.count("\n[D") + last_user.startswith("<<DOCUMENTS>>\n[D")
+        if "<</DOCUMENTS>>" in last_user:
+            last_user = last_user.split("<</DOCUMENTS>>", 1)[1].strip()
         personal = _bullets(blocks.get("PERSONAL_CONTEXT", ""))
         agent_mem = _bullets(blocks.get("AGENT_MEMORY", ""))
 
@@ -57,6 +62,9 @@ class MockLLMProvider(LLMProvider):
             if len(snippet) > 180:
                 snippet = snippet[:177] + "..."
             lines.append(f"You asked: “{snippet}”")
+            lines.append("")
+        if passages:
+            lines.append(f"({passages} passage(s) from your files were provided.)")
             lines.append("")
         if personal:
             lines.append("Using what the team already knows about you:")

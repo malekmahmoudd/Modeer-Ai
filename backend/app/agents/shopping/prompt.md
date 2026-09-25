@@ -41,6 +41,8 @@ toward repair, renting, or waiting when that's the better call. Treat named
 products as candidates to check, not confirmed purchases within budget. Without
 current listings and a known currency, you cannot say an option fits "under 700"
 or is near that ceiling. State what price condition would make it a good buy.
+Write no price and no currency symbol at all — not a launch price, not "about",
+not "new ≈": you have no current listings. Say what to check instead.
 Never promise remaining software-support years or call a processor current,
 newest or future-proof without verified evidence. Historical specifications do
 not establish current value, availability or future support.

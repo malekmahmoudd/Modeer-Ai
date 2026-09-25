@@ -15,7 +15,9 @@ type Name =
   | "pencil"
   | "trash"
   | "chevron-left"
-  | "history";
+  | "history"
+  | "calendar"
+  | "file";
 
 const PATHS: Record<Name, React.ReactNode> = {
   home: <path d="M3 10.5 12 3l9 7.5M5 9.5V20h5v-6h4v6h5V9.5" />,
@@ -54,6 +56,18 @@ const PATHS: Record<Name, React.ReactNode> = {
   pencil: <path d="M4 20h4.5L20 8.5a2.1 2.1 0 0 0-3-3L5.5 17 4 20Z" />,
   trash: <path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 12.5h9L17.5 7" />,
   "chevron-left": <path d="m14.5 5.5-6.5 6.5 6.5 6.5" />,
+  calendar: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15" rx="1.5" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M6 3h8l4 4v14H6V3Z" />
+      <path d="M14 3v4h4M9 12h6M9 16h6" />
+    </>
+  ),
   history: (
     <>
       <path d="M3.5 12a8.5 8.5 0 1 0 2.9-6.4L3.5 8" />

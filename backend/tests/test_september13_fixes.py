@@ -178,7 +178,7 @@ def test_resume_rejects_different_content_and_preserves_old_provenance(tmp_path)
         json.dumps(
             {
                 "provider": settings.llm_provider,
-                "judge_version": 2,
+                "judge_version": 3,
                 "model": settings.llm_model,
                 "judge_model": args.judge_model,
                 "samples": 1,

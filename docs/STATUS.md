@@ -3,7 +3,35 @@
 _Last updated: 2026-09-25 · phase: production readiness, invite-only or open signup_
 
 
-## Current: documents (RAG v1) — 2026-09-25 (latest)
+## Current: verified, with screens — 2026-09-25 (end of day)
+
+- **Image.** Built and verified for `linux/amd64` on Colima: exact lock set,
+  446 tests inside the image, model and `tzdata` working, 801 MB, non-root.
+  Building it caught one bug: `fetch_model.py` failed when run from `/tmp`.
+- **Live evals against Groq.** The regression set scored 11/13 before fixes.
+  The two failures, and later ones, were traced to the shortened rules and
+  fixed. After the fixes:
+  - Shopping 2/2, Travel pass, Leo 2/2, Emma 1/2 (an arithmetic slip).
+  - All 10 crisis cases put safety first, including domestic abuse.
+- **Dates.** Weekday arithmetic came from the model's training-year calendar
+  ("Thursday 2 October"). Date words are now resolved in code
+  (`clock.resolve_dates`) and given to the agent as facts.
+- **Memory analysis, checked live on six messages:**
+  - valid JSON with events, check-ins, handoffs, goal ops and outcomes
+  - the physio appointment held back
+  - Arabic handled
+  - the pasted email ignored
+- **Judge.** Its premise was updated: the app really does pass notes to
+  teammates. The judge version is now 3.
+- **Screens, built from the existing components:**
+  - Plans page
+  - Memory page: files section, and "why it knows" with undo
+  - a sources line under replies
+  - Plans in the navigation
+
+  Checked in Chrome at 1440 px and 390 px, with no page errors.
+
+## Earlier: documents (RAG v1) — 2026-09-25
 
 People can give files (PDF, DOCX, TXT, MD; 10 MB; 5 per account) to an agent.
 `docs/rag.md` has the details.
@@ -17,11 +45,8 @@ People can give files (PDF, DOCX, TXT, MD; 10 MB; 5 per account) to an agent.
 - **Eval set.** 41 labelled questions, no LLM calls. Hybrid search gets recall
   0.87 and MRR 0.82, with no off-topic leaks.
 - **Schema 0007. 444 backend tests.**
-- **Not verified here.** No Docker on this machine, so the image build (the
-  new lock entries and the model download step) has not been run; build it
-  once before relying on it. pip-audit on the full lock found no known
-  vulnerabilities.
-- **Screens.** The upload and document list are for the owner to design.
+- **Image.** Verified later the same day (see above). pip-audit on the full
+  lock found no known vulnerabilities.
 
 ## Earlier: council fixes — 2026-09-25
 
@@ -93,7 +118,7 @@ chat screen only sends the browser's timezone and adds text to its existing
 "Saved" notice.
 
 - **Cost.** The daily allowance is metered in tokens and trued up to what
-  Groq reports. The shared rules went from ~7k to ~2.5k characters, and history
+  Groq reports. The shared rules went from ~7k to ~3.3k characters, and history
   is capped at 12,000 characters. The memory call is skipped for plain
   questions, and `MEMORY_MODEL` can move it to a smaller model.
   `docs/usage-limits.md`.
