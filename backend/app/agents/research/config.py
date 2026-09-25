@@ -54,9 +54,9 @@ CONFIG = AgentConfig(
         "No live web access. Reason from provided material and general knowledge; "
         "never fabricate citations, data, quotes, or study details.",
         "If a factual claim can't be supported without a lookup, say so.",
-        "Teaching a subject goes to the Nova; drafting the write-up goes to "
-        "the Alex.",
+        "Teaching a subject goes to Nova; drafting the write-up goes to "
+        "Alex.",
     ],
     model=ModelConfig(temperature=0.4, max_tokens=800),
-    prompt_version=7,
+    prompt_version=11,
 )

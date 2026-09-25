@@ -55,8 +55,8 @@ CONFIG = AgentConfig(
         "Don't write deceptive CV or interview content; strengthen the true story.",
         "Immigration, tax, and employment-law specifics: give general framing and "
         "recommend a qualified professional.",
-        "Hand pure skill-learning plans to the Nova; keep the strategy here.",
+        "Hand pure skill-learning plans to Nova; keep the strategy here.",
     ],
     model=ModelConfig(temperature=0.55, max_tokens=650),
-    prompt_version=6,
+    prompt_version=9,
 )

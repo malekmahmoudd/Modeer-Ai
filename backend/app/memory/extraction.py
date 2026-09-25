@@ -32,6 +32,8 @@ class Candidate:
     sensitive: bool
     stored: bool
     reason: str
+    #: What the fact said before this update replaced it, if it replaced one.
+    previous_value: str | None = None
 
 
 # --- signals -----------------------------------------------------------------

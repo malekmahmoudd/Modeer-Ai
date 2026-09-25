@@ -4,6 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+from app.core.clock import valid_zone
 from app.core.validation import reject_null
 
 #: The profile is pasted into every prompt ("About the user"), so it is bounded
@@ -19,10 +20,21 @@ class ProfileUpdate(BaseModel):
     profile: dict | None = None
     #: Whether Modeer may learn facts from this person's messages automatically.
     memory_auto: bool | None = None
+    #: IANA timezone, e.g. "Europe/London". Null clears it (agents use UTC).
+    timezone: str | None = Field(default=None, max_length=64)
 
     _required_values = field_validator(
         "display_name", "onboarded", "profile", "memory_auto", mode="before"
     )(reject_null)
+
+    @field_validator("timezone")
+    @classmethod
+    def _real_zone(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        if valid_zone(value) is None:
+            raise ValueError("Unknown timezone; use an IANA name such as Europe/London")
+        return value.strip()
 
     @field_validator("profile")
     @classmethod
@@ -47,4 +59,5 @@ class UserRead(BaseModel):
     onboarded: bool
     profile: dict
     memory_auto: bool
+    timezone: str | None = None
     created_at: datetime

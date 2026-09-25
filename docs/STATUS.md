@@ -1,9 +1,116 @@
 # Project status — Modeer Personal AI Team MVP
 
-_Last updated: 2026-09-13 · phase: production readiness, invite-only or open signup_
+_Last updated: 2026-09-25 · phase: production readiness, invite-only or open signup_
 
 
-## Current: owner decisions implemented — 2026-09-13
+## Current: documents (RAG v1) — 2026-09-25 (latest)
+
+People can give files (PDF, DOCX, TXT, MD; 10 MB; 5 per account) to an agent.
+`docs/rag.md` has the details.
+
+- **Storage.** Parsing is sandboxed, only the extracted text is kept, and the
+  file is discarded.
+- **Search.** A local multilingual embedding model (MIT, pinned and
+  checksum-verified at build) plus keyword search, with a relevance gate.
+- **Answers.** Cited passages go in the user's turn, never into history,
+  summaries or memory. Documents are private to their agent unless shared.
+- **Eval set.** 41 labelled questions, no LLM calls. Hybrid search gets recall
+  0.87 and MRR 0.82, with no off-topic leaks.
+- **Schema 0007. 444 backend tests.**
+- **Not verified here.** No Docker on this machine, so the image build (the
+  new lock entries and the model download step) has not been run; build it
+  once before relying on it. pip-audit on the full lock found no known
+  vulnerabilities.
+- **Screens.** The upload and document list are for the owner to design.
+
+## Earlier: council fixes — 2026-09-25
+
+A council of 50 independent expert reviews looked at the day's work. I fixed
+their top findings; **420 backend tests** pass.
+
+- **Data fixes:**
+  - An allergy can no longer be overwritten by a diet preference.
+  - Plan progress no longer ticks on negations or questions.
+  - Follow-ups and check-ins now fail closed on sensitive data. The keyword
+    list covers medical, eating, crisis, life-event and Arabic terms.
+  - Arabic and French pasted emails are ignored.
+  - Stored text can no longer break out of its prompt block (`app/core/text.py`).
+  - Sensitive chat titles are hidden from Leo.
+- **Behaviour fixes:**
+  - The briefing asks "How did it go?" once, and the user's answer closes the
+    follow-up.
+  - Plan saves and ticks happen before the reply, so agents only confirm what
+    happened.
+  - Plans can be shifted or re-dated, and weekday and heading formats are
+    dated.
+- **Safety:**
+  - Every agent now has a shared crisis rule, with a crisis case in each
+    agent's evals.
+  - Maddie has urgent-care triage and an eating-disorder response.
+- **Infrastructure:** `tzdata` is in the lock with real hashes, and
+  `/api/health/detail` now flags a missing timezone database.
+- **Privacy notice:** now accurate about what goes to Groq.
+
+The composer now unlocks when the reply ends; memory results follow on the
+same stream with their own 30-second clock. The conversation's turn lock is
+released once the reply is saved, so the next message never waits for the
+previous turn's memory work. Switching conversation mid-reply stops that reply,
+and late memory notes only show on the conversation they came from.
+
+Still open from the council:
+- database calls still run on the event loop, and memory work is lost if the
+  browser disconnects before it finishes (rare now that the page keeps
+  listening)
+- no global token cap or suspend switch
+- screens not built
+- RAG plan revised, not started
+- the "CrewAi" / CrewAI name clash
+
+## Earlier: keeping track — 2026-09-25 (later)
+
+All nine features from the council review, backend first. They work from chat
+and surface through the briefing and the reply notice, with an API for each
+(`docs/tracking.md`):
+
+- follow-ups that count down and get asked about once
+- saved plans with progress
+- check-ins
+- a Monday weekly review
+- a remaining-allowance figure
+- "This is about me:" onboarding
+- where each fact came from, with undo
+- running summaries for long conversations
+- .ics calendar export
+
+Schema **0006**. **406 backend tests.** Screens not built (owner):
+plans/follow-ups lists, an "About me" form, the Memory page's source/history/undo
+view, and download links for the calendar files.
+
+## Earlier: cost, time, team, memory — 2026-09-25
+
+Four product problems fixed in the backend. No frontend design changes: the
+chat screen only sends the browser's timezone and adds text to its existing
+"Saved" notice.
+
+- **Cost.** The daily allowance is metered in tokens and trued up to what
+  Groq reports. The shared rules went from ~7k to ~2.5k characters, and history
+  is capped at 12,000 characters. The memory call is skipped for plain
+  questions, and `MEMORY_MODEL` can move it to a smaller model.
+  `docs/usage-limits.md`.
+- **Time.** Agents get today's date and time in the user's zone. Relative dates
+  are resolved, facts store absolute dates, and the briefing counts down to goal
+  dates. `docs/agents.md` → Time.
+- **Team.** Leo sees recent conversation titles and applies goal changes the
+  user explicitly asks for. Any agent can leave a named teammate a note the user
+  can see and delete. `docs/agents.md` → Working as a team.
+- **Memory.** Keys for the same fact are merged, identical values are not saved
+  twice, updates keep the old value in history, and pasted text is never learned
+  from. `docs/memory.md`.
+
+Schema **0005**. **386 backend tests.** Not yet run: the live quality evals
+against the shorter rules, and any eval of the dated prompt form.
+
+## Earlier: owner decisions implemented — 2026-09-13
 
 Open signup (behind `SIGNUP_ENABLED`, default off) with passwords and single-use
 recovery codes; a per-person automatic-memory switch; Ask My Team without

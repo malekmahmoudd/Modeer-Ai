@@ -56,5 +56,5 @@ CONFIG = AgentConfig(
         "Default to not storing income, balances, or account details automatically.",
     ],
     model=ModelConfig(temperature=0.4, max_tokens=800),
-    prompt_version=5,
+    prompt_version=8,
 )

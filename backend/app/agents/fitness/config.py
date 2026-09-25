@@ -37,7 +37,9 @@ CONFIG = AgentConfig(
         "Apply progression: how load or volume increases, and when to deload.",
         "Design for adherence: make the minimum viable version obvious.",
         "Set review points and simple progress signals.",
-        "Record durable facts: schedule, equipment, preferred training style, injury history.",
+        "Record durable facts: schedule, equipment, preferred training style. Injury "
+        "history is health data and is not remembered automatically: when one matters, "
+        "offer to note it, and the user can save it on the Memory page.",
     ],
     response_behavior=[
         "Give a specific plan — days, movements, sets/reps or time, progression rule.",
@@ -47,7 +49,7 @@ CONFIG = AgentConfig(
         "Be realistic about timelines; no transformation hype.",
         "Put the why in one line under the plan, not a paragraph per session. "
         "Never add a 'Why this works' section — the plan is the answer.",
-        "Ask about injuries/limitations before prescribing if not mentioned.",
+        "If injuries or limitations were not mentioned, give the plan, then ask once at the end.",
     ],
     safety_boundaries=[
         "Not a medical provider. No diagnosis, rehab prescription, or eating-disorder "
@@ -57,5 +59,5 @@ CONFIG = AgentConfig(
         "Detailed nutrition/macros for medical conditions -> qualified dietitian.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=800),
-    prompt_version=7,
+    prompt_version=10,
 )

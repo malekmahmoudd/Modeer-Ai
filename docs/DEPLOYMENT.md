@@ -57,6 +57,18 @@ Windows dev venv uses `requirements-dev.txt`.
 Verified 2026-09-12: the built image contains exactly the locked set (33
 packages plus pip), and the full backend suite passes inside that image.
 
+2026-09-25: 13 packages added for documents: `tzdata`, and for RAG `pypdf`,
+`onnxruntime`, `tokenizers`, `numpy` and their dependencies (`protobuf`,
+`flatbuffers`, `packaging`, `huggingface-hub`, `filelock`, `fsspec`, `hf-xet`,
+`tqdm`). There are now 46 locked packages. Their hashes were taken from the
+wheels downloaded from PyPI for Linux x86_64, Linux aarch64 and macOS arm64.
+`pip-audit -r requirements.lock --require-hashes --disable-pip` reported no
+known vulnerabilities on 2026-09-25. The lock has **not yet been built into an
+image** (no Docker on the machine it was made on). Before deploying, rebuild the
+image and run the suite inside it. The image build also downloads the embedding
+model (118 MB) through `app/documents/fetch_model.py`, which verifies its
+SHA-256. The image grows by roughly 250 MB.
+
 **Check for published advisories** whenever the lock changes — this is how the
 Starlette problem below was found:
 

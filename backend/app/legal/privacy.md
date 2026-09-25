@@ -37,6 +37,33 @@ can be saved as an ordinary fact. Everything stored is visible to you in Memory,
 where you can edit or delete it — so it is worth a look now and then. Anything
 you save yourself is stored exactly as you wrote it, sensitive or not.
 
+When CrewAi updates a fact automatically, it keeps the last few earlier values
+with it, so a wrong update can be undone. Editing that fact yourself clears
+them, and deleting it deletes them. Text you paste in, such as someone else's
+email, is not learned from. When you ask one assistant to pass something to
+another, the note is stored as that assistant's note, where you can read or
+delete it. Your browser's timezone (for example "Europe/London") is stored so
+the assistants know what day it is for you.
+
+The team also keeps track of a few things between conversations: dates you
+mention (as follow-ups), plans you ask it to save, progress you report (such as
+a run or money spent), and a short summary of older parts of long
+conversations. Each fact also records which of your messages it was learned
+from. All of it is included in your data export and deleted with your account.
+Follow-ups, check-ins and learned facts stop when you switch automatic memory
+off.
+
+**Documents you upload.** When you give an assistant a file, CrewAi reads the
+text out of it and throws the file itself away; it keeps only the text, split
+into passages. Only the assistant you gave it to reads it, unless you share it
+with the team (you can undo that). When a passage is relevant to a message, it
+is sent to the model provider with that message, like the rest of the
+conversation. Passages are never turned into facts about you. The text is in
+your data export and is deleted when you delete the document or your account;
+it may remain in encrypted server backups for up to their retention period.
+Only upload files you have the right to share: if a file contains other
+people's personal details, they are stored and processed too.
+
 ## Where it lives
 
 In one PostgreSQL database on the server running your deployment. Nothing is
@@ -54,14 +81,26 @@ that backup was taken.
   so they can read anything in it. CrewAi is self-hosted: trust
   in the operator is part of the arrangement, and no software here changes that.
 - **Your model provider.** To answer you, CrewAi sends the specialist's
-  instructions, the relevant facts it remembers about you, the recent messages
-  of that conversation (up to the last 40) and your new message to the
-  configured provider — by default Groq. While automatic learning is on, a
-  second, separate request sends your message again so the model can pick out
-  any durable facts worth remembering; switch it off on your Account page and
-  that second request is not made. Your message text and your personal context
-  leave the server on every turn.
-  What the provider does with it is governed by their terms, not this document.
+  instructions, the relevant facts it remembers about you, what it is keeping
+  track of for that specialist (dates, saved plans, logged progress), notes a
+  teammate left at your request, the recent messages of that conversation (up to
+  the last 12 exchanges, and a short summary of anything older) and your new
+  message to the configured provider — by default Groq. When you talk to Leo, the
+  titles of your other recent conversations go too, except titles that look
+  sensitive, which are replaced with "a private topic".
+  Two other requests can happen after a reply:
+  - a request that sends your new message (without text you pasted) so the model
+    can pick out facts, dates and progress worth keeping, and requests you made
+    such as "tell Harvey…". It is skipped for plain questions. With automatic
+    memory switched off on your Account page it is made only when you ask for
+    something explicitly, such as a goal change or a note for a teammate;
+  - in long conversations, a request that sends older messages (without pasted
+    text) to be condensed into that short summary.
+
+  Your message text and your personal context leave the server on every turn.
+  What the provider does with it is governed by their terms, not this document;
+  read them before using the service, including where they process data, how
+  long they keep it, and whether they use it for training.
 - **Nobody else.** Other accounts on the same deployment cannot read your
   conversations, memories or goals; that isolation is enforced and tested.
 

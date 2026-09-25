@@ -1,4 +1,7 @@
 # --- Python / backend ---
+# Embedding model weights: fetched at image build (see backend/Dockerfile) or by
+# `python -m app.documents.fetch_model` for local development.
+backend/models/
 __pycache__/
 *.py[cod]
 *.egg-info/

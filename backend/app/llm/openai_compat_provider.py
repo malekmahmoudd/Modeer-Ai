@@ -8,6 +8,7 @@ import logging
 import math
 import time
 from collections.abc import AsyncIterator
+from contextvars import ContextVar
 
 import httpx
 
@@ -28,6 +29,19 @@ _TOO_LONG = "This reply ran past the time limit and was cut short."
 #: Silence between stream events that means the provider has stopped sending,
 #: as opposed to a long reply still arriving. Capped by LLM_TIMEOUT_SECONDS.
 _IDLE_SECONDS = 15.0
+
+
+#: Where a call reports the token usage the provider returned. The budget
+#: wrapper sets a fresh dict before each call and trues its charge up from it.
+usage_sink: ContextVar[dict | None] = ContextVar("usage_sink", default=None)
+
+#: Extra completion room Groq's gpt-oss models get for hidden reasoning.
+_REASONING_ALLOWANCE = 512
+
+
+def reasoning_allowance(model: str) -> int:
+    """Tokens a model may spend reasoning on top of the visible reply cap."""
+    return _REASONING_ALLOWANCE if model.startswith("openai/gpt-oss") else 0
 
 
 class ProviderError(RuntimeError):
@@ -73,10 +87,15 @@ class OpenAICompatProvider(LLMProvider):
             ],
         }
         if model.startswith("openai/gpt-oss") and self.name == "groq":
-            payload["max_completion_tokens"] = max_tokens + 512
+            payload["max_completion_tokens"] = max_tokens + reasoning_allowance(model)
             payload["reasoning_effort"] = settings.llm_reasoning_effort
         else:
             payload["max_tokens"] = max_tokens
+        if self.name in ("groq", "openai"):
+            # Ask for the real token count in the final event, so the account
+            # is charged for what was used rather than the up-front estimate.
+            payload["stream_options"] = {"include_usage": True}
+        sink = usage_sink.get()
         started = time.monotonic()
         emitted = False
         finished = False
@@ -150,6 +169,13 @@ class OpenAICompatProvider(LLMProvider):
                                 if event.get("error"):
                                     interrupted = True
                                     break
+                                usage = event.get("usage") or (event.get("x_groq") or {}).get(
+                                    "usage"
+                                )
+                                if sink is not None and isinstance(usage, dict):
+                                    total = usage.get("total_tokens")
+                                    if isinstance(total, int):
+                                        sink["total_tokens"] = total
                                 choices = event.get("choices") or []
                                 if not choices:
                                     continue

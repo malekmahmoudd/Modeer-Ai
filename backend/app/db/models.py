@@ -6,14 +6,16 @@ package (users, conversations, memory, ...) owns the *behaviour* around them.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy import (
     Boolean,
+    Date,
     Float,
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -45,6 +47,9 @@ class User(UUIDMixin, TimestampMixin, Base):
     memory_auto: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False, server_default="1"
     )
+    #: IANA timezone the browser reported ("Europe/London"). None until known;
+    #: agents then work in UTC. See app/core/clock.py.
+    timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     recovery_codes: Mapped[list[RecoveryCode]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
@@ -59,6 +64,10 @@ class User(UUIDMixin, TimestampMixin, Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     goals: Mapped[list[Goal]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    followups: Mapped[list[FollowUp]] = relationship(cascade="all, delete-orphan")
+    plans: Mapped[list[Plan]] = relationship(cascade="all, delete-orphan")
+    checkins: Mapped[list[CheckIn]] = relationship(cascade="all, delete-orphan")
+    documents: Mapped[list[Document]] = relationship(cascade="all, delete-orphan")
     briefings: Mapped[list[Briefing]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
@@ -107,6 +116,12 @@ class Conversation(UUIDMixin, TimestampMixin, Base):
     agent_id: Mapped[str] = mapped_column(ForeignKey("agents.id", ondelete="CASCADE"), index=True)
     title: Mapped[str] = mapped_column(String(200), default="New conversation")
     last_message_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    #: A running summary of the turns too old to send with each message, and how
+    #: many of the model-visible messages it covers (from the start).
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary_count: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False, server_default="0"
+    )
 
     user: Mapped[User] = relationship(back_populates="conversations")
     agent: Mapped[Agent] = relationship(back_populates="conversations")
@@ -152,6 +167,11 @@ class SharedMemory(UUIDMixin, TimestampMixin, Base):
     confidence: Mapped[float] = mapped_column(Float, default=1.0)
     sensitive: Mapped[bool] = mapped_column(Boolean, default=False)
     pinned: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: Earlier values, newest last: [{"value", "source", "replaced_at"}]. An
+    #: update never silently erases what was there.
+    history: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    #: The user message this fact was learned from (None when saved by hand).
+    source_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
 
     user: Mapped[User] = relationship(back_populates="shared_memories")
 
@@ -174,6 +194,8 @@ class AgentMemory(UUIDMixin, TimestampMixin, Base):
     source: Mapped[str] = mapped_column(String(24), default="agent")
     confidence: Mapped[float] = mapped_column(Float, default=1.0)
     sensitive: Mapped[bool] = mapped_column(Boolean, default=False)
+    history: Mapped[list | None] = mapped_column(JSON, nullable=True)  # as SharedMemory
+    source_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
 
     user: Mapped[User] = relationship(back_populates="agent_memories")
 
@@ -204,6 +226,120 @@ class Briefing(UUIDMixin, TimestampMixin, Base):
     user: Mapped[User] = relationship(back_populates="briefings")
 
 
+class FollowUp(UUIDMixin, TimestampMixin, Base):
+    """A dated thing the person mentioned: an interview, an exam, a trip.
+
+    Shown counting down in the briefing and to the agents; once the day has
+    passed, the agent who owns it asks how it went, once.
+    """
+
+    __tablename__ = "followups"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    agent_id: Mapped[str] = mapped_column(String(48))  # the teammate it belongs with
+    title: Mapped[str] = mapped_column(String(200))
+    due_on: Mapped[date] = mapped_column(Date)
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending|done|dismissed
+    #: When an agent was first prompted to ask how it went. Asked once, not nagged.
+    asked_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    #: How it went, in the user's words, once they said so. Closes the follow-up.
+    outcome: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    source_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+
+
+class Plan(UUIDMixin, TimestampMixin, Base):
+    """A plan an agent wrote that the person chose to keep, as a checklist."""
+
+    __tablename__ = "plans"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    agent_id: Mapped[str] = mapped_column(String(48))
+    goal_id: Mapped[str | None] = mapped_column(
+        ForeignKey("goals.id", ondelete="SET NULL"), nullable=True
+    )
+    title: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(16), default="active")  # active|done|archived
+    starts_on: Mapped[date] = mapped_column(Date)
+    source_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+
+    steps: Mapped[list[PlanStep]] = relationship(
+        back_populates="plan", cascade="all, delete-orphan", order_by="PlanStep.position"
+    )
+
+
+class PlanStep(UUIDMixin, Base):
+    __tablename__ = "plan_steps"
+
+    plan_id: Mapped[str] = mapped_column(ForeignKey("plans.id", ondelete="CASCADE"), index=True)
+    position: Mapped[int] = mapped_column(Integer)
+    text: Mapped[str] = mapped_column(Text)
+    due_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    done_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+    plan: Mapped[Plan] = relationship(back_populates="steps")
+
+
+class CheckIn(UUIDMixin, TimestampMixin, Base):
+    """Progress the person reported: a workout, a study session, spending."""
+
+    __tablename__ = "checkins"
+    __table_args__ = (Index("ix_checkins_user_agent_day", "user_id", "agent_id", "logged_on"),)
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    agent_id: Mapped[str] = mapped_column(String(48))
+    text: Mapped[str] = mapped_column(String(300))
+    amount: Mapped[float | None] = mapped_column(Float, nullable=True)
+    unit: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    logged_on: Mapped[date] = mapped_column(Date)
+    source_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+
+
+class Document(UUIDMixin, TimestampMixin, Base):
+    """A file the person gave one of their agents, kept as extracted text only.
+
+    The uploaded bytes are parsed and then discarded: what is stored is the text
+    the agents can quote, split into chunks. Nothing binary is kept or backed up.
+    """
+
+    __tablename__ = "documents"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    #: The agent it was given to. Only that agent retrieves from it, unless shared.
+    agent_id: Mapped[str] = mapped_column(String(48))
+    shared: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    #: Display name only, cleaned of control characters; never used as a path.
+    filename: Mapped[str] = mapped_column(String(200))
+    kind: Mapped[str] = mapped_column(String(8))  # pdf | docx | txt | md
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(16), default="processing")  # processing|ready|failed
+    error: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    pages: Mapped[int] = mapped_column(Integer, default=0)
+    chars: Mapped[int] = mapped_column(Integer, default=0)
+    #: The embedding model the chunks were embedded with; None = keyword search only.
+    embed_model: Mapped[str | None] = mapped_column(String(80), nullable=True)
+
+    chunks: Mapped[list[DocumentChunk]] = relationship(
+        back_populates="document", cascade="all, delete-orphan", order_by="DocumentChunk.position"
+    )
+
+
+class DocumentChunk(UUIDMixin, Base):
+    __tablename__ = "document_chunks"
+
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    position: Mapped[int] = mapped_column(Integer)
+    page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    heading: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    text: Mapped[str] = mapped_column(Text)
+    #: float32 vector, L2-normalised, as raw bytes. None when embeddings are off.
+    embedding: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+
+    document: Mapped[Document] = relationship(back_populates="chunks")
+
+
 __all__ = [
     "new_uuid",
     "User",
@@ -214,6 +350,12 @@ __all__ = [
     "AgentMemory",
     "Goal",
     "Briefing",
+    "FollowUp",
+    "Plan",
+    "PlanStep",
+    "CheckIn",
+    "Document",
+    "DocumentChunk",
     "UsageBucket",
 ]
 

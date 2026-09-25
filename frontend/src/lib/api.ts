@@ -59,6 +59,71 @@ export async function apiFetch<T>(
   return (await res.json()) as T;
 }
 
+/** What the upload endpoint accepts. Checked here first, so a phone does not
+ *  send 10 MB over mobile data only to be told no. */
+export const UPLOAD_TYPES = ".pdf,.docx,.txt,.md";
+export const UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+
+/** Why an upload was refused, in words, by status code. */
+const UPLOAD_ERRORS: Record<number, string> = {
+  409: "You've reached the document limit. Delete one to add another.",
+  413: "That file is over the 10 MB limit.",
+  415: "That file type isn't supported. Upload PDF, DOCX, TXT or MD.",
+};
+
+/**
+ * Upload a file to one agent. Uses XMLHttpRequest because fetch cannot report
+ * upload progress. `onProgress` gets 0–1; the returned `abort` cancels. The
+ * server answers at once with status "processing"; poll /documents/{id}.
+ */
+export function uploadDocument(
+  file: File,
+  agentId: string,
+  opts: { shared?: boolean; onProgress?: (fraction: number) => void } = {},
+): { promise: Promise<import("@/types").UserDocument>; abort: () => void } {
+  const xhr = new XMLHttpRequest();
+  const promise = new Promise<import("@/types").UserDocument>((resolve, reject) => {
+    const name = file.name.toLowerCase();
+    if (!UPLOAD_TYPES.split(",").some((ext) => name.endsWith(ext))) {
+      reject(new ApiError(415, UPLOAD_ERRORS[415]));
+      return;
+    }
+    if (file.size > UPLOAD_MAX_BYTES) {
+      reject(new ApiError(413, UPLOAD_ERRORS[413]));
+      return;
+    }
+    const form = new FormData();
+    form.append("file", file);
+    form.append("agent_id", agentId);
+    form.append("shared", opts.shared ? "true" : "false");
+    xhr.open("POST", `${API_BASE}/documents`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) opts.onProgress?.(e.loaded / e.total);
+    };
+    xhr.onload = () => {
+      let body: { detail?: unknown } | null = null;
+      try {
+        body = JSON.parse(xhr.responseText);
+      } catch {
+        /* not JSON */
+      }
+      if (xhr.status === 401 && !PUBLIC_PAGES.includes(window.location.pathname)) {
+        window.location.assign("/login");
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(body as import("@/types").UserDocument);
+      } else {
+        const detail = readableDetail(body?.detail) || UPLOAD_ERRORS[xhr.status] || "The upload failed.";
+        reject(new ApiError(xhr.status, detail));
+      }
+    };
+    xhr.onerror = () => reject(new ApiError(0, "The upload was interrupted. Please try again."));
+    xhr.onabort = () => reject(new ApiError(0, "Upload cancelled."));
+    xhr.send(form);
+  });
+  return { promise, abort: () => xhr.abort() };
+}
+
 /** Minimal data hook: fetch on mount, expose loading/error and a refetch. */
 export function useApi<T>(path: string | null, deps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null);

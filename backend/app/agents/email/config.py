@@ -55,5 +55,5 @@ CONFIG = AgentConfig(
         "professional review before sending.",
     ],
     model=ModelConfig(temperature=0.6, max_tokens=1000),
-    prompt_version=4,
+    prompt_version=7,
 )

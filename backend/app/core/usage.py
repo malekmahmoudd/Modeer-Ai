@@ -1,8 +1,11 @@
 """Account quotas shared across workers. Charge before spending provider quota.
 
-Streaming usage is unavailable: deliberately charge UTF-8 prompt bytes + output
-cap, with framing allowance. These are conservative budget units, not billing
-measurements.
+The charge is taken up front from an estimate in tokens: UTF-8 bytes / 3 for
+the prompt (real tokenisers average 3.5-4 bytes a token for English, so this
+errs high), plus the output cap, plus the hidden reasoning allowance the
+provider grants gpt-oss models. When the provider reports what the call really
+used, the unused part of the estimate is given back — so the meter tracks real
+tokens, and the estimate only has to be safe, not accurate.
 
 A call the provider refused or failed before sending a single word is refunded:
 the person got nothing, and with "Try again" on every failure a handful of
@@ -15,14 +18,14 @@ import time
 from contextvars import ContextVar
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import delete, update
+from sqlalchemy import delete, select, update
 
 from app.core.auth import caller_id
 from app.core.config import settings
 from app.db.models import UsageBucket
 from app.db.session import SessionLocal
-from app.llm.base import LLMProvider
-from app.llm.openai_compat_provider import ProviderError
+from app.llm.base import LLMProvider, StreamEnded
+from app.llm.openai_compat_provider import ProviderError, reasoning_allowance, usage_sink
 
 account_scope: ContextVar[str | None] = ContextVar("usage_account", default=None)
 
@@ -98,6 +101,36 @@ def charge(account: str, kind: str, amount: int, limit: int, seconds: int) -> in
     return window
 
 
+#: What a typical turn costs after the true-up: a ~2.5k-token prompt, history, a
+#: reply, and sometimes the memory call. Only used to turn tokens into "about N
+#: messages", which is all a person needs to know.
+TYPICAL_TURN_TOKENS = 4000
+
+
+def allowance(account: str) -> dict:
+    """How much of today's allowance this account has left."""
+    now = int(time.time())
+    window = now // 86400
+    with SessionLocal() as db:
+        used = db.scalar(
+            select(UsageBucket.amount).where(
+                UsageBucket.account == account,
+                UsageBucket.kind == "tokens",
+                UsageBucket.window == window,
+            )
+        )
+    limit = settings.account_daily_token_budget
+    used = int(used or 0)
+    remaining = max(0, limit - used)
+    return {
+        "used": used,
+        "limit": limit,
+        "remaining": remaining,
+        "messages_left": remaining // TYPICAL_TURN_TOKENS,
+        "resets_at": (window + 1) * 86400,
+    }
+
+
 async def limited_caller(user_id=Depends(caller_id)):
     account = user_id or "local-demo"
     try:
@@ -113,6 +146,20 @@ async def limited_caller(user_id=Depends(caller_id)):
         account_scope.reset(token)
 
 
+def estimate_tokens(*, system, messages, model, max_tokens) -> int:
+    """The up-front charge for one call, in tokens. Deliberately high."""
+    prompt_bytes = len(system.encode("utf-8")) + sum(
+        len(m.content.encode("utf-8")) for m in messages
+    )
+    return (
+        -(-prompt_bytes // 3)  # ceiling division
+        + 8 * len(messages)
+        + 16
+        + max_tokens
+        + reasoning_allowance(model)
+    )
+
+
 class BudgetedProvider(LLMProvider):
     def __init__(self, inner):
         self.inner = inner
@@ -122,13 +169,13 @@ class BudgetedProvider(LLMProvider):
         account = account_scope.get()
         units = window = 0
         if account is not None:
-            units = (
-                len(system.encode("utf-8"))
-                + sum(len(m.content.encode("utf-8")) + 32 for m in messages)
-                + max_tokens
-                + 256
+            units = estimate_tokens(
+                system=system, messages=messages, model=model, max_tokens=max_tokens
             )
             window = charge(account, "tokens", units, settings.account_daily_token_budget, 86400)
+        # The provider writes the usage it reports into this, when it reports any.
+        sink: dict = {}
+        usage_sink.set(sink)
         emitted = False
         try:
             async for delta in self.inner.stream_chat(
@@ -145,3 +192,16 @@ class BudgetedProvider(LLMProvider):
             if account is not None and not emitted:
                 refund(account, "tokens", units, window)
             raise
+        except StreamEnded:
+            if account is not None:
+                _true_up(account, units, window, sink)
+            raise
+        if account is not None:
+            _true_up(account, units, window, sink)
+
+
+def _true_up(account: str, units: int, window: int, sink: dict) -> None:
+    """Give back what the estimate over-charged, once the provider says what it used."""
+    used = sink.get("total_tokens")
+    if isinstance(used, int) and 0 <= used < units:
+        refund(account, "tokens", units - used, window)

@@ -11,8 +11,10 @@ from sqlalchemy import text
 from app.agents.registry import all_agents
 from app.api.deps import DbSession
 from app.core.auth import COOKIE, session_claims
+from app.core.clock import zone
 from app.core.config import settings
 from app.core.observability import health as health_counters
+from app.documents.embedding import get_embedder
 from app.users.service import get_by_id
 
 router = APIRouter(tags=["system"])
@@ -93,6 +95,11 @@ def health_detail(db: DbSession, response: Response, request: Request) -> dict:
     ready = db_ok and not _erroring(counters)
     if settings.environment == "production" and not schema_current:
         ready = False
+    # Without a timezone database every user silently gets UTC: agents then
+    # count days wrong for anyone far from Greenwich. Visible here, not silent.
+    timezones_ok = zone("Asia/Riyadh") is not None
+    if settings.environment == "production" and not timezones_ok:
+        ready = False
     response.status_code = 200 if ready else 503
     public = {
         "status": "ok" if ready else "degraded",
@@ -105,6 +112,11 @@ def health_detail(db: DbSession, response: Response, request: Request) -> dict:
         **public,
         "schema_revision": ", ".join(sorted(applied)) or None,
         "expected_schema_revision": ", ".join(sorted(expected)) or None,
+        "timezones": "ok" if timezones_ok else "missing",
+        # "meaning and keywords" with the embedding model, else "keywords only".
+        "document_search": (
+            "meaning and keywords" if get_embedder() is not None else "keywords only"
+        ),
         "environment": settings.environment,
         "auth_required": settings.auth_required,
         **counters,

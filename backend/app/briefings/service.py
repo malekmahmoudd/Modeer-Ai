@@ -12,9 +12,11 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.clock import today_for
 from app.db.models import Briefing, User
 from app.goals import service as goal_service
 from app.memory import service as memory_service
+from app.tracking import service as tracking
 
 # Route a goal/priority to the specialist most likely to help with it.
 _AGENT_HINTS: list[tuple[str, str, str]] = [
@@ -44,11 +46,27 @@ def _agent_for(text: str) -> tuple[str | None, str]:
     return None, "•"
 
 
-def _today() -> str:
-    return date.today().isoformat()
+def _today(user: User) -> str:
+    """The user's own date: a briefing is for their day, not the server's."""
+    return today_for(user).isoformat()
+
+
+def _countdown(target, today: date) -> str:
+    """Text like "Due Thu 1 Oct — in 6 days", for a goal with a target date."""
+    if target is None:
+        return ""
+    day = target.date() if hasattr(target, "date") else target
+    days = (day - today).days
+    label = f"{day:%a} {day.day} {day:%b}"
+    if days < 0:
+        return f"Was due {label}"
+    if days == 0:
+        return f"Due today ({label})"
+    return f"Due {label} — in {days} day{'s' if days != 1 else ''}"
 
 
 def build_items(db: Session, user: User) -> tuple[str, list[dict]]:
+    today = today_for(user)
     goals = goal_service.list_goals(db, user.id, status="active")
     shared = memory_service.list_shared(db, user.id)
     items: list[dict] = []
@@ -62,7 +80,9 @@ def build_items(db: Session, user: User) -> tuple[str, list[dict]]:
             {
                 "icon": icon,
                 "text": g.title,
-                "detail": g.detail or "",
+                "detail": " · ".join(
+                    part for part in (_countdown(g.target_date, today), g.detail or "") if part
+                ),
                 "source": "goal",
                 "agent": slug,
             }
@@ -80,6 +100,20 @@ def build_items(db: Session, user: User) -> tuple[str, list[dict]]:
                     "agent": slug,
                 }
             )
+
+    # Dated things first: they are why today is different from yesterday.
+    items[:0] = tracking.briefing_items(db, user.id, today=today)
+    if today.weekday() == 0:  # Monday, in the user's own week
+        review = tracking.weekly_review(db, user.id, today=today)
+        items.append(
+            {
+                "icon": "🗓️",
+                "text": "Your week",
+                "detail": review["summary"],
+                "source": "review",
+                "agent": "modeer",
+            }
+        )
 
     items.append(
         {
@@ -111,7 +145,7 @@ def get_today(db: Session, user: User) -> Briefing | None:
         select(Briefing)
         .where(
             Briefing.user_id == user.id,
-            Briefing.generated_for_date == _today(),
+            Briefing.generated_for_date == _today(user),
         )
         .order_by(Briefing.created_at.desc())
     )
@@ -126,7 +160,7 @@ def get_or_generate_today(db: Session, user: User, *, force: bool = False) -> Br
         user_id=user.id,
         summary=summary,
         items=items,
-        generated_for_date=_today(),
+        generated_for_date=_today(user),
     )
     db.add(briefing)
     db.flush()

@@ -11,6 +11,11 @@ COPY requirements.lock .
 RUN pip install --no-cache-dir --require-hashes --no-deps -r requirements.lock \
     && pip check \
     && useradd --create-home app
+# The document-search embedding model, at a pinned revision, checked against
+# SHA-256 values in fetch_model.py: a mismatch fails the build. Its own layer, so
+# code changes do not download it again. The server never fetches anything.
+COPY app/documents/fetch_model.py /tmp/fetch_model.py
+RUN python /tmp/fetch_model.py /app/models/multilingual-e5-small && rm /tmp/fetch_model.py
 COPY . .
 USER app
 EXPOSE 8000

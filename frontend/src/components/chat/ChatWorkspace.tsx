@@ -43,6 +43,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   // transcript, which a screen reader has no reason to revisit.
   const [announcement, setAnnouncement] = useState("");
   const [savedFacts, setSavedFacts] = useState<MemoryCandidate[]>([]);
+  const [teamNotes, setTeamNotes] = useState<string[]>([]);
   const [justOnboarded, setJustOnboarded] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState("");
@@ -53,6 +54,11 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const followReply = useRef(true);
   const historyRef = useRef<HTMLDivElement>(null);
   const liveConversation = useRef<string | null>(null);
+  // The conversation on screen right now, for results that arrive late.
+  const shownConversation = useRef<string | null>(null);
+  useEffect(() => {
+    shownConversation.current = conversationId;
+  }, [conversationId]);
 
   useEffect(() => {
     if (!historyOpen) return;
@@ -75,6 +81,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     setConversationId(null);
     setMessages([]);
     setSavedFacts([]);
+    setTeamNotes([]);
     setErr(null);
     seededRef.current = false;
     liveConversation.current = null;
@@ -110,7 +117,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     };
   }, [conversationId, scrollDown]);
 
-  const { send, streaming, replyComplete, streamingText } = useChatStream(agentId, {
+  const { send, stop, streaming, replyComplete, streamingText } = useChatStream(agentId, {
     onStart: (cid) => {
       liveConversation.current = cid;
       setConversationId(cid);
@@ -138,13 +145,50 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       refetchConvos();
       if (followReply.current) scrollDown(false);
     },
-    onMemory: ({ candidates, newlyOnboarded, error }) => {
+    onMemory: ({
+      conversationId: memoryFor,
+      candidates,
+      goalChanges,
+      handoffs,
+      followups,
+      followupsClosed,
+      checkins,
+      plans,
+      planProgress,
+      allowance,
+      newlyOnboarded,
+      error,
+    }) => {
+      // Memory results arrive after the reply; by then the person may have moved
+      // to another conversation. Those notes belong to the one they came from.
+      if (memoryFor && memoryFor !== shownConversation.current) return;
       if (error) {
         setErr(error);
         setAnnouncement(error);
       }
       const stored = candidates.filter((c) => c.stored);
       if (stored.length) setSavedFacts(stored);
+      const notes = [
+        ...goalChanges.filter((g) => g.applied).map((g) => `Goal “${g.title}”: ${g.reason}.`),
+        ...handoffs.filter((h) => h.stored).map((h) => `Note left for ${h.agent_name}.`),
+        // Say so when something asked for did not happen, and why.
+        ...goalChanges.filter((g) => !g.applied).map((g) => `Goal “${g.title}” not changed: ${g.reason}.`),
+        ...handoffs.filter((h) => !h.stored).map((h) => `No note left for ${h.agent_name}: ${h.reason}.`),
+        ...followupsClosed.map((f) => `Closed follow-up: ${f.title}.`),
+        ...plans.map((p) => `Plan saved: “${p.title}” (${p.steps} steps).`),
+        ...planProgress.map((p) => `Ticked off: ${p.text}.`),
+        ...followups.filter((f) => f.stored).map((f) => `Follow-up added: ${f.title} (${f.due_on}).`),
+        ...checkins.filter((c) => c.stored).map((c) => `Logged: ${c.text}.`),
+        // Say so before the day's allowance runs out, not after.
+        ...(allowance && allowance.messages_left <= 3
+          ? [
+              allowance.messages_left === 0
+                ? "You’ve used today’s AI allowance; it resets at midnight UTC."
+                : `About ${allowance.messages_left} message${allowance.messages_left === 1 ? "" : "s"} left today.`,
+            ]
+          : []),
+      ];
+      if (notes.length) setTeamNotes(notes);
       if (newlyOnboarded) setJustOnboarded(true);
     },
     onError: (m, unfinishedIn) => {
@@ -170,6 +214,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       setErr(null);
       setAnnouncement("");
       setSavedFacts([]);
+      setTeamNotes([]);
       setInput("");
       setMessages((prev) => [
         ...prev,
@@ -188,6 +233,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     setErr(null);
     setAnnouncement("");
     setSavedFacts([]);
+    setTeamNotes([]);
     await send(null, conversationId, true);
   }, [streaming, send, conversationId]);
 
@@ -213,6 +259,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       setConversationId(c.id);
       setMessages([]);
       setSavedFacts([]);
+      setTeamNotes([]);
       setHistoryOpen(false);
       refetchConvos();
     } catch {
@@ -376,19 +423,25 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       {/* ---------- composer ---------- */}
       <div className="workspace-composer shrink-0 border-t-2 border-ink bg-paper px-4 pb-[calc(70px+env(safe-area-inset-bottom))] pt-3 sm:px-7 md:pb-4">
         <div className="mx-auto w-full max-w-read">
-          {savedFacts.length > 0 && (
+          {(savedFacts.length > 0 || teamNotes.length > 0) && (
             <div className="anim-in mb-2.5 flex items-start gap-2 border-2 border-ink bg-sun px-3 py-2 text-[13px] font-semibold text-ink">
               <Icon name="check" size={16} className="mt-px shrink-0" />
               <span>
-                Saved to your context:{" "}
-                {savedFacts.map((f, i) => (
-                  <span key={i}>
-                    {i > 0 && "; "}
-                    {f.value}
-                    {f.scope === "agent" ? ` (${shortName} only)` : ""}
-                  </span>
-                ))}
-                .{" "}
+                {savedFacts.length > 0 && (
+                  <>
+                    Saved to your context:{" "}
+                    {savedFacts.map((f, i) => (
+                      <span key={i}>
+                        {i > 0 && "; "}
+                        {f.value}
+                        {f.previous_value ? ` (was ${f.previous_value})` : ""}
+                        {f.scope === "agent" ? ` (${shortName} only)` : ""}
+                      </span>
+                    ))}
+                    .{" "}
+                  </>
+                )}
+                {teamNotes.length > 0 && `${teamNotes.join(" ")} `}
                 <Link href="/memory" className="underline decoration-2 underline-offset-2">
                   Manage
                 </Link>
@@ -464,7 +517,12 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                   <li key={c.id} className="flex items-stretch gap-2">
                     <button
                       onClick={() => {
+                        // A reply still streaming belongs to the conversation it
+                        // started in; stop it rather than let it land in this one.
+                        if (streaming) stop();
                         liveConversation.current = null;
+                        setSavedFacts([]);
+                        setTeamNotes([]);
                         setConversationId(c.id);
                         setHistoryOpen(false);
                       }}
@@ -484,7 +542,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                       try {
                         await apiFetch(`/conversations/${c.id}`, {method:"DELETE"});
                         await refetchConvos();
-                        if (conversationId === c.id) { liveConversation.current = null; setConversationId(null); setMessages([]); setSavedFacts([]); }
+                        if (conversationId === c.id) { liveConversation.current = null; setConversationId(null); setMessages([]); setSavedFacts([]); setTeamNotes([]); }
                       } catch (e) { setHistoryError(e instanceof Error ? e.message : "Could not delete the conversation."); }
                       finally { setDeletingId(null); }
                     }}><Icon name="trash" size={18}/></button>

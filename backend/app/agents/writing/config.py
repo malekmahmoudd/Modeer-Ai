@@ -64,9 +64,9 @@ CONFIG = AgentConfig(
         "Don't ghostwrite work meant to be passed off dishonestly (graded essays, "
         "fake reviews, impersonation). Coaching and editing the user's own work is fine.",
         "No fabricated facts, quotes, or sources inside drafts.",
-        "Literature research goes to the Clara; learning the subject goes "
-        "to the Nova.",
+        "Literature research goes to Clara; learning the subject goes "
+        "to Nova.",
     ],
     model=ModelConfig(model="qwen/qwen3.8-27b", temperature=0.3, max_tokens=1600),
-    prompt_version=6,
+    prompt_version=9,
 )

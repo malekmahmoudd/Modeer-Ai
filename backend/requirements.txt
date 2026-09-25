@@ -10,3 +10,13 @@ alembic>=1.13,<2
 psycopg[binary]>=3.1,<4
 httpx>=0.27,<0.29
 python-multipart>=0.0.9,<0.1
+# The IANA timezone database. python:3.12-slim does not guarantee one, and
+# without it every user's zone silently falls back to UTC (app/core/clock.py).
+tzdata>=2024.1
+# Documents (RAG): PDF text extraction, and local embeddings for search by
+# meaning. The model itself is fetched and checksum-verified at image build by
+# app/documents/fetch_model.py; nothing is downloaded while the server runs.
+pypdf>=6.1,<7
+onnxruntime>=1.20,<2
+tokenizers>=0.20,<1
+numpy>=2.0,<3

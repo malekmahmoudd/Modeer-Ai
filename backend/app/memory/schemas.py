@@ -57,6 +57,10 @@ class SharedMemoryRead(MemoryBase):
     id: str
     scope: str
     pinned: bool
+    #: Earlier values an automatic update replaced, newest last.
+    history: list[dict] | None = None
+    #: The message it was learned from; None when saved by hand.
+    source_message_id: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -87,6 +91,8 @@ class AgentMemoryRead(MemoryBase):
     id: str
     scope: str
     agent_id: str
+    history: list[dict] | None = None
+    source_message_id: str | None = None
     created_at: datetime
     updated_at: datetime
 

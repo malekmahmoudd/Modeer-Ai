@@ -13,6 +13,9 @@ os.environ["MEMORY_MIN_CONFIDENCE"] = "0.55"
 # Ask My Team ships switched off, but its implementation is kept and must stay
 # tested. The disabled default has its own explicit test in test_release_config.py.
 os.environ["TEAM_ENABLED"] = "true"
+# Keyword search only by default, so results do not depend on whether the model
+# was downloaded on this machine. Tests that need vectors supply a fake embedder.
+os.environ["EMBEDDING_MODEL_DIR"] = ""
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -27,6 +30,12 @@ from app.users.service import get_or_create_demo_user  # noqa: E402
 _WIPE_TABLES = [
     "recovery_codes",
     "usage_buckets",
+    "document_chunks",
+    "documents",
+    "plan_steps",
+    "plans",
+    "checkins",
+    "followups",
     "briefings",
     "goals",
     "agent_memories",

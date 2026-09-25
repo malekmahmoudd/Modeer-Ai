@@ -13,6 +13,7 @@ from app.agents.runtime import AgentRuntime
 from app.conversations import service as convo_service
 from app.conversations.schemas import ChatRequest
 from app.core.auth import session_epoch_matches
+from app.core.clock import valid_zone
 from app.core.config import settings
 from app.core.usage import account_scope, limited_caller
 from app.db.session import SessionLocal
@@ -24,6 +25,17 @@ CallerId = Annotated[str | None, Depends(limited_caller)]
 
 
 def _resolve_user(db, x_user_id: str | None, request: Request | None = None):
+    user = _find_user(db, x_user_id, request)
+    if request is not None:
+        # The browser reports its IANA zone with each message, so the agents
+        # know what day it is for this person. Saved only when it changes.
+        reported = valid_zone(request.headers.get("x-timezone"))
+        if reported and reported != user.timezone:
+            user.timezone = reported
+    return user
+
+
+def _find_user(db, x_user_id: str | None, request: Request | None):
     if x_user_id:
         user = get_by_id(db, x_user_id)
         if user is None:
@@ -132,6 +144,8 @@ async def chat_sync(
             "notice": "",
             "context": {},
             "memory_candidates": [],
+            "goal_changes": [],
+            "handoffs": [],
             "conversation_id": convo.id,
             "context_used": False,
             "newly_onboarded": False,
@@ -149,9 +163,10 @@ async def chat_sync(
                     message_id=event.data["message_id"],
                 )
             elif event.type == "memory":
+                # Everything the memory event reports: facts, goal changes,
+                # handoffs, follow-ups, check-ins, plans, the allowance.
                 collected.update(
-                    memory_candidates=event.data["memory_candidates"],
-                    newly_onboarded=event.data.get("newly_onboarded", False),
+                    {k: v for k, v in event.data.items() if k not in ("conversation_id", "error")}
                 )
             elif event.type == "error":
                 raise HTTPException(

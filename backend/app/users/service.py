@@ -17,9 +17,13 @@ from sqlalchemy.orm import Session
 from app.db.models import (
     AgentMemory,
     Briefing,
+    CheckIn,
     Conversation,
+    Document,
+    FollowUp,
     Goal,
     Message,
+    Plan,
     SharedMemory,
     UsageBucket,
     User,
@@ -98,6 +102,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
             "onboarded": user.onboarded,
             "profile": user.profile or {},
             "memory_auto": user.memory_auto,
+            "timezone": user.timezone,
             # How the account signs in — never the password or code hashes.
             "signs_in_with": "password" if user.password_hash else "access key",
             "created_at": when(user.created_at),
@@ -108,6 +113,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "agent_id": c.agent_id,
                 "title": c.title,
                 "last_message_at": when(c.last_message_at),
+                "summary": c.summary,
                 "created_at": when(c.created_at),
                 "messages": [
                     {
@@ -131,6 +137,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "source": m.source,
                 "sensitive": m.sensitive,
                 "pinned": m.pinned,
+                "history": m.history or [],
                 "created_at": when(m.created_at),
             }
             for m in db.scalars(select(SharedMemory).where(SharedMemory.user_id == user.id))
@@ -145,6 +152,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "confidence": m.confidence,
                 "source": m.source,
                 "sensitive": m.sensitive,
+                "history": m.history or [],
                 "created_at": when(m.created_at),
             }
             for m in db.scalars(select(AgentMemory).where(AgentMemory.user_id == user.id))
@@ -170,6 +178,63 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "created_at": when(b.created_at),
             }
             for b in db.scalars(select(Briefing).where(Briefing.user_id == user.id))
+        ],
+        "followups": [
+            {
+                "id": f.id,
+                "agent_id": f.agent_id,
+                "title": f.title,
+                "due_on": f.due_on.isoformat(),
+                "status": f.status,
+                "created_at": when(f.created_at),
+            }
+            for f in db.scalars(select(FollowUp).where(FollowUp.user_id == user.id))
+        ],
+        "plans": [
+            {
+                "id": p.id,
+                "agent_id": p.agent_id,
+                "title": p.title,
+                "status": p.status,
+                "starts_on": p.starts_on.isoformat(),
+                "steps": [
+                    {
+                        "text": step.text,
+                        "due_on": step.due_on.isoformat() if step.due_on else None,
+                        "done_at": when(step.done_at),
+                    }
+                    for step in p.steps
+                ],
+                "created_at": when(p.created_at),
+            }
+            for p in db.scalars(select(Plan).where(Plan.user_id == user.id))
+        ],
+        "documents": [
+            {
+                "id": d.id,
+                "agent_id": d.agent_id,
+                "shared": d.shared,
+                "filename": d.filename,
+                "kind": d.kind,
+                "status": d.status,
+                "created_at": when(d.created_at),
+                # The file itself is not kept; this is everything that is.
+                "text": [
+                    {"page": c.page, "heading": c.heading, "text": c.text} for c in d.chunks
+                ],
+            }
+            for d in db.scalars(select(Document).where(Document.user_id == user.id))
+        ],
+        "checkins": [
+            {
+                "id": c.id,
+                "agent_id": c.agent_id,
+                "text": c.text,
+                "amount": c.amount,
+                "unit": c.unit,
+                "logged_on": c.logged_on.isoformat(),
+            }
+            for c in db.scalars(select(CheckIn).where(CheckIn.user_id == user.id))
         ],
     }
 

@@ -104,7 +104,7 @@ def test_failed_provider_keeps_charge():
 
     asyncio.run(run())
     with SessionLocal() as db:
-        assert db.scalar(select(UsageBucket.amount).where(UsageBucket.account == "alice")) == 361
+        assert db.scalar(select(UsageBucket.amount).where(UsageBucket.account == "alice")) == 118
 
 
 def _run_budgeted(inner, account="bob"):
@@ -159,7 +159,7 @@ def test_a_reply_that_produced_text_stays_charged_even_if_cut_short():
 
     (got, error), charged = _run_budgeted(CutShort(), account="carol")
     assert got == ["Half an answer"] and isinstance(error, StreamEnded)
-    assert charged == 361, "tokens were spent on text the person received"
+    assert charged == 118, "tokens were spent on text the person received"
 
 
 def test_the_account_allowance_is_still_enforced_after_refunds(monkeypatch):
@@ -195,11 +195,12 @@ def test_memory_extraction_is_charged(client, monkeypatch):
     response = client.post("/api/agents/study/chat", json={"message": "I live in Cairo."})
     assert response.status_code == 200
     assert len(calls) == 2
+    from app.core.usage import estimate_tokens
+
     expected = sum(
-        len(c["system"].encode())
-        + sum(len(m.content.encode()) + 32 for m in c["messages"])
-        + c["max_tokens"]
-        + 256
+        estimate_tokens(
+            system=c["system"], messages=c["messages"], model=c["model"], max_tokens=c["max_tokens"]
+        )
         for c in calls
     )
     with SessionLocal() as db:
@@ -211,3 +212,44 @@ def test_team_daily_limit(client, monkeypatch):
     response = client.post("/api/team/ask", json={"question": "hello", "agent_ids": ["study"]})
     assert response.status_code == 429
     assert "daily AI allowance" in response.text
+
+
+def test_the_charge_is_trued_up_to_what_the_provider_reports():
+    """The up-front estimate is deliberately high; real usage replaces it."""
+    from app.llm.openai_compat_provider import usage_sink
+
+    class Reports:
+        name = "reports"
+
+        async def stream_chat(self, **kwargs):
+            yield "An answer"
+            usage_sink.get()["total_tokens"] = 40
+
+    (got, error), charged = _run_budgeted(Reports(), account="erin")
+    assert got == ["An answer"] and error is None
+    assert charged == 40
+
+
+def test_reported_usage_above_the_estimate_is_not_refunded():
+    from app.llm.openai_compat_provider import usage_sink
+
+    class Overruns:
+        name = "overruns"
+
+        async def stream_chat(self, **kwargs):
+            yield "An answer"
+            usage_sink.get()["total_tokens"] = 10_000
+
+    (_, _), charged = _run_budgeted(Overruns(), account="frank")
+    assert charged == 118
+
+
+def test_gpt_oss_estimate_includes_the_reasoning_allowance():
+    from app.core.usage import estimate_tokens
+
+    plain = estimate_tokens(system="x" * 300, messages=[], model="test", max_tokens=100)
+    oss = estimate_tokens(
+        system="x" * 300, messages=[], model="openai/gpt-oss-120b", max_tokens=100
+    )
+    assert plain == 100 + 16 + 100
+    assert oss == plain + 512

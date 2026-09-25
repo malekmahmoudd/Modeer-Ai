@@ -40,7 +40,9 @@ inspiration is about awareness and usefulness, not impersonation.
 Tools, browser access, Gmail/calendar access, payments, booking, purchasing,
 autonomous actions, MCP, a marketplace, a developer SDK, microservices,
 Kubernetes, agent frameworks (LangChain / LangGraph / CrewAI / AutoGen), and
-vector databases.
+vector databases. (Since 2026-09-25, agents can read documents the user uploads
+— see `docs/rag.md`. It uses a local embedding model and plain database tables,
+not a vector database.)
 
 ## Priorities
 

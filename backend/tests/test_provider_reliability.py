@@ -275,3 +275,23 @@ def test_complete_does_not_pass_off_an_interrupted_reply_as_whole(monkeypatch):
 
     with pytest.raises(StreamEnded):
         asyncio.run(go())
+
+
+def test_reported_usage_reaches_the_budget_and_is_requested(monkeypatch):
+    from app.llm.openai_compat_provider import usage_sink
+
+    body = (
+        'data: {"choices":[{"delta":{"content":"Hi"},"finish_reason":"stop"}]}\n\n'
+        'data: {"choices":[],"usage":{"total_tokens":321}}\n\n'
+        "data: [DONE]\n\n"
+    )
+    call, captured = run(monkeypatch, httpx.Response(200, text=body))
+    sink: dict = {}
+
+    async def collect():
+        usage_sink.set(sink)
+        return await call()
+
+    assert asyncio.run(collect()) == "Hi"
+    assert captured["stream_options"] == {"include_usage": True}
+    assert sink == {"total_tokens": 321}

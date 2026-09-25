@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.agents.registry import get_agent
 from app.api.deps import CurrentUser, DbSession
+from app.db.models import AgentMemory, Conversation, Message, SharedMemory
 from app.memory import service
 from app.memory.schemas import (
     AgentMemoryCreate,
@@ -26,6 +28,7 @@ TAKEN = "You already have a fact with that label. Edit that one, or pick another
 
 # --- shared ---------------------------------------------------------------
 
+
 @router.get("/shared", response_model=list[SharedMemoryRead])
 def list_shared(user: CurrentUser, db: DbSession):
     return service.list_shared(db, user.id)
@@ -40,9 +43,7 @@ def create_shared(data: SharedMemoryCreate, user: CurrentUser, db: DbSession):
 
 
 @router.patch("/shared/{memory_id}", response_model=SharedMemoryRead)
-def update_shared(
-    memory_id: str, data: SharedMemoryUpdate, user: CurrentUser, db: DbSession
-):
+def update_shared(memory_id: str, data: SharedMemoryUpdate, user: CurrentUser, db: DbSession):
     try:
         row = service.update_shared(db, user.id, memory_id, data)
     except IntegrityError as exc:
@@ -61,6 +62,7 @@ def delete_shared(memory_id: str, user: CurrentUser, db: DbSession):
 
 # --- agent -------------------------------------------------------------
 
+
 @router.get("/agent/{agent_id}", response_model=list[AgentMemoryRead])
 def list_agent(agent_id: str, user: CurrentUser, db: DbSession):
     if get_agent(agent_id) is None:
@@ -77,9 +79,7 @@ def create_agent_memory(data: AgentMemoryCreate, user: CurrentUser, db: DbSessio
 
 
 @router.patch("/agent/{memory_id}", response_model=AgentMemoryRead)
-def update_agent_memory(
-    memory_id: str, data: AgentMemoryUpdate, user: CurrentUser, db: DbSession
-):
+def update_agent_memory(memory_id: str, data: AgentMemoryUpdate, user: CurrentUser, db: DbSession):
     try:
         row = service.update_agent(db, user.id, memory_id, data)
     except IntegrityError as exc:
@@ -94,3 +94,55 @@ def update_agent_memory(
 def delete_agent_memory(memory_id: str, user: CurrentUser, db: DbSession):
     if not service.delete_agent(db, user.id, memory_id):
         raise HTTPException(status_code=404, detail="Memory not found")
+
+
+# --- where a fact came from, and undoing an automatic update -------------------------
+
+
+def _row(db, user_id: str, scope: str, memory_id: str):
+    model = {"shared": SharedMemory, "agent": AgentMemory}.get(scope)
+    if model is None:
+        raise HTTPException(status_code=404, detail="Unknown memory layer")
+    row = db.scalar(select(model).where(model.id == memory_id, model.user_id == user_id))
+    if row is None:
+        raise HTTPException(status_code=404, detail="Memory not found")
+    return row
+
+
+@router.get("/{scope}/{memory_id}/source")
+def memory_source(scope: str, memory_id: str, user: CurrentUser, db: DbSession) -> dict:
+    """Why the team knows this: the message it was learned from, and its history."""
+    row = _row(db, user.id, scope, memory_id)
+    origin = None
+    if row.source_message_id:
+        found = db.execute(
+            select(Message, Conversation)
+            .join(Conversation, Message.conversation_id == Conversation.id)
+            .where(Message.id == row.source_message_id, Conversation.user_id == user.id)
+        ).first()
+        if found is not None:
+            message, conversation = found
+            origin = {
+                "message_id": message.id,
+                "conversation_id": conversation.id,
+                "agent_id": conversation.agent_id,
+                "said_at": message.created_at.isoformat() if message.created_at else None,
+                "excerpt": message.content[:300],
+            }
+    return {
+        "id": row.id,
+        "source": row.source,
+        "saved_by_you": row.source == service.USER_SOURCE,
+        "learned_from": origin,
+        "history": row.history or [],
+    }
+
+
+@router.post("/{scope}/{memory_id}/undo")
+def undo_memory_update(scope: str, memory_id: str, user: CurrentUser, db: DbSession) -> dict:
+    """Put back the value the last automatic update replaced."""
+    row = _row(db, user.id, scope, memory_id)
+    if not service.undo_last_update(row):
+        raise HTTPException(status_code=409, detail="There is no earlier value to go back to.")
+    db.flush()
+    return {"id": row.id, "value": row.value, "history": row.history or []}

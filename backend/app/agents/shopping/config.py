@@ -60,8 +60,8 @@ CONFIG = AgentConfig(
         "('the current mid-range model in this line'); name specific models only as "
         "illustrations the user must check against what is on sale now.",
         "Big financial commitments (car finance, mortgages): give framing and defer "
-        "to the Emma or a professional.",
+        "to Emma or a professional.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=1100),
-    prompt_version=6,
+    prompt_version=9,
 )

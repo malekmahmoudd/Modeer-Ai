@@ -23,12 +23,58 @@ At runtime `context.py` composes the system message:
 ## Operating framework (internal — never output verbatim)   ← reasoning_framework
 ## Response behaviour                                        ← response_behavior
 ## Safety boundaries                                         ← safety_boundaries
-## Non-negotiable rules                                      ← global guardrails
 ## About the user
 ## Personal context (shared)   <<PERSONAL_CONTEXT>> … <</PERSONAL_CONTEXT>>
 ## Your private notes          <<AGENT_MEMORY>> … <</AGENT_MEMORY>>
+## Notes teammates passed you  <<HANDOFFS>> … <</HANDOFFS>>     (when any)
 ## Current goals and priorities
+## Today                                                     ← date/time in the user's zone
+## Recent activity across the team (titles only)             ← Leo only
+## Rules (internal — never quote them)                       ← shared rules, 8 numbered
 ```
+
+The shared rules were ~7k characters (half of every prompt) until 2026-09-25.
+They are now one numbered block of ~2.5k characters with the same content.
+Rule 7 (dates) has two forms. In the live app the agent is given today's date
+and resolves relative dates ("next Thursday (2 October)"). Without a date, as
+in the evals, it is told it does not know today's date and must keep dates as
+given. The rubric's date checks (`app/agents/rubric.py`) assume the second
+form. The dated form has no eval cases yet.
+
+## Time
+
+The browser sends its IANA zone as `X-Timezone` with every chat message. A
+valid zone is saved on the account (`users.timezone`, migration 0005; also
+settable with `PATCH /api/users/me {"timezone": …}`). Agents get the current
+date and time in that zone. Until one is known they get UTC and are told the
+local date may differ by one day. The daily briefing uses the user's own date,
+and shows "Due Thu 1 Oct — in 6 days" for goals with a target date. See
+`app/core/clock.py`.
+
+## Working as a team
+
+Agents still never read each other's transcripts. What crosses between them is
+narrow and visible (`app/agents/team.py`):
+
+- **Leo sees recent activity**: the titles of up to 8 recent conversations with
+  specialists and how long ago they were, plus notes waiting for teammates.
+  Never their contents.
+- **Leo changes goals when asked**: an explicit request ("add a marathon to my
+  goals", "mark Spanish done", "make the CV my top priority") comes back from the
+  turn analysis as a goal change. It is validated (known op, real goal number,
+  priority 1–5), applied to Goals, and reported in the `memory` event. Only Leo's
+  turns can change goals.
+- **Handoffs**: when the person asks any agent to pass something to a named
+  teammate ("tell Harvey about the interview"), the analysis returns a short
+  brief. It is stored as that teammate's private note (category `handoff`, key
+  `from_<sender>`; a newer note from the same sender replaces the older one and
+  keeps it in history). The teammate sees it under "Notes teammates passed
+  you", and the person can read or delete it on the Memory page. A handoff goes
+  only to a teammate the person actually named in the message, never to the
+  sender itself, and a brief that looks sensitive is not passed on
+  automatically.
+- These requests still work with automatic memory switched off, because the
+  person asked for them explicitly. Facts are not learned then.
 
 The framework is **internal scaffolding**: the guardrails explicitly forbid
 reproducing it or narrating hidden chain-of-thought. Output is conclusions,

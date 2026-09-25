@@ -23,8 +23,29 @@ class Settings(BaseSettings):
     llm_reasoning_effort: str = "low"
     account_requests_per_minute: int = Field(default=6, ge=1)
     account_daily_token_budget: int = Field(default=60000, ge=1)
-    # Conservative UTF-8 input units plus maximum output tokens, UTC day.
+    # Tokens per account per UTC day: charged up front from a high estimate,
+    # then trued up to what the provider reports. See app/core/usage.py.
     memory_timeout_seconds: float = Field(default=8, ge=1, le=30)
+
+    # --- Documents (RAG) ---
+    #: Upload files to an agent and have it answer from them. See docs/rag.md.
+    documents_enabled: bool = True
+    documents_per_user: int = Field(default=5, ge=0, le=50)
+    document_max_bytes: int = Field(default=10 * 1024 * 1024, ge=1024)
+    #: Most text kept from one document, after extraction.
+    document_max_chars: int = Field(default=400_000, ge=1000)
+    #: Characters of retrieved text added to a turn (~4 chars a token).
+    rag_context_chars: int = Field(default=4000, ge=500, le=20000)
+    #: Where the ONNX embedding model lives. Empty or missing = keyword search only.
+    embedding_model_dir: str = Field(default="models/multilingual-e5-small")
+    #: Relevance gate for multilingual-e5 cosine similarity: a top score this high
+    #: counts on its own; one above the soft level counts when it beats the
+    #: median of the person's passages by the margin. Calibrated on the eval set.
+    rag_min_similarity: float = Field(default=0.84, ge=0.0, le=1.0)
+    rag_soft_similarity: float = Field(default=0.79, ge=0.0, le=1.0)
+    rag_similarity_margin: float = Field(default=0.05, ge=0.0, le=1.0)
+    #: Seconds a document may take to parse in its sandboxed subprocess.
+    document_parse_seconds: float = Field(default=30, ge=1, le=300)
 
     # --- Features ---
     #: Ask My Team (POST /api/team/ask). Off for the initial release: no screen
@@ -102,6 +123,10 @@ class Settings(BaseSettings):
     # "auto" -> LLM extraction when a real provider is configured, else rules.
     # Force with "llm" or "rules".
     memory_extraction: str = Field(default="auto")
+    #: Model for the per-message memory call. Empty uses the agent's own model.
+    #: A smaller one is cheaper, and on Groq's free tier a different model also
+    #: draws on its own daily token limit rather than the chat model's.
+    memory_model: str = Field(default="")
 
     @property
     def use_llm_extraction(self) -> bool:

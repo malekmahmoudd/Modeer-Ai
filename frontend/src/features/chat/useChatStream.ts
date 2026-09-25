@@ -3,7 +3,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { API_BASE } from "@/lib/api";
-import type { ChatStreamEvent, Completion, ContextDiagnostics, MemoryCandidate } from "@/types";
+import type {
+  Allowance,
+  ChatStreamEvent,
+  Completion,
+  ContextDiagnostics,
+  GoalChangeNote,
+  HandoffNote,
+  MemoryCandidate,
+  TrackedNote,
+} from "@/types";
+
+/** The browser's IANA timezone, so agents know what day it is for this person. */
+function browserTimeZone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
 
 interface Options {
   onStart?: (conversationId: string, context: ContextDiagnostics) => void;
@@ -17,7 +35,16 @@ interface Options {
     notice: string;
   }) => void;
   onMemory?: (info: {
+    conversationId: string;
     candidates: MemoryCandidate[];
+    goalChanges: GoalChangeNote[];
+    handoffs: HandoffNote[];
+    followups: TrackedNote[];
+    followupsClosed: { id: string; title: string; outcome: string | null }[];
+    checkins: TrackedNote[];
+    plans: TrackedNote[];
+    planProgress: TrackedNote[];
+    allowance: Allowance | null;
     newlyOnboarded: boolean;
     error?: string;
   }) => void;
@@ -32,8 +59,17 @@ export function useChatStream(agentId: string, opts: Options = {}) {
   const [text, setText] = useState("");
   const [replyComplete, setReplyComplete] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  // Streams whose reply has ended but whose memory results are still arriving.
+  // The composer is free again; these finish (or time out) in the background.
+  const trailingRef = useRef<Set<AbortController>>(new Set());
 
-  useEffect(() => () => abortRef.current?.abort(), [agentId]);
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      trailingRef.current.forEach((c) => c.abort());
+    },
+    [agentId],
+  );
 
   /** Send a message, or with `retry` regenerate the latest unfinished reply. */
   const send = useCallback(
@@ -45,7 +81,7 @@ export function useChatStream(agentId: string, opts: Options = {}) {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const timeout = setTimeout(() => controller.abort("timeout"), 50000);
+      let timeout = setTimeout(() => controller.abort("timeout"), 50000);
       let ended = false;
       let acc = "";
       let context: ContextDiagnostics | null = null;
@@ -55,7 +91,10 @@ export function useChatStream(agentId: string, opts: Options = {}) {
       try {
         const res = await fetch(`${API_BASE}/agents/${agentId}/chat/stream`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(browserTimeZone() ? { "X-Timezone": browserTimeZone() as string } : {}),
+          },
           body: JSON.stringify(
             retry ? { conversation_id: conversationId, retry: true } : { message, conversation_id: conversationId },
           ),
@@ -99,6 +138,14 @@ export function useChatStream(agentId: string, opts: Options = {}) {
             } else if (evt.type === "end") {
               if (ended) continue;
               ended = true;
+              // The reply is saved and shown: free the composer now. Memory work
+              // (what to remember, follow-ups, plans) is reported on this same
+              // stream a few seconds later, and gets its own, shorter clock.
+              clearTimeout(timeout);
+              timeout = setTimeout(() => controller.abort("timeout"), 30000);
+              trailingRef.current.add(controller);
+              abortRef.current = null;
+              setStreaming(false);
               setReplyComplete(true);
               convId = evt.conversation_id;
               opts.onEnd?.({
@@ -111,7 +158,16 @@ export function useChatStream(agentId: string, opts: Options = {}) {
               });
             } else if (evt.type === "memory") {
               opts.onMemory?.({
+                conversationId: evt.conversation_id,
                 candidates: evt.memory_candidates,
+                goalChanges: evt.goal_changes ?? [],
+                handoffs: evt.handoffs ?? [],
+                followups: evt.followups ?? [],
+                followupsClosed: evt.followups_closed ?? [],
+                checkins: evt.checkins ?? [],
+                plans: evt.plans ?? [],
+                planProgress: evt.plan_progress ?? [],
+                allowance: evt.allowance ?? null,
                 newlyOnboarded: evt.newly_onboarded,
                 error: evt.error,
               });
@@ -132,9 +188,13 @@ export function useChatStream(agentId: string, opts: Options = {}) {
         }
       } finally {
         clearTimeout(timeout);
-        setReplyComplete(true);
-        setStreaming(false);
-        abortRef.current = null;
+        trailingRef.current.delete(controller);
+        // A newer message may already be streaming; only reset what is ours.
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+          setReplyComplete(true);
+          setStreaming(false);
+        }
       }
     },
     [agentId, opts],
