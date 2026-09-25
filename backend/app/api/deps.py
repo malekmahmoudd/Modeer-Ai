@@ -37,8 +37,18 @@ def get_current_user(
         # A cookie from a generation the account has since revoked is spent.
         if not session_epoch_matches(request, user):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Please sign in")
+        refuse_if_suspended(user)
         return user
     return get_or_create_demo_user(db)
+
+
+SUSPENDED = "This account is suspended. Contact whoever runs this service."
+
+
+def refuse_if_suspended(user: User) -> None:
+    """An operator stopped this account: nothing it asks for is served."""
+    if getattr(user, "suspended_at", None) is not None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=SUSPENDED)
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

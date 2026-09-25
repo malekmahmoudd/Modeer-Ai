@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.agents.registry import get_agent, require_agent
 from app.agents.runtime import AgentRuntime
+from app.api.deps import refuse_if_suspended
 from app.core.auth import session_epoch_matches
 from app.core.config import settings
 from app.core.usage import BudgetExceeded, limited_caller
@@ -76,6 +77,7 @@ async def ask_team(
             raise HTTPException(status_code=401, detail="Please sign in")
         if user is None:
             raise HTTPException(status_code=404, detail="Unknown user")
+        refuse_if_suspended(user)
         db.commit()
 
         runtime = AgentRuntime()

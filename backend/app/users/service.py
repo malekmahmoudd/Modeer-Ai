@@ -185,6 +185,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "agent_id": f.agent_id,
                 "title": f.title,
                 "due_on": f.due_on.isoformat(),
+                "ends_on": f.ends_on.isoformat() if f.ends_on else None,
                 "status": f.status,
                 "created_at": when(f.created_at),
             }
@@ -219,9 +220,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "status": d.status,
                 "created_at": when(d.created_at),
                 # The file itself is not kept; this is everything that is.
-                "text": [
-                    {"page": c.page, "heading": c.heading, "text": c.text} for c in d.chunks
-                ],
+                "text": [{"page": c.page, "heading": c.heading, "text": c.text} for c in d.chunks],
             }
             for d in db.scalars(select(Document).where(Document.user_id == user.id))
         ],
@@ -232,6 +231,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "text": c.text,
                 "amount": c.amount,
                 "unit": c.unit,
+                "details": c.details,
                 "logged_on": c.logged_on.isoformat(),
             }
             for c in db.scalars(select(CheckIn).where(CheckIn.user_id == user.id))

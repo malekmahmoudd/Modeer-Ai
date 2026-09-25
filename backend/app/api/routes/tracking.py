@@ -33,12 +33,14 @@ router = APIRouter(tags=["tracking"])
 class FollowUpCreate(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     due_on: date
+    ends_on: date | None = None
     agent_id: str = "modeer"
 
 
 class FollowUpUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=2, max_length=200)
     due_on: date | None = None
+    ends_on: date | None = None
     status: str | None = Field(default=None, pattern="^(pending|done|dismissed)$")
 
 
@@ -65,6 +67,7 @@ def _followup(row) -> dict:
         "agent_id": row.agent_id,
         "title": row.title,
         "due_on": row.due_on.isoformat(),
+        "ends_on": row.ends_on.isoformat() if row.ends_on else None,
         "status": row.status,
         "asked_at": row.asked_at.isoformat() if row.asked_at else None,
         "source_message_id": row.source_message_id,
@@ -101,6 +104,7 @@ def _checkin(row) -> dict:
         "text": row.text,
         "amount": row.amount,
         "unit": row.unit,
+        "details": row.details,
         "logged_on": row.logged_on.isoformat(),
     }
 
@@ -132,8 +136,15 @@ def list_followups(user: CurrentUser, db: DbSession, status: str | None = None):
 @router.post("/followups", status_code=201)
 def create_followup(data: FollowUpCreate, user: CurrentUser, db: DbSession):
     _known_agent(data.agent_id)
+    if data.ends_on and data.ends_on < data.due_on:
+        raise HTTPException(status_code=422, detail="The end date is before the start date.")
     row, _ = service.add_followup(
-        db, user.id, agent_id=data.agent_id, title=data.title.strip(), due_on=data.due_on
+        db,
+        user.id,
+        agent_id=data.agent_id,
+        title=data.title.strip(),
+        due_on=data.due_on,
+        ends_on=data.ends_on,
     )
     return _followup(row)
 

@@ -77,3 +77,35 @@ A 50-expert review found these in the first version. All are fixed and tested
   - "Shift my plan" moves the remaining steps so the next one is today.
   - Missed steps read "not ticked yet", not "overdue".
 - **.ics:** carriage returns are escaped and lines are folded at 75 octets.
+
+## Trips, logs, handoffs and the week (2026-09-25, last batch)
+
+Migration **0008** adds `followups.ends_on`, `checkins.details`,
+`agent_memories.seen_at` and `users.suspended_at`. All of it is in the export.
+Tests: `backend/tests/test_team_extras.py`.
+
+- **Trips have an end date.** The analysis may return `end_date` with an event
+  (after the start, at most 90 days later). A trip in progress reads
+  "happening now", and Tessa asks how it went only after the last day. The
+  Plans page shows "Thu 10 Nov → Mon 14 Nov". The API takes `ends_on` and
+  rejects an end before the start.
+- **Structured check-ins.** A check-in may carry `details`, each field checked
+  against bounds in code:
+  - for a workout: exercise, sets, reps, load and unit, RPE, distance, duration
+  - for money: currency (a three-letter code) and direction (`out`/`in`)
+  Maddie gets a "Progression from their logs" section: per exercise, the last
+  session and the best load over 12 weeks.
+- **Money adds up in code.** The weekly review sums spending (`direction` out)
+  per currency; the model is told the totals are exact. Emma is told to show
+  arithmetic inline and check it.
+- **Leo's weekly review.** When the message asks about the week (English or
+  Arabic), or on Mondays, Leo gets the past week and the next, spending, and
+  goals quiet for 14 days or more. He answers in three parts: what moved,
+  what's next, one quiet goal.
+- **Handoff notes are picked up and expire.** A note is marked seen when its
+  teammate first replies with it in context; others see "picked up" or "not
+  yet seen". Seen notes go after 14 days, unseen ones after 30.
+- **Memory ranking.** Past the memory ceiling, facts are ordered pinned first,
+  then by word overlap with the message, then by recency, so the relevant old
+  fact isn't the one cut.
+

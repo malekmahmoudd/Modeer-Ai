@@ -116,7 +116,7 @@ body {
 
   /* --- typography --- */
   .display {
-    font-family: var(--font-display), system-ui, sans-serif;
+    font-family: var(--font-display), var(--font-arabic), system-ui, sans-serif;
     font-weight: 400; /* Archivo Black is single-weight */
     letter-spacing: -0.025em;
     line-height: 0.92;
@@ -138,7 +138,7 @@ body {
     color: var(--ink-soft);
   }
   .tab-label {
-    font-family: var(--font-display), system-ui, sans-serif;
+    font-family: var(--font-display), var(--font-arabic), system-ui, sans-serif;
     @apply inline-block px-3 py-1 text-[13px];
     letter-spacing: -0.01em;
     background: var(--sun);
@@ -273,7 +273,7 @@ body {
     padding: 5px 16px 6px;
     background: var(--sun);
     border: var(--line-w) solid var(--ink);
-    font-family: var(--font-display), system-ui, sans-serif;
+    font-family: var(--font-display), var(--font-arabic), system-ui, sans-serif;
     letter-spacing: -0.01em;
     clip-path: polygon(0 0, 100% 0, calc(100% - 11px) 100%, 0 100%);
     padding-right: 26px;

@@ -91,7 +91,10 @@ export function TrackingManager() {
       )}
       <ul className="mb-11 flex flex-col gap-2.5">
         {upcoming.map((f) => {
-          const passed = daysFromToday(f.due_on) < 0;
+          // A trip spans days: it is under way until its last day, then over.
+          const passed = daysFromToday(f.ends_on ?? f.due_on) < 0;
+          const underway = !passed && daysFromToday(f.due_on) < 0;
+          const badge = underway ? "Happening now" : when(f.due_on);
           return (
             <li key={f.id}>
               <div className="goal-card flex items-center gap-3 border-2 border-ink bg-paper-hi px-3 py-2.5 shadow-pop-xs">
@@ -110,7 +113,8 @@ export function TrackingManager() {
                 <span className="min-w-0 flex-1">
                   <span className="block text-[15px] font-semibold leading-snug text-ink">{f.title}</span>
                   <span className="mt-0.5 block text-[11.5px] font-bold uppercase tracking-wide text-ink-faint">
-                    {day(f.due_on)} · {passed ? "How did it go?" : when(f.due_on)} · {name(f.agent_id)}
+                    {day(f.due_on)}
+                    {f.ends_on && ` → ${day(f.ends_on)}`} · {passed ? "How did it go?" : badge} · {name(f.agent_id)}
                   </span>
                 </span>
                 <span
@@ -118,7 +122,7 @@ export function TrackingManager() {
                     passed ? "bg-paper-lo text-ink" : daysFromToday(f.due_on) <= 3 ? "bg-pink text-ink" : "bg-sun text-ink"
                   }`}
                 >
-                  {when(f.due_on)}
+                  {passed ? when(f.ends_on ?? f.due_on) : badge}
                 </span>
                 <button
                   onClick={() =>

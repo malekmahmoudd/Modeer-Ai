@@ -258,6 +258,8 @@ export interface FollowUp {
   agent_id: string;
   title: string;
   due_on: string;
+  /** Last day, for things that span days (a trip). */
+  ends_on: string | null;
   status: "pending" | "done" | "dismissed";
   asked_at: string | null;
   source_message_id: string | null;
@@ -289,6 +291,8 @@ export interface CheckIn {
   text: string;
   amount: number | null;
   unit: string | null;
+  /** Structured parts: sets/reps/load for a lift, currency/direction for money. */
+  details: Record<string, string | number> | null;
   logged_on: string;
 }
 

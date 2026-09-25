@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 
 from app.agents.registry import get_agent
 from app.agents.runtime import AgentRuntime
+from app.api.deps import refuse_if_suspended
 from app.conversations import service as convo_service
 from app.conversations.schemas import ChatRequest
 from app.core.auth import session_epoch_matches
@@ -44,6 +45,7 @@ def _find_user(db, x_user_id: str | None, request: Request | None):
             raise HTTPException(status_code=404, detail="Unknown user")
         if request is not None and not session_epoch_matches(request, user):
             raise HTTPException(status_code=401, detail="Please sign in")
+        refuse_if_suspended(user)
         return user
     return get_or_create_demo_user(db)
 

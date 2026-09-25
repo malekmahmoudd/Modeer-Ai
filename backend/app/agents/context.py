@@ -13,6 +13,7 @@ A specialist never receives another agent's raw transcript.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
@@ -136,6 +137,33 @@ def _bounded_lines(lines: list[str], limit: int = MEMORY_BLOCK_CHARS) -> str:
     text = "\n".join(lines)
     marker = "\n[Additional context omitted]"
     return text if len(text) <= limit else text[: limit - len(marker)] + marker
+
+
+_WORD = re.compile(r"\w+", re.UNICODE)
+
+
+def _rank_for(rows: list, message: str) -> list:
+    """Rows in the order they should survive the block's ceiling.
+
+    Unchanged while everything fits. Past the ceiling, pinned facts first, then
+    the ones sharing words with this message, then the most recently updated —
+    so what gets left out is what matters least now, not what sorts last.
+    """
+    if sum(len(f"{r.category}.{r.key}: {r.value}") + 3 for r in rows) <= MEMORY_BLOCK_CHARS:
+        return rows
+    words = {w for w in _WORD.findall((message or "").casefold()) if len(w) > 2}
+
+    def score(row):
+        text = f"{row.key.replace('_', ' ')} {row.value}".casefold()
+        overlap = len(words & set(_WORD.findall(text)))
+        updated = getattr(row, "updated_at", None)
+        return (
+            not getattr(row, "pinned", False),
+            -overlap,
+            -(updated.timestamp() if updated else 0),
+        )
+
+    return sorted(rows, key=score)
 
 
 def _memory_block(tag: str, rows: list) -> tuple[str, list[str]]:
@@ -295,12 +323,12 @@ def build_context(
     from app.agents.registry import all_agents
 
     shared = filter_shared_context(agent, shared)
-    personal_block, shared_used = _memory_block("PERSONAL_CONTEXT", shared)
+    personal_block, shared_used = _memory_block("PERSONAL_CONTEXT", _rank_for(shared, user_message))
     # Notes a teammate left at the user's request are shown as what they are,
     # not mixed in with what this agent learned itself.
     handed = [r for r in agent_memory if getattr(r, "category", "") == "handoff"]
     agent_memory = [r for r in agent_memory if getattr(r, "category", "") != "handoff"]
-    agent_block, agent_used = _memory_block("AGENT_MEMORY", agent_memory)
+    agent_block, agent_used = _memory_block("AGENT_MEMORY", _rank_for(agent_memory, user_message))
 
     sections = [
         f"# ACTIVE AGENT: {agent.name} — {agent.role}",
@@ -370,8 +398,13 @@ def build_context(
         "history_messages": len(msgs) - 1,
         "system_chars": len(system),
         "documents": [
-            {"label": d.label, "document_id": d.document_id, "filename": d.filename,
-             "page": d.page, "score": d.score}
+            {
+                "label": d.label,
+                "document_id": d.document_id,
+                "filename": d.filename,
+                "page": d.page,
+                "score": d.score,
+            }
             for d in documents or []
         ],
     }

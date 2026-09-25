@@ -1,0 +1,314 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "samples": 3,
+  "generated_with": {
+    "code_revision": "b2aa7d2-dirty",
+    "source_sha256": "bb20bdee0a54dddd9ae16a1b13c4e472a609fed4aa62a8ad87e37ffc0e891521",
+    "agents": {
+      "travel": {
+        "model": "openai/gpt-oss-120b",
+        "temperature": 0.6,
+        "max_tokens": 800,
+        "prompt_version": 16
+      }
+    },
+    "provider": "groq",
+    "judge_model": "openai/gpt-oss-120b",
+    "judge_temperature": 0.0,
+    "judge_max_tokens": 700,
+    "reasoning_effort": "low",
+    "llm_timeout_seconds": 35.0
+  },
+  "summary": {
+    "travel-personalization-1": {
+      "attempts": 3,
+      "responses": 3,
+      "provider_errors": 0,
+      "truncated": 0,
+      "deterministic_passes": 3,
+      "judge_available": 3,
+      "judge_passes": 2,
+      "evaluated": 3,
+      "passes": 2,
+      "pass_rate": 0.6666666666666666
+    }
+  },
+  "judge_model": "openai/gpt-oss-120b",
+  "judge_version": 3,
+  "results": [
+    {
+      "generated_with": {
+        "code_revision": "b2aa7d2-dirty",
+        "source_sha256": "bb20bdee0a54dddd9ae16a1b13c4e472a609fed4aa62a8ad87e37ffc0e891521",
+        "agents": {
+          "travel": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.6,
+            "max_tokens": 800,
+            "prompt_version": 16
+          }
+        },
+        "provider": "groq",
+        "judge_model": "openai/gpt-oss-120b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "travel",
+      "sample": 1,
+      "prompt_version": 16,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 2.3,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 289,
+        "violations": []
+      },
+      "output": "A relaxed long\u2011weekend in Lisbon fits your love of slow travel, caf\u00e9s and avoiding early flights \u2013 you can arrive mid\u2011morning on a Friday and still have plenty of time to soak up the city\u2019s laid\u2011back vibe.\n\n**Day\u202f1\u202f\u2013\u202fFriday**  \nFly out of Manchester on a mid\u2011morning flight (e.g., 10\u202fam) and arrive in Lisbon by early afternoon; take the Aerobus or metro to a boutique hotel in the Alfama neighbourhood. Spend the afternoon wandering the narrow streets, then unwind at **Caf\u00e9 A Brasileira** for a late\u2011afternoon espresso and pastel de nata.\n\n**Day\u202f2\u202f\u2013\u202fSaturday**  \nMorning: leisurely brunch at **Nicolau Lisboa** in Baixa.  \nMidday: explore the historic Bel\u00e9m district \u2013 Jer\u00f3nimos Monastery, Bel\u00e9m Tower and the famous **Past\u00e9is de Bel\u00e9m** bakery.  \nEvening: sunset drinks on a rooftop bar (e.g., **Park**), followed by dinner at a traditional tasca in Bairro Alto.\n\n**Day\u202f3\u202f\u2013\u202fSunday**  \nMorning: stroll through the **LX Factory** creative hub, stopping at its many caf\u00e9s and independent shops.  \nAfternoon: take a gentle tram 28 ride through the city\u2019s hills, then relax in the **Jardim da Estrela** with a book and a coffee from a nearby caf\u00e9.  \nEvening: early dinner at a riverside restaurant in Cais do Sodr\u00e9, then catch a late\u2011evening flight back to Manchester (e.g., 8\u202fpm) to avoid a pre\u2011dawn departure.\n\n**Key \u201cbook now\u201d items**  \n- Mid\u2011morning outbound flight (to avoid early take\u2011off).  \n- Boutique hotel in Alfama (high demand on weekends).  \n- Tickets for Jer\u00f3nimos Monastery (optional timed entry).  \n\n**Decide later**  \n- Rooftop bar reservations (usually walk\u2011in).  \n- Specific restaurant choices for dinner (many good options).  \n\nLet me know if you have a preferred travel window (e.g., next month) or any dietary preferences so I can fine\u2011tune the caf\u00e9 and restaurant suggestions.",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "generated_with": {
+        "code_revision": "b2aa7d2-dirty",
+        "source_sha256": "bb20bdee0a54dddd9ae16a1b13c4e472a609fed4aa62a8ad87e37ffc0e891521",
+        "agents": {
+          "travel": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.6,
+            "max_tokens": 800,
+            "prompt_version": 16
+          }
+        },
+        "provider": "groq",
+        "judge_model": "openai/gpt-oss-120b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "travel",
+      "sample": 2,
+      "prompt_version": 16,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 2.06,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 343,
+        "violations": []
+      },
+      "output": "A relaxed long\u2011weekend in **Lisbon** works well from Manchester: a short flight lands mid\u2011morning, the city is caf\u00e9\u2011rich, hilly but walkable, and the weather in spring\u2011autumn is usually mild.\n\n**Day\u202f1 \u2013 Arrival & settle**  \nFly Manchester\u202f\u2192\u202fLisbon (mid\u2011morning arrival, avoid early\u2011morning departure). Check into a boutique guesthouse in the Alfama district (easy access to caf\u00e9s and historic streets). Spend the afternoon wandering the narrow lanes, sip a bica at **Caf\u00e9 A Brasileira**, and watch sunset from the **Miradouro de Santa\u202fLuzia**.\n\n**Day\u202f2 \u2013 Culture at a gentle pace**  \nMorning: leisurely brunch at **Nicolau Lisboa** (healthy bowls, good Wi\u2011Fi).  \nMidday: visit the **Calouste Gulbenkian Museum** (quiet galleries, short walk).  \nAfternoon: stroll through the **Jardim da Estrela** and stop at **Pastelaria Versailles** for a pastel de nata.  \nEvening: dinner at a riverside restaurant in **Cais do Sodr\u00e9**; optional Fado show (book now if you want a specific venue).\n\n**Day\u202f3 \u2013 Markets & departure**  \nLate morning: explore the **Mercado da Ribeira (Time Out Market)**, sample small plates and browse local crafts.  \nAfternoon: relax in a caf\u00e9 near **Pra\u00e7a do Com\u00e9rcio** (e.g., **Hello, Kristof**).  \nLate afternoon: head to the airport for a Manchester return flight (again, mid\u2011afternoon departure to avoid early\u2011morning travel).\n\n### What to book now\n- **Flights** (mid\u2011morning outbound, mid\u2011afternoon return) \u2013 prices fluctuate, so lock in seats early.  \n- **Boutique guesthouse** in Alfama \u2013 popular for weekend stays, especially with a good caf\u00e9 vibe.  \n- **Fado venue** (if desired) \u2013 limited seating, reserve a table.\n\n### Decide later\n- Specific restaurant reservations for dinner (Lisbon has many great spots; you can pick based on mood).  \n- Optional day\u2011trip to Sintra (can be added if you find an extra half\u2011day).  \n\n**Quick next steps**  \n1. Check flight options on the airline\u2019s website and book the mid\u2011morning outbound and mid\u2011afternoon return.  \n2. Reserve the guesthouse in Alfama (look for \u201ccaf\u00e9\u2011friendly\u201d rooms).  \n3. If you want a Fado night, pick a venue (e.g., **Casa de Linhares**) and secure a table.\n\n*Anything else you\u2019d like to tailor\u2014like a specific culinary focus or a museum must\u2011see?*",
+      "judge": {
+        "passed": true,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": true,
+            "evidence": ""
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": true,
+            "evidence": ""
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "",
+        "error": ""
+      },
+      "passed": true
+    },
+    {
+      "generated_with": {
+        "code_revision": "b2aa7d2-dirty",
+        "source_sha256": "bb20bdee0a54dddd9ae16a1b13c4e472a609fed4aa62a8ad87e37ffc0e891521",
+        "agents": {
+          "travel": {
+            "model": "openai/gpt-oss-120b",
+            "temperature": 0.6,
+            "max_tokens": 800,
+            "prompt_version": 16
+          }
+        },
+        "provider": "groq",
+        "judge_model": "openai/gpt-oss-120b",
+        "judge_temperature": 0.0,
+        "judge_max_tokens": 700,
+        "reasoning_effort": "low",
+        "llm_timeout_seconds": 35.0
+      },
+      "agent": "travel",
+      "sample": 3,
+      "prompt_version": 16,
+      "profile": {},
+      "display_name": "Alex",
+      "case": "travel-personalization-1",
+      "model": "openai/gpt-oss-120b",
+      "input": "Suggest a long weekend break for me.",
+      "context": [
+        {
+          "category": "context",
+          "key": "location",
+          "value": "Manchester, UK"
+        },
+        {
+          "category": "preferences",
+          "key": "travel_style",
+          "value": "slow travel, one city, lots of cafes, no early flights"
+        }
+      ],
+      "seconds": 1.94,
+      "error": "",
+      "finish": "completed",
+      "keyword_passed": true,
+      "keyword_checks": [
+        "+ mentions one of 'Manchester' / 'slow' / 'one city' / 'cafe'",
+        "+ nonempty response"
+      ],
+      "review": {
+        "passed": true,
+        "words": 356,
+        "violations": []
+      },
+      "output": "A long\u2011weekend in Lisbon fits your love of slow travel, caf\u00e9 culture and avoiding early departures \u2013 you can catch a mid\u2011morning flight from Manchester and settle into the city\u2019s relaxed rhythm.\n\n**Day\u202f1 \u2013 Arrival & Alfama stroll**  \nTake a mid\u2011morning flight (\u224810\u202fam) to Lisbon, transfer to a centrally located boutique hotel in Baixa. Spend the afternoon wandering the winding streets of Alfama, stopping for a pastel de nata and a coffee at a local pastelaria. Evening: dinner at a traditional tasca with fado music.\n\n**Day\u202f2 \u2013 Caf\u00e9 hopping & Bel\u00e9m**  \nLate start (breakfast at the hotel). Walk to the historic caf\u00e9s of Chiado for a leisurely espresso tasting. Mid\u2011day tram to Bel\u00e9m: visit the Jer\u00f3nimos Monastery (check opening hours) and try the famous Past\u00e9is de Bel\u00e9m. Sunset at the riverside Pra\u00e7a do Com\u00e9rcio, followed by a relaxed dinner in the Bairro Alto neighbourhood.\n\n**Day\u202f3 \u2013 Day at leisure & sunset view**  \nSleep in, then choose a low\u2011key activity that matches your pace \u2013 a gentle walk through the LX Factory creative hub, a visit to the Calouste Gulbenkian Museum, or simply lounging in a garden caf\u00e9. End the day with the iconic tram\u202f28 ride up to Miradouro da Senhora do Monte for a panoramic sunset over the city.\n\n**Day\u202f4 \u2013 Easy departure**  \nEnjoy a relaxed brunch at a caf\u00e9 in the Mercado da Ribeira. Transfer to the airport for an afternoon flight back to Manchester (no early morning departure).\n\n**What to book now vs. decide later**  \n- **Book now:** Manchester\u2011Lisbon flight (mid\u2011morning slot), boutique hotel in Baixa, and the Jer\u00f3nimos Monastery ticket if you prefer a timed entry.  \n- **Decide later:** specific caf\u00e9 or museum visits, tram\u202f28 ticket (can be bought on\u2011site), and any optional day\u2011trip (e.g., Sintra) if you feel up for a short excursion.\n\n**Key things to confirm**  \n- Current UK\u2011Portugal travel requirements (visa, COVID\u2011related entry rules) on the UK government website.  \n- Flight schedules and baggage allowances directly with the airline.  \n- Hotel check\u2011in times and any COVID\u2011related health policies.\n\n*Is a mid\u2011morning flight from Manchester to Lisbon on a Thursday\u2011to\u2011Sunday schedule workable for you?*",
+      "judge": {
+        "passed": false,
+        "available": true,
+        "dimensions": {
+          "grounding": {
+            "pass": false,
+            "evidence": "fits your love of slow travel, caf\u00e9 culture"
+          },
+          "delivers": {
+            "pass": true,
+            "evidence": ""
+          },
+          "currency": {
+            "pass": false,
+            "evidence": "mid\u2011morning flight (\u224810\u202fam) to Lisbon"
+          },
+          "respects_preferences": {
+            "pass": true,
+            "evidence": ""
+          },
+          "capability_honesty": {
+            "pass": true,
+            "evidence": ""
+          },
+          "concision": {
+            "pass": true,
+            "evidence": ""
+          },
+          "internal_consistency": {
+            "pass": true,
+            "evidence": ""
+          }
+        },
+        "worst_problem": "Unsupported claims about the user's preferences and current flight times",
+        "error": ""
+      },
+      "passed": false
+    }
+  ]
+}

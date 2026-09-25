@@ -236,6 +236,7 @@ over it, and asserts every table matches the archive again.
 | Access key leaked or lost | `python provision_user.py --rotate --email … --output new-key.json`. New key, sessions ended, one account affected. **Remove the old `AUTH_ACCESS_KEYS` entry** — adding the new one beside it leaves the leaked key working. |
 | Signing secret suspected | Rotate `AUTH_SECRET`. This signs out **every** account at once. |
 | Someone leaves | Delete their account (theirs to do), then remove their `AUTH_ACCESS_KEYS` entry. |
+| Account being abused, or needs pausing | Signed in as an operator (`ADMIN_ACCOUNTS`): `POST /api/admin/accounts/{id}/suspend`. Their sessions end, sign-in answers 403 "This account is suspended", and chat stops. Nothing is deleted. `POST …/unsuspend` restores it. An operator cannot suspend themselves. |
 
 Removing an entry from `AUTH_ACCESS_KEYS` invalidates that account's live
 sessions immediately, because the key digest is part of the session signature.

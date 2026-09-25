@@ -143,13 +143,17 @@ Also, separately from facts:
 interview, exam, trip, deadline, race — whose day you can work out from today's
 date (convert Hijri dates and religious holidays to the Gregorian date; if unsure,
 leave the event out). [] if none. Each: {"title":"<short, e.g. Interview at
-Stripe>","date":"YYYY-MM-DD","agent":"<slug of the teammate it fits, or null>",
+Stripe>","date":"YYYY-MM-DD","end_date":"YYYY-MM-DD for something spanning days
+(a trip), else null","agent":"<slug of the teammate it fits, or null>",
 "sensitive":true|false}.
 "checkins": progress the user reports having done — a workout, a study session,
 money spent, a task finished. [] if none. Each: {"agent":"fitness|study|finance|
 career|writing|research|travel|shopping|email|modeer","text":"<short, e.g. ran
 5k>","amount":<number or null>,"unit":"<e.g. km, min, pages, or null>",
-"sensitive":true|false}. Do not put a currency in "unit" unless the user named one.
+"details":<null, or for a lift {"exercise","sets","reps","load","load_unit","rpe"},
+for a run {"distance_km","duration_min"}, for money {"direction":"out"|"in",
+"currency":"<only if they named one>"}>,"sensitive":true|false}. Do not put a
+currency in "unit" or "details" unless the user named one.
 Never log food eaten, calories, fasting, skipped meals or body weight as check-ins.
 sensitive=true for anything about health, injury, medical or therapy appointments,
 bereavement, legal or family proceedings, or money trouble.
@@ -222,6 +226,7 @@ class Event:
     stored: bool = True
     reason: str = "added to your follow-ups"
     id: str | None = None
+    ends_on: date | None = None
 
 
 @dataclass(slots=True)
@@ -232,6 +237,7 @@ class CheckInItem:
     unit: str | None = None
     stored: bool = True
     reason: str = "logged"
+    details: dict | None = None
 
 
 @dataclass(slots=True)
@@ -591,6 +597,13 @@ def _to_events(raw, *, agent_id: str, today: date) -> list[Event]:
         if not 0 <= (due - today).days <= _EVENT_HORIZON_DAYS:
             continue  # a date in the past is not something to follow up on
         event = Event(_slug_or(item.get("agent"), agent_id), title, due)
+        if isinstance(item.get("end_date"), str):
+            try:
+                end = date.fromisoformat(item["end_date"].strip())
+            except ValueError:
+                end = None
+            if end is not None and 0 < (end - due).days <= 90:
+                event.ends_on = end
         # Fail closed, as for facts: the model's flag counts only when it is a
         # real False, and the keyword backstop can raise it but never lower it.
         flagged = item.get("sensitive") is not False or looks_sensitive(title)
@@ -625,11 +638,45 @@ def _to_checkins(raw, *, agent_id: str) -> list[CheckInItem]:
             float(amount) if amount is not None else None,
             unit,
         )
+        entry.details = _details(item.get("details"))
         flagged = item.get("sensitive") is not False or looks_sensitive(entry.text)
         if flagged and not settings.memory_store_sensitive:
             entry.stored, entry.reason = False, "sensitive; not stored automatically"
         out.append(entry)
     return out
+
+
+#: Allowed check-in detail fields and their bounds. Anything else is dropped.
+_NUMBERS = {
+    "sets": (1, 50),
+    "reps": (1, 500),
+    "load": (0, 2000),
+    "rpe": (1, 10),
+    "distance_km": (0, 500),
+    "duration_min": (0, 1440),
+}
+_TEXTS = {"exercise": 60, "load_unit": 8, "currency": 8}
+_CURRENCY = re.compile(r"^[A-Za-z]{3}$|^[$£€¥₹]$|^[\u0600-\u06FF.]{1,8}$")
+
+
+def _details(raw) -> dict | None:
+    """Structured check-in detail, validated field by field; None when empty."""
+    if not isinstance(raw, dict):
+        return None
+    out: dict = {}
+    for key, (low, high) in _NUMBERS.items():
+        value = raw.get(key)
+        if isinstance(value, int | float) and not isinstance(value, bool) and low <= value <= high:
+            out[key] = value
+    for key, limit in _TEXTS.items():
+        value = raw.get(key)
+        if isinstance(value, str) and value.strip():
+            out[key] = " ".join(value.split())[:limit]
+    if "currency" in out and not _CURRENCY.match(out["currency"]):
+        del out["currency"]  # a currency must look like one: "EGP", "£", "ج.م"
+    if raw.get("direction") in ("out", "in"):
+        out["direction"] = raw["direction"]
+    return out or None
 
 
 def _to_outcomes(raw, asked: list) -> list[Outcome]:

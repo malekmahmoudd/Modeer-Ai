@@ -21,7 +21,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator, model_validato
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
-from app.api.deps import CurrentUser, DbSession
+from app.api.deps import CurrentUser, DbSession, refuse_if_suspended
 from app.core import passwords
 from app.core.auth import COOKIE, key_user, session_epoch_matches, sign_session
 from app.core.config import settings
@@ -217,6 +217,7 @@ def login(body: Login, request: Request, response: Response, db: DbSession):
         if not passwords.verify_password(body.password, account.password_hash if account else None):
             raise HTTPException(401, WRONG_SIGN_IN)
 
+    refuse_if_suspended(account)
     _set_session(response, account)
     return {"signed_in": True}
 

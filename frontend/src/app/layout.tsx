@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo_Black, Caveat, Inter, Permanent_Marker } from "next/font/google";
+import { Archivo_Black, Caveat, Inter, Noto_Sans_Arabic, Permanent_Marker } from "next/font/google";
 import { connection } from "next/server";
 
 import { AppShell } from "@/components/AppShell";
@@ -20,6 +20,15 @@ const brush = Permanent_Marker({
   weight: "400",
   variable: "--font-brush",
   display: "swap",
+});
+/* Arabic fallback: the fonts above have no Arabic glyphs. Loaded only when a
+   page shows Arabic text (unicode-range), so Latin pages cost nothing extra. */
+const arabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  weight: "variable",
+  variable: "--font-arabic",
+  display: "swap",
+  preload: false,
 });
 /* Handwritten margin notes — decorative, sparse */
 const hand = Caveat({
@@ -47,7 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${display.variable} ${brush.variable} ${hand.variable}`}
+      className={`${inter.variable} ${display.variable} ${brush.variable} ${hand.variable} ${arabic.variable}`}
     >
       <body className="font-sans">
         <AppShell>{children}</AppShell>

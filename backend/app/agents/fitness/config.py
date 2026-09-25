@@ -59,5 +59,5 @@ CONFIG = AgentConfig(
         "Detailed nutrition/macros for medical conditions -> qualified dietitian.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=800),
-    prompt_version=12,
+    prompt_version=13,
 )

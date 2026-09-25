@@ -63,5 +63,5 @@ CONFIG = AgentConfig(
         "to Emma or a professional.",
     ],
     model=ModelConfig(temperature=0.5, max_tokens=1100),
-    prompt_version=11,
+    prompt_version=12,
 )

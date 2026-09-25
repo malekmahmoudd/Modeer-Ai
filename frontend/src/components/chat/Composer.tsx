@@ -66,6 +66,7 @@ export function Composer({
       </label>
       <textarea
         id="composer"
+        dir="auto"
         ref={ref}
         rows={1}
         value={value}

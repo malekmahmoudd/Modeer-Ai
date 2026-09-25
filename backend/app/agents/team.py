@@ -13,7 +13,7 @@ narrow and visible to the person:
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -70,10 +70,43 @@ def recent_activity(
     for note in db.scalars(
         select(AgentMemory).where(AgentMemory.user_id == user_id, AgentMemory.category == HANDOFF)
     ):
-        lines.append(f"Note waiting for {_name(note.agent_id)}: {as_data(note.value[:160])}")
+        state = (
+            f"picked up {_when(note.seen_at, now)}" if note.seen_at is not None else "not yet seen"
+        )
+        lines.append(f"Note for {_name(note.agent_id)} ({state}): {as_data(note.value[:160])}")
         if len(lines) >= ACTIVITY_LIMIT + 4:
             break
     return lines
+
+
+#: How long a note stays once its teammate has seen it, and at most if never seen.
+SEEN_NOTE_DAYS = 14
+UNSEEN_NOTE_DAYS = 30
+
+
+def expire_handoffs(db: Session, user_id: str, *, now: datetime) -> None:
+    """Remove handoff notes that have done their job or gone stale, so an old
+    brief stops steering a teammate. They were visible on the Memory page."""
+    moment = now.astimezone(UTC).replace(tzinfo=None) if now.tzinfo else now
+    for note in db.scalars(
+        select(AgentMemory).where(AgentMemory.user_id == user_id, AgentMemory.category == HANDOFF)
+    ):
+        seen = note.seen_at
+        created = note.created_at.replace(tzinfo=None) if note.created_at else moment
+        if (seen is not None and seen < moment - timedelta(days=SEEN_NOTE_DAYS)) or (
+            seen is None and created < moment - timedelta(days=UNSEEN_NOTE_DAYS)
+        ):
+            db.delete(note)
+    db.flush()
+
+
+def mark_seen(db: Session, notes: list) -> None:
+    """The teammate has had these in front of it for a finished reply."""
+    now = datetime.now(UTC).replace(tzinfo=None)
+    for note in notes:
+        if getattr(note, "category", "") == HANDOFF and note.seen_at is None:
+            note.seen_at = now
+    db.flush()
 
 
 def apply_goal_changes(db: Session, user_id: str, changes: list[GoalChange]) -> None:

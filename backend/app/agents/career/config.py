@@ -57,6 +57,7 @@ CONFIG = AgentConfig(
         "recommend a qualified professional.",
         "Hand pure skill-learning plans to Nova; keep the strategy here.",
     ],
-    model=ModelConfig(temperature=0.55, max_tokens=650),
-    prompt_version=11,
+    # Room for a requirement-by-requirement CV/job-post fit check.
+    model=ModelConfig(temperature=0.55, max_tokens=1000),
+    prompt_version=12,
 )

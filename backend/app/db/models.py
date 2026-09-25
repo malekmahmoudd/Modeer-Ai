@@ -50,6 +50,9 @@ class User(UUIDMixin, TimestampMixin, Base):
     #: IANA timezone the browser reported ("Europe/London"). None until known;
     #: agents then work in UTC. See app/core/clock.py.
     timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    #: Set by an operator to stop an account from signing in or using the API.
+    #: Reversible; nothing is deleted.
+    suspended_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     recovery_codes: Mapped[list[RecoveryCode]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
@@ -196,6 +199,9 @@ class AgentMemory(UUIDMixin, TimestampMixin, Base):
     sensitive: Mapped[bool] = mapped_column(Boolean, default=False)
     history: Mapped[list | None] = mapped_column(JSON, nullable=True)  # as SharedMemory
     source_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    #: Handoff notes only: when the teammate first had it in front of them. Notes
+    #: expire a while after that, so a stale brief stops steering the agent.
+    seen_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     user: Mapped[User] = relationship(back_populates="agent_memories")
 
@@ -239,6 +245,8 @@ class FollowUp(UUIDMixin, TimestampMixin, Base):
     agent_id: Mapped[str] = mapped_column(String(48))  # the teammate it belongs with
     title: Mapped[str] = mapped_column(String(200))
     due_on: Mapped[date] = mapped_column(Date)
+    #: Last day, for things that span days (a trip). "How did it go?" waits for it.
+    ends_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(String(16), default="pending")  # pending|done|dismissed
     #: When an agent was first prompted to ask how it went. Asked once, not nagged.
     asked_at: Mapped[datetime | None] = mapped_column(nullable=True)
@@ -290,6 +298,10 @@ class CheckIn(UUIDMixin, TimestampMixin, Base):
     text: Mapped[str] = mapped_column(String(300))
     amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     unit: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    #: Structured detail when there is some: a lift ({"exercise", "sets", "reps",
+    #: "load", "load_unit", "rpe"}), a run ({"distance_km", "duration_min"}), or
+    #: money ({"direction": "out"|"in", "currency"}). Validated on the way in.
+    details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     logged_on: Mapped[date] = mapped_column(Date)
     source_message_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
 

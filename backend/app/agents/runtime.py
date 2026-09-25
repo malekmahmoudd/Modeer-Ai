@@ -204,6 +204,7 @@ class AgentRuntime:
                 }
         focus = [a["id"] for a in (user_row.meta or {}).get("attachments", [])]
 
+        team.expire_handoffs(db, user.id, now=now_for(user)[0])
         shared, agent_mem = memory_service.context_for_agent(db, user.id, agent)
         if not private_notes:
             agent_mem = []
@@ -217,7 +218,12 @@ class AgentRuntime:
         recent = history[covered:]
         tracked, ask_about = (
             tracking.context_sections(
-                db, user.id, agent_id=agent.id, is_leo=agent.is_assistant, today=now.date()
+                db,
+                user.id,
+                agent_id=agent.id,
+                is_leo=agent.is_assistant,
+                today=now.date(),
+                message=user_message,
             )
             if private_notes
             else ([], [])
@@ -429,6 +435,7 @@ class AgentRuntime:
                         agent_id=event.agent_id,
                         title=event.title,
                         due_on=event.due_on,
+                        ends_on=event.ends_on,
                         source_message_id=user_row.id,
                     )
                     event.id = row.id
@@ -443,12 +450,14 @@ class AgentRuntime:
                         text=item.text,
                         amount=item.amount,
                         unit=item.unit,
+                        details=item.details,
                         logged_on=now.date(),
                         source_message_id=user_row.id,
                     )
             closed = tracking.close_followups(db, user.id, analysis.outcomes)
             # The reply went out with these in it: they have been asked about.
             tracking.mark_asked(db, ask_about)
+            team.mark_seen(db, agent_mem)
             if agent.is_assistant:
                 team.apply_goal_changes(db, user.id, analysis.goal_changes)
             team.apply_handoffs(db, user.id, analysis.handoffs, source=agent.id)

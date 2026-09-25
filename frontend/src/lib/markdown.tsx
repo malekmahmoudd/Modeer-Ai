@@ -82,7 +82,7 @@ export function renderMarkdown(src: string): ReactNode[] {
     const h = line.match(/^(#{1,4})\s+(.*)$/);
     if (h) {
       out.push(
-        <p key={k++} className="mb-1.5 mt-4 text-[15px] font-extrabold text-ink first:mt-0">
+        <p key={k++} dir="auto" className="mb-1.5 mt-4 text-[15px] font-extrabold text-ink first:mt-0">
           {inline(h[2], `h${k}`)}
         </p>,
       );
@@ -107,7 +107,8 @@ export function renderMarkdown(src: string): ReactNode[] {
                 {header.map((c, ci) => (
                   <th
                     key={ci}
-                    className="border-b-2 border-ink bg-sun-pale px-3 py-2 text-left font-extrabold text-ink"
+                    dir="auto"
+                    className="border-b-2 border-ink bg-sun-pale px-3 py-2 text-start font-extrabold text-ink"
                   >
                     {inline(c, `th${k}-${ci}`)}
                   </th>
@@ -118,7 +119,7 @@ export function renderMarkdown(src: string): ReactNode[] {
               {rows.map((r, ri) => (
                 <tr key={ri}>
                   {r.map((c, ci) => (
-                    <td key={ci} className="border-b border-ink/25 px-3 py-2 align-top text-ink-soft">
+                    <td key={ci} dir="auto" className="border-b border-ink/25 px-3 py-2 align-top text-ink-soft">
                       {inline(c, `td${k}-${ri}-${ci}`)}
                     </td>
                   ))}
@@ -141,7 +142,8 @@ export function renderMarkdown(src: string): ReactNode[] {
       out.push(
         <blockquote
           key={k++}
-          className="my-3 border-l-[3px] border-pink pl-3 text-ink-soft"
+          dir="auto"
+          className="my-3 border-s-[3px] border-pink ps-3 text-ink-soft"
         >
           {inline(buf.join(" "), `q${k}`)}
         </blockquote>,
@@ -159,9 +161,9 @@ export function renderMarkdown(src: string): ReactNode[] {
       }
       const List = ordered ? "ol" : "ul";
       out.push(
-        <List key={k++} className={ordered ? "my-2 list-decimal pl-5" : "my-2 list-disc pl-5"}>
+        <List key={k++} dir="auto" className={ordered ? "my-2 list-decimal ps-5" : "my-2 list-disc ps-5"}>
           {items.map((it, ii) => (
-            <li key={ii} className="my-0.5">
+            <li key={ii} dir="auto" className="my-0.5">
               {inline(it, `li${k}-${ii}`)}
             </li>
           ))}
@@ -182,7 +184,7 @@ export function renderMarkdown(src: string): ReactNode[] {
       i++;
     }
     out.push(
-      <p key={k++} className="my-2 first:mt-0 last:mb-0">
+      <p key={k++} dir="auto" className="my-2 first:mt-0 last:mb-0">
         {inline(buf.join(" "), `p${k}`)}
       </p>,
     );

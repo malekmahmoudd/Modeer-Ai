@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import html
 import time
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
@@ -73,6 +74,33 @@ def metrics(user: CurrentUser, db: DbSession) -> dict:
         "accounts_today": accounts,
         "tokens_today": sum(a["used"] for a in accounts),
     }
+
+
+@router.post("/accounts/{account_id}/suspend")
+def suspend(account_id: str, user: CurrentUser, db: DbSession) -> dict:
+    """Stop an account at once: it cannot sign in or use the API. Nothing is
+    deleted, and the sessions it holds stop working. Undo with /unsuspend."""
+    _require_admin(user)
+    if account_id == user.id:
+        raise HTTPException(status_code=400, detail="You cannot suspend your own account")
+    target = db.get(User, account_id)
+    if target is None:
+        raise HTTPException(status_code=404, detail="Account not found")
+    target.suspended_at = target.suspended_at or datetime.now(UTC).replace(tzinfo=None)
+    target.session_epoch = (target.session_epoch or 0) + 1  # sign it out everywhere
+    db.flush()
+    return {"id": target.id, "suspended": True}
+
+
+@router.post("/accounts/{account_id}/unsuspend")
+def unsuspend(account_id: str, user: CurrentUser, db: DbSession) -> dict:
+    _require_admin(user)
+    target = db.get(User, account_id)
+    if target is None:
+        raise HTTPException(status_code=404, detail="Account not found")
+    target.suspended_at = None
+    db.flush()
+    return {"id": target.id, "suspended": False}
 
 
 @router.post("/test-alert")

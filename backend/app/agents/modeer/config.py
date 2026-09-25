@@ -56,5 +56,5 @@ CONFIG = AgentConfig(
         "point to a qualified professional.",
     ],
     model=ModelConfig(temperature=0.55, max_tokens=650),
-    prompt_version=10,
+    prompt_version=11,
 )

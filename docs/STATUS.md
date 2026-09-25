@@ -3,6 +3,23 @@
 _Last updated: 2026-09-25 · phase: production readiness, invite-only or open signup_
 
 
+## Team extras — 2026-09-25 (last batch)
+
+Details in `tracking.md` (last section) and `OPERATIONS.md` (suspension).
+
+- Suspend and restore an account (operator only).
+- Handoff notes: "picked up", then they expire.
+- Trips with start and end dates.
+- Structured workout and spending logs; Maddie sees progression.
+- Emma's totals are summed in code; Leo gives a weekly review.
+- Memory past the ceiling is ranked by relevance to the message.
+- Harvey checks a CV against a job post (met / partly / missing) and never
+  invents numbers.
+- Arabic reads right to left: messages, the composer and markdown use
+  `dir="auto"` and logical spacing, and there is a Noto Sans Arabic fallback.
+- Backend venv rebuilt from the lock; Colima removed.
+- 461 tests pass. Migration 0008.
+
 ## Renamed to Fareeq — 2026-09-25
 
 The product is now **Fareeq** (فريق, "team"), resolving the clash with the CrewAI
