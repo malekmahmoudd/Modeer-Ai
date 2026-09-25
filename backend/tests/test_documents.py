@@ -417,3 +417,28 @@ def get_user_stub():
     from types import SimpleNamespace
 
     return SimpleNamespace(display_name="Sam", profile={}, onboarded=True, id="u1")
+
+
+def test_an_attached_file_is_shown_on_the_message_and_read_first(client, db):
+    doc = _upload(client, "cv.md", CV.encode()).json()
+    # A vague message that would not pass the relevance gate on its own.
+    body = client.post(
+        "/api/agents/career/chat",
+        json={"message": "What do you think?", "attachments": [doc["id"]]},
+    ).json()
+    assert body["context"]["documents"] and body["context"]["documents"][0]["filename"] == "cv.md"
+    messages = client.get(f"/api/conversations/{body['conversation_id']}").json()["messages"]
+    assert messages[0]["meta"]["attachments"] == [
+        {"id": doc["id"], "filename": "cv.md", "kind": "md", "size_bytes": len(CV.encode())}
+    ]
+
+
+def test_attachments_cannot_reach_another_agents_private_file(client, db):
+    doc = _upload(client, "cv.md", CV.encode(), agent="career").json()
+    body = client.post(
+        "/api/agents/writing/chat",
+        json={"message": "What do you think?", "attachments": [doc["id"], "not-a-real-id"]},
+    ).json()
+    assert body["context"]["documents"] == []
+    messages = client.get(f"/api/conversations/{body['conversation_id']}").json()["messages"]
+    assert "attachments" not in messages[0]["meta"]

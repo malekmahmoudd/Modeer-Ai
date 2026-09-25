@@ -420,14 +420,14 @@ def to_ics(events: list[tuple[str, date, str]], *, name: str) -> str:
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//CrewAi//Personal AI Team//EN",
+        "PRODID:-//Fareeq//Personal AI Team//EN",
         "CALSCALE:GREGORIAN",
         f"X-WR-CALNAME:{_ics_text(name)}",
     ]
     for uid, day, summary in events:
         lines += [
             "BEGIN:VEVENT",
-            f"UID:{uid}@crewai",
+            f"UID:{uid}@fareeq",
             f"DTSTAMP:{stamp}",
             f"DTSTART;VALUE=DATE:{day:%Y%m%d}",
             f"DTEND;VALUE=DATE:{day + timedelta(days=1):%Y%m%d}",

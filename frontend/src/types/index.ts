@@ -20,11 +20,20 @@ export type AgentDetail = Agent;
 /** How an assistant reply ended. Replies saved before this existed completed. */
 export type Completion = "completed" | "truncated" | "interrupted" | "failed";
 
+/** A file sent with a message. */
+export interface Attachment {
+  id: string;
+  filename: string;
+  kind: string;
+  size_bytes: number;
+}
+
 export interface Message {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
   meta: Record<string, unknown> & {
+    attachments?: Attachment[];
     context?: ContextDiagnostics;
     provider?: string;
     model?: string;

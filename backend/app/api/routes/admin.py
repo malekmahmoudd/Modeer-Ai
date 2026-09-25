@@ -85,7 +85,7 @@ async def test_alert(user: CurrentUser) -> dict:
     _require_admin(user)
     if not alerts_enabled():
         raise HTTPException(status_code=400, detail="No alert channel is configured")
-    if not await _deliver("CrewAi test alert: the configured endpoint accepted this test."):
+    if not await _deliver("Fareeq test alert: the configured endpoint accepted this test."):
         raise HTTPException(status_code=502, detail="No alert channel accepted the test")
     return {"sent": True}
 
@@ -155,7 +155,7 @@ def dashboard(user: CurrentUser, db: DbSession) -> HTMLResponse:
 
     return HTMLResponse(f"""<!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CrewAi operations</title>
+<title>Fareeq operations</title>
 <style>
   :root {{ color-scheme: light dark; }}
   body {{ font: 15px/1.6 system-ui, sans-serif; margin: 0; padding: 24px 16px 64px;
@@ -175,7 +175,7 @@ def dashboard(user: CurrentUser, db: DbSession) -> HTMLResponse:
            border-radius: 999px; font-size: 12px; font-weight: 600; }}
   @media (prefers-color-scheme: dark) {{ .good {{ color: #6ee7a8; }} .bad {{ color: #ff9d95; }} }}
 </style>
-<h1>CrewAi operations <span class="pill {status_class}">{status_text}</span></h1>
+<h1>Fareeq operations <span class="pill {status_class}">{status_text}</span></h1>
 <p class="muted">{esc(settings.environment)} · up {snapshot["uptime_seconds"]:,.0f}s ·
 since {esc(snapshot["started_at"])} · alerts {alert_block}</p>
 

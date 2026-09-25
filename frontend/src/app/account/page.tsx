@@ -108,7 +108,7 @@ export default function AccountPage() {
     </section>
     <section className="border-2 border-ink bg-paper-hi p-5 shadow-pop-xs">
       <h2 className="display text-2xl">Delete my account.</h2>
-      <p className="my-3 text-ink-soft">Permanently remove your account, chats, memories and goals from CrewAi’s live database. This cannot be undone. Existing backups expire on the operator’s retention schedule, normally within 30 days.</p>
+      <p className="my-3 text-ink-soft">Permanently remove your account, chats, memories and goals from Fareeq’s live database. This cannot be undone. Existing backups expire on the operator’s retention schedule, normally within 30 days.</p>
       <form onSubmit={e => { e.preventDefault(); if (confirm !== "DELETE") return; void run("delete", async () => {
         await apiFetch("/users/me/delete", {method:"POST", body:JSON.stringify({confirm})}); window.location.assign("/login?deleted=1");
       }); }}>

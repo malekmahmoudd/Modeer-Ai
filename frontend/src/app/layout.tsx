@@ -14,7 +14,7 @@ const display = Archivo_Black({
   variable: "--font-display",
   display: "swap",
 });
-/* Brush wordmark — "CrewAi" only */
+/* Brush wordmark — "Fareeq" only */
 const brush = Permanent_Marker({
   subsets: ["latin"],
   weight: "400",
@@ -30,7 +30,7 @@ const hand = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "CrewAi — Personal AI Team",
+  title: "Fareeq — Personal AI Team",
   description:
     "Leo, your personal assistant, plus a team of specialist AI agents that share your context.",
 };

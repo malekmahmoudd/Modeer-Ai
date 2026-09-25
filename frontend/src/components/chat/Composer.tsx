@@ -13,6 +13,10 @@ export function Composer({
   streaming,
   placeholder,
   autoFocus,
+  attach,
+  chips,
+  hasAttachments,
+  waiting,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -21,6 +25,14 @@ export function Composer({
   streaming?: boolean;
   placeholder: string;
   autoFocus?: boolean;
+  /** Optional control shown before the text field, e.g. the attach button. */
+  attach?: React.ReactNode;
+  /** Files on the message being written, shown above the text field. */
+  chips?: React.ReactNode;
+  /** Ready files: the message can be sent without text. */
+  hasAttachments?: boolean;
+  /** Files still uploading or being read: sending waits for them. */
+  waiting?: boolean;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -35,7 +47,8 @@ export function Composer({
     if (autoFocus && window.matchMedia("(min-width: 768px)").matches) ref.current?.focus();
   }, [autoFocus]);
 
-  const canSend = value.trim().length > 0 && !streaming && !disabled;
+  const canSend =
+    (value.trim().length > 0 || Boolean(hasAttachments)) && !streaming && !disabled && !waiting;
 
   return (
     <form
@@ -43,8 +56,11 @@ export function Composer({
         e.preventDefault();
         if (canSend) onSend();
       }}
-      className="flex items-end gap-2 rounded-lg border-2 border-ink bg-paper-hi p-2 pl-3.5 shadow-pop-xs transition focus-within:border-pink focus-within:shadow-pop-sm"
+      className="rounded-lg border-2 border-ink bg-paper-hi p-2 shadow-pop-xs transition focus-within:border-pink focus-within:shadow-pop-sm"
     >
+      {chips}
+      <div className="flex items-end gap-2">
+      {attach}
       <label htmlFor="composer" className="sr-only">
         {placeholder}
       </label>
@@ -67,7 +83,7 @@ export function Composer({
       <button
         type="submit"
         disabled={!canSend}
-        aria-label={streaming ? "Sending" : "Send message"}
+        aria-label={streaming ? "Sending" : waiting ? "Waiting for your file" : "Send message"}
         className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-ink transition disabled:opacity-40"
         style={{
           background: canSend ? "var(--pink)" : "var(--paper-lo)",
@@ -76,6 +92,7 @@ export function Composer({
       >
         {streaming ? <Spinner className="!h-4 !w-4 !border-white !border-t-transparent" /> : <Icon name="arrow-up" size={20} strokeWidth={2.8} />}
       </button>
+      </div>
     </form>
   );
 }

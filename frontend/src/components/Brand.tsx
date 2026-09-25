@@ -1,18 +1,18 @@
 import Link from "next/link";
 
-/** The CrewAi wordmark: heavy brush lettering with a pink ink underline. */
+/** The Fareeq wordmark: heavy brush lettering with a pink ink underline. */
 export function Brand({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const text =
     size === "lg" ? "text-[34px]" : size === "sm" ? "text-[20px]" : "text-[26px]";
   const rule = size === "lg" ? "h-[7px]" : size === "sm" ? "h-[4px]" : "h-[5px]";
 
   return (
-    <Link href="/" className="group inline-block leading-none" aria-label="CrewAi — home">
+    <Link href="/" className="group inline-block leading-none" aria-label="Fareeq — home">
       <span
         className={`wordmark block ${text} text-ink`}
         style={{ transform: "skewX(-7deg)" }}
       >
-        CrewAi
+        Fareeq
       </span>
       <svg
         viewBox="0 0 120 8"

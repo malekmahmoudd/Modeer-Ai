@@ -1,6 +1,6 @@
-# CrewAi Personal AI Team — third-party project report
+# Fareeq Personal AI Team — third-party project report
 
-**Agent-name update — 2026-09-15:** Leo is the team leader; Nova (Study), Harvey (Career), Clara (Research), Alex (Writing), Tessa (Travel), Nate (Shopping), Emma (Finance), Maddie (Fitness), and Nora (Email) are the specialists. CrewAi is the product name. See [current naming and compatibility](AGENT-NAMES.md). Historical screenshots, decks and quality artifacts retain the names used when recorded; the earlier live evaluations predate the renamed prompts.
+**Agent-name update — 2026-09-15:** Leo is the team leader; Nova (Study), Harvey (Career), Clara (Research), Alex (Writing), Tessa (Travel), Nate (Shopping), Emma (Finance), Maddie (Fitness), and Nora (Email) are the specialists. Fareeq is the product name. See [current naming and compatibility](AGENT-NAMES.md). Historical screenshots, decks and quality artifacts retain the names used when recorded; the earlier live evaluations predate the renamed prompts.
 
 **Latest closeout — 2026-09-15 (checks run September 14):** the isolated production rehearsal
 now passes 23 HTTPS browser checks, 25 automated accessibility scans and 351
@@ -29,7 +29,7 @@ This document explains the current product and implementation to an engineer tak
 
 ## 1. Product, audience and boundaries
 
-CrewAi is a personal assistant and nine specialist AI conversations sharing selected facts about one person. Intended use cases include study planning, career preparation, research reasoning, writing/editing, travel planning, purchasing advice, budgeting, fitness planning, and email drafting. These are supported workflows, not evidence of a validated market or paying customer base. [Product description](product.md), [agent registry](../backend/app/agents/registry.py).
+Fareeq is a personal assistant and nine specialist AI conversations sharing selected facts about one person. Intended use cases include study planning, career preparation, research reasoning, writing/editing, travel planning, purchasing advice, budgeting, fitness planning, and email drafting. These are supported workflows, not evidence of a validated market or paying customer base. [Product description](product.md), [agent registry](../backend/app/agents/registry.py).
 
 The product's distinction is a persistent personal context layer and visibly different human characters, rather than ten unrelated chatbots. Leo is the team leader/general assistant. Each specialist has its own configuration, prompt, domain framework, private notes and conversations. All run in the same backend runtime.
 

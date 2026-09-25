@@ -84,7 +84,9 @@ async def chat_stream(
             # aclosing: when the client goes away, the runtime is closed here and
             # saves what arrived before this session closes — not whenever the
             # garbage collector gets round to it.
-            turn = runtime.run_stream(db, user, agent, convo, body.message, retry=body.retry)
+            turn = runtime.run_stream(
+                db, user, agent, convo, body.message, retry=body.retry, attachments=body.attachments
+            )
             async with aclosing(turn):
                 async for event in turn:
                     yield event.as_sse()
@@ -150,7 +152,9 @@ async def chat_sync(
             "context_used": False,
             "newly_onboarded": False,
         }
-        turn = runtime.run_stream(db, user, agent, convo, body.message, retry=body.retry)
+        turn = runtime.run_stream(
+            db, user, agent, convo, body.message, retry=body.retry, attachments=body.attachments
+        )
         async for event in turn:
             if event.type == "start":
                 collected["context"] = event.data.get("context", {})

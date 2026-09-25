@@ -6,6 +6,6 @@ if "$DIR/backup.sh" && MODEER_BACKUP_DIR="$MODEER_BACKUP_OFFHOST" "$DIR/restore-
   echo "NIGHTLY BACKUP AND RESTORE PASSED"
 else
   echo "Nightly backup or restore failed; inspect the host job log" >&2
-  python3 "$DIR/notify-operator.py" "CrewAi nightly backup or restore failed. Inspect the host job log." || true
+  python3 "$DIR/notify-operator.py" "Fareeq nightly backup or restore failed. Inspect the host job log." || true
   exit 1
 fi

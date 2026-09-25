@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AgentBadge, AgentPortrait } from "@/components/art/AgentPortrait";
+import { AttachButton, AttachmentChips, useAttachments } from "@/components/chat/AttachFile";
 import { Composer } from "@/components/chat/Composer";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { Icon } from "@/components/ui/Icon";
@@ -42,6 +43,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   // Spoken, not shown: a reply that failed or stopped short says so in the
   // transcript, which a screen reader has no reason to revisit.
   const [announcement, setAnnouncement] = useState("");
+  const attachments = useAttachments(agentId);
   const [savedFacts, setSavedFacts] = useState<MemoryCandidate[]>([]);
   const [teamNotes, setTeamNotes] = useState<string[]>([]);
   const [justOnboarded, setJustOnboarded] = useState(false);
@@ -208,8 +210,10 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
 
   const submit = useCallback(
     async (text: string) => {
-      const t = text.trim();
-      if (!t || streaming) return;
+      const files = attachments.ready;
+      // A file on its own is a message too: "Here's cv.md."
+      const t = text.trim() || (files.length ? `Here's ${files.map((f) => f.filename).join(", ")}.` : "");
+      if (!t || streaming || attachments.busy) return;
       followReply.current = true;
       setErr(null);
       setAnnouncement("");
@@ -219,12 +223,19 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       setMessages((prev) => [
         ...prev,
         // local: shown before the server has it, so it is nothing to retry yet.
-        { id: tmpId(), role: "user", content: t, created_at: new Date().toISOString(), meta: { local: true } },
+        {
+          id: tmpId(),
+          role: "user",
+          content: t,
+          created_at: new Date().toISOString(),
+          meta: { local: true, attachments: files },
+        },
       ]);
+      attachments.clear();
       scrollDown();
-      await send(t, conversationId);
+      await send(t, conversationId, false, files.map((f) => f.id));
     },
-    [streaming, send, conversationId, scrollDown],
+    [streaming, send, conversationId, scrollDown, attachments],
   );
 
   const retry = useCallback(async () => {
@@ -471,6 +482,10 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
             streaming={streaming}
             placeholder={agent.composer_placeholder}
             autoFocus
+            attach={<AttachButton agentName={shortName} disabled={streaming} onPick={attachments.add} />}
+            chips={<AttachmentChips files={attachments.files} onRemove={attachments.remove} />}
+            hasAttachments={attachments.ready.length > 0}
+            waiting={attachments.busy}
           />
           <p className="mt-2 text-center text-[11.5px] font-semibold text-ink-faint">
             Uses your saved context, not other chats.

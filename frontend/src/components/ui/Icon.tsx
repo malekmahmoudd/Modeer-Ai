@@ -17,7 +17,8 @@ type Name =
   | "chevron-left"
   | "history"
   | "calendar"
-  | "file";
+  | "file"
+  | "paperclip";
 
 const PATHS: Record<Name, React.ReactNode> = {
   home: <path d="M3 10.5 12 3l9 7.5M5 9.5V20h5v-6h4v6h5V9.5" />,
@@ -62,6 +63,7 @@ const PATHS: Record<Name, React.ReactNode> = {
       <path d="M3.5 10h17M8 3v4M16 3v4" />
     </>
   ),
+  paperclip: <path d="m20 11.5-7.8 7.8a5 5 0 0 1-7.1-7.1l8.3-8.3a3.4 3.4 0 0 1 4.8 4.8l-8.3 8.3a1.7 1.7 0 0 1-2.4-2.4l7.6-7.6" />,
   file: (
     <>
       <path d="M6 3h8l4 4v14H6V3Z" />

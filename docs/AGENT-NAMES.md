@@ -1,9 +1,13 @@
 # Current agent names — 2026-09-15
 
-CrewAi is the product; Leo is its personal manager and team leader.
+Fareeq (فريق, "team") is the product; Leo is its personal manager and team leader.
 
-The product was renamed from Modeer to CrewAi on September 15. Public branding,
-browser metadata/icon, API title, privacy copy and operator alert labels use CrewAi.
+The product was renamed from Modeer to CrewAi on September 15, and from CrewAi to
+Fareeq on September 25, 2026. CrewAi was too close to CrewAI, a well-known agent
+framework. Public branding, browser metadata and icon, API title, privacy copy,
+calendar exports and operator alert labels now use Fareeq. Internal identifiers
+that users never see (the repository, the `modeer` slug for Leo, database and
+email-domain names) are unchanged.
 Legacy `modeer` database names, session cookies, environment-variable prefixes,
 routes and backup filenames remain compatible with existing installations.
 The repository directory and old verification artifacts are not renamed.

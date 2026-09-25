@@ -80,7 +80,7 @@ def enabled() -> bool:
 
 def _format(event: str, detail: str, severity: Severity) -> str:
     return (
-        f"{_ICON[severity]} CrewAi [{settings.environment}] {severity.value.upper()}: {event}"
+        f"{_ICON[severity]} Fareeq [{settings.environment}] {severity.value.upper()}: {event}"
         f"\n{detail}"
     )
 

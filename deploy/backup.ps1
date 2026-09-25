@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Back up the CrewAi database: dump, verify, encrypt, prune, and optionally copy off-host.
+    Back up the Fareeq database: dump, verify, encrypt, prune, and optionally copy off-host.
 
 .DESCRIPTION
     A backup nobody has restored is a guess, so this verifies every archive with

@@ -122,6 +122,7 @@ class AgentRuntime:
         retry: bool = False,
         private_notes: bool = True,
         learn: bool = True,
+        attachments: list[str] | None = None,
     ) -> AsyncIterator[RuntimeEvent]:
         """Run one turn, or with ``retry`` regenerate the latest unfinished one.
 
@@ -132,7 +133,8 @@ class AgentRuntime:
         ``private_notes=False`` answers from shared context alone — for any turn
         whose reply is handed on to another agent, where a private note would
         otherwise travel inside the answer. ``learn=False`` skips memory
-        extraction for the turn.
+        extraction for the turn. ``attachments`` are document ids sent with the
+        message: recorded on it, and read first this turn.
         """
         async with one_turn_at_a_time(conversation.id) as release:
             async for event in self._run_turn(
@@ -144,6 +146,7 @@ class AgentRuntime:
                 retry=retry,
                 private_notes=private_notes,
                 learn=learn,
+                attachments=attachments,
             ):
                 if event.type in ("end", "error"):
                     # The reply (or its failure) is committed before this event
@@ -163,6 +166,7 @@ class AgentRuntime:
         retry: bool = False,
         private_notes: bool = True,
         learn: bool = True,
+        attachments: list[str] | None = None,
     ) -> AsyncIterator[RuntimeEvent]:
         if retry:
             try:
@@ -175,6 +179,30 @@ class AgentRuntime:
             user_message = user_row.content
         else:
             user_row = convo_service.add_message(db, conversation, "user", user_message)
+            attached = retrieval.attachable(
+                db,
+                user.id,
+                attachments or [],
+                agent_id=agent.id,
+                is_leo=agent.is_assistant,
+                private_ok=private_notes,
+            )
+            if attached:
+                # Kept on the message, so the conversation shows what was sent
+                # with it — after a reload too — and a retry reads the same files.
+                user_row.meta = {
+                    **(user_row.meta or {}),
+                    "attachments": [
+                        {
+                            "id": d.id,
+                            "filename": d.filename,
+                            "kind": d.kind,
+                            "size_bytes": d.size_bytes,
+                        }
+                        for d in attached
+                    ],
+                }
+        focus = [a["id"] for a in (user_row.meta or {}).get("attachments", [])]
 
         shared, agent_mem = memory_service.context_for_agent(db, user.id, agent)
         if not private_notes:
@@ -209,7 +237,7 @@ class AgentRuntime:
             user_row.meta = {**(user_row.meta or {}), "plan_actions": True}
 
         documents, files = await self._documents_for(
-            db, user, agent, user_message, history, private_notes=private_notes
+            db, user, agent, user_message, history, private_notes=private_notes, focus=focus
         )
 
         packet = build_context(
@@ -573,7 +601,7 @@ class AgentRuntime:
         db.flush()
         return actions
 
-    async def _documents_for(self, db, user, agent, message, history, *, private_notes):
+    async def _documents_for(self, db, user, agent, message, history, *, private_notes, focus=None):
         """Passages from the person's files for this turn, and the file names the
         agent may mention. Nothing, at no cost, when they have no documents."""
         if not settings.documents_enabled:
@@ -600,6 +628,7 @@ class AgentRuntime:
             message=message,
             previous=previous,
             query_vector=vector,
+            focus=focus or None,
         )
         return hits, files
 

@@ -1,6 +1,6 @@
-# Prompt: create the CrewAi handover presentations
+# Prompt: create the Fareeq handover presentations
 
-**Agent-name update — 2026-09-15:** Leo is the team leader; Nova (Study), Harvey (Career), Clara (Research), Alex (Writing), Tessa (Travel), Nate (Shopping), Emma (Finance), Maddie (Fitness), and Nora (Email) are the specialists. CrewAi is the product name. See [current naming and compatibility](AGENT-NAMES.md). Historical screenshots, decks and quality artifacts retain the names used when recorded; the earlier live evaluations predate the renamed prompts.
+**Agent-name update — 2026-09-15:** Leo is the team leader; Nova (Study), Harvey (Career), Clara (Research), Alex (Writing), Tessa (Travel), Nate (Shopping), Emma (Finance), Maddie (Fitness), and Nora (Email) are the specialists. Fareeq is the product name. See [current naming and compatibility](AGENT-NAMES.md). Historical screenshots, decks and quality artifacts retain the names used when recorded; the earlier live evaluations predate the renamed prompts.
 
 Create two professional, editable presentations from this repository for a third
 party taking over the product. Produce the actual presentation files, not only
@@ -47,7 +47,7 @@ paths and revisions where available in slide footers or speaker notes.
 ## Presentation 1: product and engineering handover
 
 Audience: incoming technical lead, product owner and competent engineers who
-have never seen CrewAi. Aim for 16–20 main slides plus focused appendices; adjust
+have never seen Fareeq. Aim for 16–20 main slides plus focused appendices; adjust
 the count to preserve readability and coverage.
 
 Tell a coherent story covering:

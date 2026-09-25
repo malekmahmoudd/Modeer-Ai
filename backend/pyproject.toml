@@ -1,7 +1,7 @@
 [project]
-name = "crewai-backend"
+name = "fareeq-backend"
 version = "0.1.0"
-description = "CrewAi personal AI team — FastAPI modular monolith"
+description = "Fareeq personal AI team — FastAPI modular monolith"
 requires-python = ">=3.11"
 
 [tool.ruff]

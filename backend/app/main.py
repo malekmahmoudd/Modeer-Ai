@@ -50,7 +50,7 @@ def api_docs(environment: str) -> dict:
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
-    description="CrewAi: Leo, your personal manager, plus a shared-context specialist team.",
+    description="Fareeq: Leo, your personal manager, plus a shared-context specialist team.",
     lifespan=lifespan,
     **api_docs(settings.environment),
 )

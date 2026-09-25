@@ -16,6 +16,8 @@ env/
 htmlcov/
 *.sqlite3
 *.db
+# Local database backups (e.g. modeer.db.bak-2026-09-25) hold real conversations.
+*.db.bak*
 
 # --- Node / frontend ---
 node_modules/

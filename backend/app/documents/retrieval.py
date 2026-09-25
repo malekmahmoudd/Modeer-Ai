@@ -119,15 +119,21 @@ def retrieve(
     query_vector=None,
     whole_doc: bool = True,
     min_similarity: float | None = None,
+    focus: list[str] | None = None,
 ) -> list[Hit]:
     """The passages to add to this turn, best first; [] when none is relevant.
 
     ``query_vector`` is the embedded query (see :func:`query_text`), computed by
-    the caller off the event loop; None means keyword search only.
+    the caller off the event loop; None means keyword search only. ``focus`` is
+    the documents attached to this very message: only they are searched, and the
+    person is taken to be asking about them.
     """
     documents = visible_documents(
         db, user_id, agent_id=agent_id, is_leo=is_leo, private_ok=private_ok
     )
+    if focus:
+        attached = [d for d in documents if d.id in set(focus)]
+        documents = attached or documents
     chunks = [(doc, chunk) for doc in documents for chunk in doc.chunks]
     if not chunks:
         return []
@@ -146,10 +152,14 @@ def retrieve(
                 similarity[i] = float(emb.from_bytes(chunk.embedding) @ query_vector)
 
     names = {_fold(d.filename).casefold() for d in documents}
-    refers = bool(_REFERS_TO_FILES.search(_fold(message))) or any(
-        stem and stem in _fold(message).casefold()
-        for stem in (n.rsplit(".", 1)[0] for n in names)
-        if len(stem) > 3
+    refers = (
+        bool(focus)
+        or bool(_REFERS_TO_FILES.search(_fold(message)))
+        or any(
+            stem and stem in _fold(message).casefold()
+            for stem in (n.rsplit(".", 1)[0] for n in names)
+            if len(stem) > 3
+        )
     )
     # Is anything here about this message? e5 scores sit in a narrow band
     # (unrelated text still scores ~0.78), so a high score counts on its own and
@@ -204,6 +214,27 @@ def retrieve(
             )
         )
     return hits
+
+
+def attachable(
+    db: Session,
+    user_id: str,
+    ids: list[str],
+    *,
+    agent_id: str,
+    is_leo: bool,
+    private_ok: bool,
+) -> list[Document]:
+    """The attached ids this agent may read, in the order given. Anything else —
+    another person's document, one private to another agent — is dropped."""
+    if not ids:
+        return []
+    stmt = select(Document).where(Document.user_id == user_id, Document.id.in_(ids))
+    own_ok = private_ok and not is_leo  # the same rule as visible_documents
+    visible = {
+        d.id: d for d in db.scalars(stmt) if d.shared or (own_ok and d.agent_id == agent_id)
+    }
+    return [visible[i] for i in dict.fromkeys(ids) if i in visible]
 
 
 def query_text(message: str, previous: str = "") -> str:

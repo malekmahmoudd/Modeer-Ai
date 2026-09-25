@@ -167,7 +167,7 @@ def followups_calendar(user: CurrentUser, db: DbSession):
     events = [
         (f.id, f.due_on, f.title) for f in service.list_followups(db, user.id, status="pending")
     ]
-    return _calendar(service.to_ics(events, name="CrewAi follow-ups"), "crewai-followups.ics")
+    return _calendar(service.to_ics(events, name="Fareeq follow-ups"), "fareeq-followups.ics")
 
 
 # --- plans ------------------------------------------------------------------------------
@@ -253,7 +253,7 @@ def plan_calendar(plan_id: str, user: CurrentUser, db: DbSession):
     events = [(s.id, s.due_on, s.text) for s in plan.steps if s.due_on and not s.done_at]
     if not events:
         raise HTTPException(status_code=422, detail="This plan has no dated steps.")
-    return _calendar(service.to_ics(events, name=plan.title), "crewai-plan.ics")
+    return _calendar(service.to_ics(events, name=plan.title), "fareeq-plan.ics")
 
 
 # --- check-ins ---------------------------------------------------------------------------

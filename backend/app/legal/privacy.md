@@ -1,6 +1,6 @@
-# What CrewAi stores about you
+# What Fareeq stores about you
 
-CrewAi is a personal assistant with a team of specialists that share what they
+Fareeq is a personal assistant with a team of specialists that share what they
 know about you. That only works because it remembers things — so this page says
 exactly what it keeps, where that lives, and who can reach it.
 
@@ -10,7 +10,7 @@ assume the more cautious reading and ask.
 ## What it keeps
 
 - **Your messages and the replies**, in full, for every specialist you talk to.
-- **Facts it learns about you.** As you chat, CrewAi extracts durable personal
+- **Facts it learns about you.** As you chat, Fareeq extracts durable personal
   facts — what you study, where you work, what you are training for, what you
   can afford, what you are avoiding. Some are shared across the whole team; some
   stay with one specialist.
@@ -30,14 +30,14 @@ assume the more cautious reading and ask.
   address, not the address itself, and exist to stop guessing.
 
 Some of what it remembers is sensitive by nature — health, money, work. When
-CrewAi recognises a fact as sensitive it does not store it automatically unless
+Fareeq recognises a fact as sensitive it does not store it automatically unless
 the deployment has opted in (`MEMORY_STORE_SENSITIVE`). **Recognising it is best
 effort**, not a guarantee: a health or money detail phrased in an ordinary way
 can be saved as an ordinary fact. Everything stored is visible to you in Memory,
 where you can edit or delete it — so it is worth a look now and then. Anything
 you save yourself is stored exactly as you wrote it, sensitive or not.
 
-When CrewAi updates a fact automatically, it keeps the last few earlier values
+When Fareeq updates a fact automatically, it keeps the last few earlier values
 with it, so a wrong update can be undone. Editing that fact yourself clears
 them, and deleting it deletes them. Text you paste in, such as someone else's
 email, is not learned from. When you ask one assistant to pass something to
@@ -53,7 +53,7 @@ from. All of it is included in your data export and deleted with your account.
 Follow-ups, check-ins and learned facts stop when you switch automatic memory
 off.
 
-**Documents you upload.** When you give an assistant a file, CrewAi reads the
+**Documents you upload.** When you give an assistant a file, Fareeq reads the
 text out of it and throws the file itself away; it keeps only the text, split
 into passages. Only the assistant you gave it to reads it, unless you share it
 with the team (you can undo that). When a passage is relevant to a message, it
@@ -78,9 +78,9 @@ that backup was taken.
 
 - **You.**
 - **Whoever runs the server.** They hold the database and the backup passphrase,
-  so they can read anything in it. CrewAi is self-hosted: trust
+  so they can read anything in it. Fareeq is self-hosted: trust
   in the operator is part of the arrangement, and no software here changes that.
-- **Your model provider.** To answer you, CrewAi sends the specialist's
+- **Your model provider.** To answer you, Fareeq sends the specialist's
   instructions, the relevant facts it remembers about you, what it is keeping
   track of for that specialist (dates, saved plans, logged progress), notes a
   teammate left at your request, the recent messages of that conversation (up to
@@ -104,10 +104,10 @@ that backup was taken.
 - **Nobody else.** Other accounts on the same deployment cannot read your
   conversations, memories or goals; that isolation is enforced and tested.
 
-## What CrewAi does not do
+## What Fareeq does not do
 
 - No advertising, profiling for advertising, or selling data.
-- No training of any model on your conversations by CrewAi itself.
+- No training of any model on your conversations by Fareeq itself.
 - No sharing between accounts.
 - No logging of your message content in server logs — logs record timings,
   status codes and error types only.
@@ -118,7 +118,7 @@ that backup was taken.
 |---|---|
 | See what it remembers | Memory, in the app — every stored fact, editable |
 | Stop it learning from your messages | Account → What Leo learns → switch off "Learn from my messages automatically". Nothing already saved is removed, and you can still save facts yourself |
-| Correct or delete a single fact | Memory — edit or delete it. An edit is yours: CrewAi will not overwrite it automatically later |
+| Correct or delete a single fact | Memory — edit or delete it. An edit is yours: Fareeq will not overwrite it automatically later |
 | Delete one conversation | Open conversation history, then choose its delete button |
 | Take everything with you | Account → Download my data — a JSON file, messages included |
 | Delete everything | Account → Delete my account → type DELETE |
@@ -132,7 +132,7 @@ backup retention schedule, 30 days by default.
 ## Sessions and access
 
 You sign in with your email and password, or with an invitation key if the
-operator gave you one. CrewAi stores only hashes of passwords, keys and recovery
+operator gave you one. Fareeq stores only hashes of passwords, keys and recovery
 codes, never the secrets themselves. A session is a signed, HttpOnly,
 SameSite=Strict cookie that expires after seven days.
 

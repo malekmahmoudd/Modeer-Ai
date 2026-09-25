@@ -3,7 +3,12 @@
 _Last updated: 2026-09-25 · phase: production readiness, invite-only or open signup_
 
 
-## Current: verified, with screens — 2026-09-25 (end of day)
+## Renamed to Fareeq — 2026-09-25
+
+The product is now **Fareeq** (فريق, "team"), resolving the clash with the CrewAI
+framework. See `AGENT-NAMES.md`.
+
+## Earlier: verified, with screens — 2026-09-25 (end of day)
 
 - **Image.** Built and verified for `linux/amd64` on Colima: exact lock set,
   446 tests inside the image, model and `tzdata` working, 801 MB, non-root.
@@ -89,7 +94,6 @@ Still open from the council:
 - no global token cap or suspend switch
 - screens not built
 - RAG plan revised, not started
-- the "CrewAi" / CrewAI name clash
 
 ## Earlier: keeping track — 2026-09-25 (later)
 

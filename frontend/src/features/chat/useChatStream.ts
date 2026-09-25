@@ -73,7 +73,7 @@ export function useChatStream(agentId: string, opts: Options = {}) {
 
   /** Send a message, or with `retry` regenerate the latest unfinished reply. */
   const send = useCallback(
-    async (message: string | null, conversationId: string | null, retry = false) => {
+    async (message: string | null, conversationId: string | null, retry = false, attachments: string[] = []) => {
       if (abortRef.current) return;
       setText("");
       setReplyComplete(false);
@@ -96,7 +96,9 @@ export function useChatStream(agentId: string, opts: Options = {}) {
             ...(browserTimeZone() ? { "X-Timezone": browserTimeZone() as string } : {}),
           },
           body: JSON.stringify(
-            retry ? { conversation_id: conversationId, retry: true } : { message, conversation_id: conversationId },
+            retry
+              ? { conversation_id: conversationId, retry: true }
+              : { message, conversation_id: conversationId, attachments },
           ),
           signal: controller.signal,
         });

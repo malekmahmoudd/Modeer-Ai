@@ -55,6 +55,9 @@ class ChatRequest(BaseModel):
     message: str | None = Field(default=None, max_length=8000)
     conversation_id: str | None = None
     retry: bool = False
+    #: Documents attached to this message (ids from POST /documents). They show
+    #: in the conversation with the message, and this turn reads them first.
+    attachments: list[str] = Field(default_factory=list, max_length=5)
 
     @field_validator("message")
     @classmethod

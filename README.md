@@ -1,4 +1,4 @@
-# CrewAi — Personal AI Team (MVP)
+# Fareeq — Personal AI Team (MVP)
 
 A personal AI assistant, **Leo**, plus a user-chosen team of nine specialist
 AI agents that share your personal context.

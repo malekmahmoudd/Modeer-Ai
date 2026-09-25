@@ -1,4 +1,4 @@
-# Running CrewAi
+# Running Fareeq
 
 What to schedule, what to watch, and what happens when it breaks. Written for
 the person holding the pager, which on a private deployment is the person who
@@ -100,7 +100,7 @@ The app alerts on:
 |---|---|---|
 | Unhandled errors reaching `ALERT_ERROR_THRESHOLD` (default 3) | critical | Something is broken and users are seeing it |
 | Provider daily quota exhausted | critical | Replies using the affected model may fail until its budget refills |
-| CrewAi down or degraded (from the watchdog) | critical | The app cannot report this itself |
+| Fareeq down or degraded (from the watchdog) | critical | The app cannot report this itself |
 
 The same event alerts at most once every 15 minutes, so a crash loop is one
 message rather than three hundred. Alerts carry event names, counts, exception
