@@ -26,8 +26,14 @@ ASK = {"question": "How should I plan my week?", "agent_ids": ["study"]}
 # --- Ask My Team ----------------------------------------------------------------
 
 
-def test_team_ships_disabled():
-    assert Settings.model_fields["team_enabled"].default is False
+def test_team_ships_enabled_with_a_cap_of_three(client):
+    assert Settings.model_fields["team_enabled"].default is True
+    four = {"question": "hi", "agent_ids": ["study", "career", "travel", "email"]}
+    assert client.post("/api/team/ask", json=four).status_code == 422
+    twice = {"question": "hi", "agent_ids": ["study", "study"]}
+    assert client.post("/api/team/ask", json=twice).status_code == 422
+    leo = {"question": "hi", "agent_ids": ["modeer", "study"]}
+    assert client.post("/api/team/ask", json=leo).status_code == 422
 
 
 def test_disabled_team_is_not_found_for_a_signed_in_caller(client, monkeypatch):

@@ -15,8 +15,9 @@ from pydantic import BaseModel, Field, field_validator
 from app.agents.registry import get_agent, require_agent
 from app.agents.runtime import AgentRuntime
 from app.api.deps import refuse_if_suspended
-from app.core.auth import session_epoch_matches
+from app.conversations import service as convo_service
 from app.core.config import settings
+from app.core.sessions import session_ok
 from app.core.usage import BudgetExceeded, limited_caller
 from app.db.models import Conversation
 from app.db.session import SessionLocal
@@ -29,9 +30,23 @@ router = APIRouter(prefix="/team", tags=["team"])
 CallerId = Annotated[str | None, Depends(limited_caller)]
 
 
+#: Specialists one ask may consult: each is a model call from the same daily
+#: allowance, plus Leo's synthesis.
+MAX_TEAM = 3
+
+
 class AskTeamRequest(BaseModel):
     question: str = Field(min_length=1, max_length=4000)
-    agent_ids: list[str] = Field(min_length=1, max_length=5)
+    agent_ids: list[str] = Field(min_length=1, max_length=MAX_TEAM)
+
+    @field_validator("agent_ids")
+    @classmethod
+    def _distinct_specialists(cls, value: list[str]) -> list[str]:
+        if len(set(value)) != len(value):
+            raise ValueError("Pick each teammate once")
+        if "modeer" in value:
+            raise ValueError("Leo brings the answers together; pick specialists to ask")
+        return value
 
     @field_validator("question")
     @classmethod
@@ -48,12 +63,16 @@ class SpecialistTake(BaseModel):
     answer: str
     # completed | truncated | interrupted | failed — see app.agents.runtime.
     completion: str = "completed"
+    #: Where this answer is kept, to carry on with that specialist.
+    conversation_id: str | None = None
 
 
 class AskTeamResponse(BaseModel):
     question: str
     takes: list[SpecialistTake]
     synthesis: str
+    #: Leo's conversation holding the question and the combined answer.
+    conversation_id: str | None = None
 
 
 @router.post("/ask", response_model=AskTeamResponse)
@@ -73,7 +92,7 @@ async def ask_team(
     db = SessionLocal()
     try:
         user = get_by_id(db, x_user_id) if x_user_id else get_or_create_demo_user(db)
-        if user is not None and x_user_id and not session_epoch_matches(request, user):
+        if user is not None and x_user_id and not session_ok(db, request, user):
             raise HTTPException(status_code=401, detail="Please sign in")
         if user is None:
             raise HTTPException(status_code=404, detail="Unknown user")
@@ -84,7 +103,9 @@ async def ask_team(
         takes: list[SpecialistTake] = []
         for slug in body.agent_ids:
             agent = require_agent(slug)
-            convo = Conversation(user_id=user.id, agent_id=slug, title="Ask My Team")
+            convo = Conversation(
+                user_id=user.id, agent_id=slug, title=f"Team: {body.question.strip()[:70]}"
+            )
             db.add(convo)
             db.flush()
             answer, completion = "", "failed"
@@ -104,12 +125,39 @@ async def ask_team(
                         raise HTTPException(429, event.data["error"])
                     answer = f"(unavailable: {event.data['error']})"
             takes.append(
-                SpecialistTake(agent_id=slug, name=agent.name, answer=answer, completion=completion)
+                SpecialistTake(
+                    agent_id=slug,
+                    name=agent.name,
+                    answer=answer,
+                    completion=completion,
+                    conversation_id=convo.id,
+                )
             )
         db.commit()
 
         synthesis = await _synthesise(user, body.question, takes)
-        return AskTeamResponse(question=body.question, takes=takes, synthesis=synthesis)
+        # Kept in Leo's history, so the combined answer can be found again.
+        leo = Conversation(
+            user_id=user.id, agent_id="modeer", title=f"Team: {body.question.strip()[:70]}"
+        )
+        db.add(leo)
+        db.flush()
+        convo_service.add_message(db, leo, "user", body.question)
+        convo_service.add_message(
+            db,
+            leo,
+            "assistant",
+            synthesis,
+            {
+                "team": [
+                    {"agent_id": t.agent_id, "conversation_id": t.conversation_id} for t in takes
+                ]
+            },
+        )
+        db.commit()
+        return AskTeamResponse(
+            question=body.question, takes=takes, synthesis=synthesis, conversation_id=leo.id
+        )
     except BudgetExceeded as exc:
         raise HTTPException(
             429, str(exc), headers={"Retry-After": str(int(exc.retry_after))}

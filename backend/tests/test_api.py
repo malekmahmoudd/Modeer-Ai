@@ -92,3 +92,10 @@ def test_ask_my_team_is_explicit_and_multi_specialist(client):
     body = r.json()
     assert {t["agent_id"] for t in body["takes"]} == {"career", "study"}
     assert body["synthesis"]
+    # Every answer is kept where it can be carried on, and Leo keeps the whole.
+    leo = client.get(f"/api/conversations/{body['conversation_id']}").json()
+    assert leo["agent_id"] == "modeer" and leo["title"].startswith("Team: ")
+    assert [m["role"] for m in leo["messages"]] == ["user", "assistant"]
+    for take in body["takes"]:
+        kept = client.get(f"/api/conversations/{take['conversation_id']}").json()
+        assert kept["agent_id"] == take["agent_id"] and kept["messages"]

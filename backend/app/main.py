@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.agents.sync import sync_agents
 from app.api import api_router
 from app.conversations.service import purge_incognito
+from app.core import sessions as devices
 from app.core.config import settings
 from app.core.observability import install as install_observability
 from app.db.base import Base
@@ -27,9 +28,11 @@ INCOGNITO_SWEEP_SECONDS = 3600
 
 def sweep_incognito() -> int:
     """Delete every incognito chat past its 24 hours. Also done per account
-    whenever someone lists their chats; this catches people who never return."""
+    whenever someone lists their chats; this catches people who never return.
+    Device records that ended over 30 days ago go in the same pass."""
     with SessionLocal() as db:
         removed = purge_incognito(db)
+        devices.sweep(db)
         db.commit()
     return removed
 

@@ -116,7 +116,8 @@ def test_ask_my_team_rejects_anonymous_and_forged_callers(client, make_user, mon
         == 200
     )
     mine = client.get("/api/conversations").json()
-    assert mine and {c["agent_id"] for c in mine} == {"study", "career"}
+    # The two answers, and Leo's combined answer kept in his history.
+    assert mine and {c["agent_id"] for c in mine} == {"study", "career", "modeer"}
 
     # Bob's account must not have gained the conversations Alice's request created.
     client.post("/api/auth/logout")
@@ -235,7 +236,8 @@ def test_signing_out_everywhere_revokes_only_this_account(client, make_user, mon
     alice_cookie = dict(client.cookies)
     assert client.get("/api/goals").status_code == 200
 
-    client.post("/api/auth/logout")
+    # Bob on another device (signing out here would end Alice's session).
+    client.cookies.clear()
     client.post("/api/auth/login", json={"access_key": "b" * 40}, headers=origin)
     bob_cookie = dict(client.cookies)
 

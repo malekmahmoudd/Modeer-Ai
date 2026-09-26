@@ -104,10 +104,23 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
             "memory_auto": user.memory_auto,
             "timezone": user.timezone,
             "locale": user.locale,
+            # Whether it is on; the secret itself is never exported.
+            "two_factor": user.totp_enabled_at is not None,
             # How the account signs in — never the password or code hashes.
             "signs_in_with": "password" if user.password_hash else "access key",
             "created_at": when(user.created_at),
         },
+        "signed_in_devices": [
+            {
+                "signed_in_at": when(d.created_at),
+                "last_seen_at": when(d.last_seen_at),
+                "ended_at": when(d.revoked_at),
+                "method": d.method,
+                "browser": d.user_agent,
+                "network": d.ip_prefix,
+            }
+            for d in user.sessions
+        ],
         "conversations": [
             {
                 "id": c.id,

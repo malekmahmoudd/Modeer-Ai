@@ -42,24 +42,36 @@ def _require_admin(user: CurrentUser) -> User:
 
 
 def _usage_today(db) -> list[dict]:
-    """Per-account token spend in the current UTC day window."""
+    """Every account's share of its daily allowance in the current UTC day —
+    including the ones that have used nothing yet — busiest first."""
     window = int(time.time()) // DAY_SECONDS
-    rows = db.execute(
-        select(UsageBucket.account, UsageBucket.amount)
-        .where(UsageBucket.kind == "tokens", UsageBucket.window == window)
-        .order_by(UsageBucket.amount.desc())
-    ).all()
+    spent = dict(
+        db.execute(
+            select(UsageBucket.account, UsageBucket.amount).where(
+                UsageBucket.kind == "tokens", UsageBucket.window == window
+            )
+        ).all()
+    )
     budget = settings.account_daily_token_budget
-    names = dict(db.execute(select(User.id, User.display_name)).all())
-    return [
+    accounts = db.execute(select(User.id, User.display_name, User.suspended_at)).all()
+    rows = [
         {
-            "account": names.get(account, account),
-            "used": amount,
-            "budget": budget,
-            "percent": round(100 * amount / budget, 1) if budget else 0.0,
+            "id": account_id,
+            "account": name,
+            "used": int(spent.pop(account_id, 0) or 0),
+            "suspended": suspended is not None,
         }
-        for account, amount in rows
+        for account_id, name, suspended in accounts
     ]
+    # Usage recorded under something that is not an account (the local demo).
+    rows += [
+        {"id": key, "account": key, "used": int(amount or 0), "suspended": False}
+        for key, amount in spent.items()
+    ]
+    for row in rows:
+        row["budget"] = budget
+        row["percent"] = round(100 * row["used"] / budget, 1) if budget else 0.0
+    return sorted(rows, key=lambda r: (-r["used"], r["account"].lower()))
 
 
 @router.get("/metrics")
@@ -140,13 +152,14 @@ def dashboard(user: CurrentUser, db: DbSession) -> HTMLResponse:
 
     account_rows = (
         "".join(
-            f"<tr><td>{esc(a['account'])}</td>"
+            f"<tr><td>{esc(a['account'])}"
+            f"{' <span class=bad>(suspended)</span>' if a['suspended'] else ''}</td>"
             f"<td class='num'>{a['used']:,}</td>"
             f"<td class='num'>{a['budget']:,}</td>"
             f"<td class='bar'>{_bar(a['percent'])} {a['percent']}%</td></tr>"
             for a in accounts
         )
-        or "<tr><td colspan='4' class='muted'>No usage recorded today.</td></tr>"
+        or "<tr><td colspan='4' class='muted'>No accounts yet.</td></tr>"
     )
 
     status_rows = (

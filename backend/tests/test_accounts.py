@@ -387,6 +387,7 @@ def test_the_operator_can_let_in_someone_who_lost_password_and_codes(
         "has_password": False,
         "recovery_codes_left": 0,
         "email": "locked@example.com",
+        "two_factor": False,
     }
     fresh = client.post(
         "/api/auth/password", json={"new_password": "a brand new passphrase"}, headers=ORIGIN

@@ -14,6 +14,7 @@ from app.core.auth import COOKIE, session_claims
 from app.core.clock import zone
 from app.core.config import settings
 from app.core.observability import health as health_counters
+from app.core.sessions import session_ok
 from app.documents.embedding import get_embedder
 from app.users.service import get_by_id
 
@@ -136,7 +137,7 @@ def _operator(request: Request, db) -> bool:
     if not claims or claims[0] not in settings.admin_accounts:
         return False
     account = get_by_id(db, claims[0])
-    return account is not None and (account.session_epoch or 0) == claims[1]
+    return account is not None and session_ok(db, request, account)
 
 
 def _erroring(counters: dict) -> bool:

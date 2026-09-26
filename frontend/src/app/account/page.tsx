@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { DevicesSection, TwoStepSection, UsageSection } from "@/components/account/SecuritySections";
 import { RecoveryCodes } from "@/components/auth/RecoveryCodes";
 import { apiFetch, useApi } from "@/lib/api";
+import { formatNumber } from "@/lib/format";
 import { usePrefs, type Locale } from "@/lib/i18n";
 import { clearDrafts } from "@/lib/offline";
 import type { AccountSecurity, UserProfile } from "@/types";
@@ -58,6 +60,7 @@ export default function AccountPage() {
         {t("account.learnToggle")}
       </label>
     </section>
+    <UsageSection />
     <section className="border-2 border-ink bg-paper-hi p-5 shadow-pop-xs">
       <h2 className="display text-2xl">{t("account.appearance")}</h2>
       <fieldset className="mt-3">
@@ -105,7 +108,7 @@ export default function AccountPage() {
         </form>
         {hasPassword && <div className="mt-6 border-t-2 border-ink/15 pt-5">
           <h3 className="font-bold">{t("account.codes")}</h3>
-          <p className="my-2 text-ink-soft">{t("account.codesLeft", { n: security?.recovery_codes_left ?? 0 })}</p>
+          <p className="my-2 text-ink-soft">{t("account.codesLeft", { n: formatNumber(security?.recovery_codes_left ?? 0) })}</p>
           <form onSubmit={e => { e.preventDefault(); void run("codes", async () => {
             const result = await apiFetch<{ recovery_codes: string[] }>("/auth/recovery-codes", {method: "POST", body: JSON.stringify({password: codesPassword})});
             setCodesPassword(""); setFreshCodes(result.recovery_codes);
@@ -117,6 +120,7 @@ export default function AccountPage() {
         </div>}
       </>}
     </section>
+    <TwoStepSection security={security} onChanged={refetchSecurity} onNotice={(message) => { setError(""); setNotice(message); }} />
     <section className="border-2 border-ink bg-paper-hi p-5 shadow-pop-xs">
       <h2 className="display text-2xl">{t("account.copy")}</h2>
       <p className="my-3 text-ink-soft">{t("account.copyHelp")}</p>
@@ -130,6 +134,9 @@ export default function AccountPage() {
     </section>
     <section className="border-2 border-ink bg-paper-hi p-5 shadow-pop-xs">
       <h2 className="display text-2xl">{t("account.devices")}</h2>
+      <div className="my-3">
+        <DevicesSection onNotice={(message) => { setError(""); setNotice(message); }} />
+      </div>
       <p className="my-3 text-ink-soft">{hasPassword ? t("account.devicesPassword") : t("account.devicesKey")}</p>
       <button disabled={!!busy} className="btn btn-sun" onClick={() => {
         if (!window.confirm(t("account.signOutAllConfirm"))) return;

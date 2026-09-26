@@ -90,10 +90,13 @@ def main(argv: list[str] | None = None) -> int:
             if args.clear_password:
                 existing.password_hash = None
                 existing.recovery_codes.clear()
+                # A lost phone is usually why the codes are gone too.
+                existing.totp_secret = existing.totp_pending = None
+                existing.totp_enabled_at = existing.totp_last_step = None
                 payload["password_cleared"] = True
                 message += (
-                    "\nPassword and recovery codes removed: after signing in with the key, "
-                    "they set a new password on the Account page."
+                    "\nPassword, recovery codes and two-step sign-in removed: after signing "
+                    "in with the key, they set a new password on the Account page."
                 )
         else:
             if existing is not None:

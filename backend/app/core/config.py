@@ -59,12 +59,11 @@ class Settings(BaseSettings):
     voice_per_day: int = Field(default=60, ge=0)
 
     # --- Features ---
-    #: Ask My Team (POST /api/team/ask). Off for the initial release: no screen
-    #: calls it yet, and it is the most expensive route — up to five specialists
-    #: plus a synthesis per request against a shared free quota. The
-    #: implementation is kept and tested; set TEAM_ENABLED=true to switch it on
-    #: once a UI exists. See docs/launch-fixes.md.
-    team_enabled: bool = False
+    #: Ask My Team (POST /api/team/ask, the Team page). On since 2026-09-26, with
+    #: a cap of three specialists: an ask costs up to four model calls (three
+    #: answers and Leo's synthesis) against the same free daily allowance.
+    #: TEAM_ENABLED=false turns it off.
+    team_enabled: bool = True
     #: Open signup (POST /api/auth/signup and the /signup page). Off until you
     #: choose to open the doors: an invite-only beta keeps provisioning accounts
     #: by hand, and turning this on is the public-launch step. SIGNUP_ENABLED=true.

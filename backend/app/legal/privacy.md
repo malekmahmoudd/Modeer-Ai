@@ -24,6 +24,16 @@ assume the more cautious reading and ask.
   has used, per minute and per day. These exist to stop one account exhausting
   the shared allowance. They record volume, never content. If a request fails
   before the model sends any text, it is not counted against you.
+- **Your signed-in devices**: for each sign-in, when it started and was last
+  used, how you signed in, what your browser says it is (for example "Chrome
+  on Mac"), and the first part of your network address (for example
+  "203.0.113.x" — never the whole address). It is how the Account page lists
+  your devices and lets you sign one out. A record is deleted 30 days after
+  that device is signed out or its session expires.
+- **Two-step sign-in**, if you turn it on: the setup key your authenticator
+  app shares with Fareeq, and the last code used (so a code can't be used
+  twice). Like everything else here, whoever runs the server can read it, and
+  it is in encrypted backups. Your export says whether it is on, never the key.
 - **Sign-in attempt counters**: how many times someone tried to sign in or reset
   a password for an email address, and how many accounts were created from one
   network address, for up to an hour. They are stored as one-way hashes of the
@@ -156,6 +166,8 @@ that backup was taken.
 | Take everything with you | Account → Download my data — a JSON file, messages included |
 | Delete everything | Account → Delete my account → type DELETE |
 | Sign out every device | Account → Sign out every device |
+| Sign out one device | Account → Your devices → Sign out beside it |
+| Add a second step to signing in | Account → Two-step sign-in |
 
 **Deletion is immediate and irreversible.** It removes your account,
 conversations, messages, memories, goals, briefings and usage counters from the

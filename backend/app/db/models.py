@@ -55,10 +55,19 @@ class User(UUIDMixin, TimestampMixin, Base):
     suspended_at: Mapped[datetime | None] = mapped_column(nullable=True)
     #: Interface language: "en" or "ar". None follows the browser.
     locale: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    #: Two-step sign-in with an authenticator app (RFC 6238). The base32 secret
+    #: is stored as is: like everything else here, the operator can read it, and
+    #: backups are encrypted. ``totp_pending`` holds a secret being set up, not
+    #: yet confirmed with a code; ``totp_last_step`` stops a code being reused.
+    totp_secret: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    totp_pending: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    totp_enabled_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    totp_last_step: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     recovery_codes: Mapped[list[RecoveryCode]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    sessions: Mapped[list[UserSession]] = relationship(cascade="all, delete-orphan")
     conversations: Mapped[list[Conversation]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
@@ -76,6 +85,30 @@ class User(UUIDMixin, TimestampMixin, Base):
     briefings: Mapped[list[Briefing]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+
+
+class UserSession(UUIDMixin, TimestampMixin, Base):
+    """One signed-in device. Its id travels in the session cookie, so one device
+    can be signed out without touching the others.
+
+    Only what the Account page shows is kept: the browser's own description of
+    itself and the first part of the network address (never the whole address).
+    Rows are removed 30 days after they end.
+    """
+
+    __tablename__ = "user_sessions"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    #: The account's session generation when this began; a later "sign out
+    #: everywhere" or password change ends it.
+    epoch: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    #: password | key | signup | recovery | refresh
+    method: Mapped[str] = mapped_column(String(16), default="password")
+    user_agent: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    ip_prefix: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    last_seen_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    expires_at: Mapped[datetime] = mapped_column()
+    revoked_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
 
 class RecoveryCode(UUIDMixin, TimestampMixin, Base):

@@ -3,6 +3,43 @@
 _Last updated: 2026-09-25 · phase: production readiness, invite-only or open signup_
 
 
+## Sign-in security, Ask My Team, usage — 2026-09-26 (later)
+
+Migration **0010**. 492 backend tests (`test_sign_in_security.py` is new).
+Browser QA in Chrome: 21/21 checks, plus the earlier 54/54 still passing.
+
+- **Your devices.** Every sign-in records a device: browser and system, the
+  first part of the network address, and when it was last used. Its id is in
+  the cookie, so the Account page can sign out one device and leave the rest.
+  - Signing out now also ends that device on the server, so a copied cookie
+    stops working.
+  - Cookies from before this change have no device id. They still work until
+    they expire, and "Sign out every device" ends them.
+- **Two-step sign-in (optional).**
+  - Authenticator-app codes (RFC 6238, standard library only, checked against
+    the RFC's test vectors).
+  - Set up with a QR code drawn as SVG (`qrcode-generator`, MIT, no
+    dependencies), confirmed with the first code.
+  - A code can't be reused. Attempts are throttled.
+  - A recovery code works instead of the phone.
+  - A password is needed first, so recovery codes exist.
+  - The operator's `--clear-password` reset also removes two-step sign-in.
+  - The setup key is stored as is; see the privacy notice.
+- **Ask My Team is on**, with at most 3 distinct specialists (Leo combines
+  them).
+  - Asked from the Team page.
+  - Each answer is kept in that specialist's history ("Carry on with …"), and
+    Leo's combined answer in his.
+  - An ask costs up to 4 model calls from the same daily allowance.
+- **Usage for every user.**
+  - Each person sees "N% used today" on Account, with a bar, messages left
+    and the reset time, and under the chat box.
+  - The operator dashboard now lists every account, including those at 0%,
+    and marks suspended ones.
+- **Fixed on the way:** times the server sent without a timezone were read as
+  local time, so "3h ago" appeared for things done just now in UTC+3. They
+  are now read as UTC.
+
 ## Features for you — 2026-09-26
 
 Six features, chosen from the council review. Migration **0009**. Tests:

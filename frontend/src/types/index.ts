@@ -235,6 +235,37 @@ export interface AccountSecurity {
   has_password: boolean;
   recovery_codes_left: number;
   email: string | null;
+  /** Two-step sign-in with an authenticator app is on. */
+  two_factor?: boolean;
+}
+
+/** A device signed in to this account (GET /auth/sessions). */
+export interface SignedInDevice {
+  id: string;
+  current: boolean;
+  browser: string | null;
+  system: string | null;
+  /** The first part of the network address, e.g. "203.0.113.x". */
+  network: string | null;
+  method: string;
+  signed_in_at: string;
+  last_seen_at: string | null;
+}
+
+/** One specialist's answer to an Ask My Team question. */
+export interface TeamTake {
+  agent_id: string;
+  name: string;
+  answer: string;
+  completion: Completion;
+  conversation_id: string | null;
+}
+
+export interface TeamAnswer {
+  question: string;
+  takes: TeamTake[];
+  synthesis: string;
+  conversation_id: string | null;
 }
 
 export type ChatStreamEvent =

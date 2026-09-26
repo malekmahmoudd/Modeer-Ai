@@ -232,7 +232,8 @@ over it, and asserts every table matches the archive again.
 
 | Situation | Action |
 |---|---|
-| Lost device | Account → Sign out every device. Ends their sessions only. |
+| Lost device | Account → Your devices → Sign out beside it (or "Sign out every device"). Ends their sessions only. |
+| Lost phone with two-step sign-in on | A recovery code works in place of the authenticator code, at sign-in and to turn it off. With no codes left: `provision_user.py --rotate --clear-password` also removes two-step sign-in. |
 | Password forgotten | Login → "Forgot your password? Use a recovery code". Each code works once; the Account page makes a fresh set. Sessions elsewhere end. |
 | Password and every recovery code lost | No self-service way back — by design there is no email reset. After confirming who they are by a channel you trust: `python provision_user.py --rotate --clear-password --email … --output key.json`, merge the entry into `AUTH_ACCESS_KEYS`, restart, hand over the key. That removes their password and codes and ends their sessions; they sign in with the key and set a new password on the Account page, which issues fresh codes. |
 | Password suspected known to someone else | Account → change password. Every other session ends. |

@@ -9,12 +9,18 @@ Two ways to sign in, side by side:
 A lost password is recovered with one of the single-use recovery codes shown at
 signup. No email is sent, so nothing here depends on a mail service.
 
+Two-step sign-in is optional: an authenticator-app code (app.core.totp) after
+the password or key. A recovery code works in its place when the phone is lost.
+Each sign-in is a device (app.core.sessions) that can be signed out on its own.
+
 Every endpoint that checks a secret is throttled per email (and signup per
 client address), because an open form is an open invitation to guess.
 """
 
 import hashlib
 import hmac
+import re
+from datetime import UTC
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
@@ -22,8 +28,9 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, DbSession, refuse_if_suspended
-from app.core import passwords
-from app.core.auth import COOKIE, key_user, session_epoch_matches, sign_session
+from app.core import passwords, totp
+from app.core import sessions as devices
+from app.core.auth import COOKIE, key_user, session_claims, sign_session
 from app.core.config import settings
 from app.core.usage import BudgetExceeded, charge
 from app.db.base import utcnow
@@ -61,6 +68,9 @@ class Login(BaseModel):
     access_key: str | None = Field(default=None, min_length=32, max_length=256)
     email: EmailStr | None = None
     password: str | None = Field(default=None, min_length=1, max_length=passwords.MAX_PASSWORD)
+    #: The second step, when the account has one: a 6-digit authenticator code
+    #: or a recovery code.
+    code: str | None = Field(default=None, max_length=40)
 
     @model_validator(mode="after")
     def _one_way_in(self) -> "Login":
@@ -105,6 +115,15 @@ class ConfirmPassword(BaseModel):
     password: str = Field(min_length=1, max_length=passwords.MAX_PASSWORD)
 
 
+class TwoFactorCode(BaseModel):
+    code: str = Field(min_length=6, max_length=40)
+
+
+class TwoFactorOff(BaseModel):
+    password: str = Field(min_length=1, max_length=passwords.MAX_PASSWORD)
+    code: str = Field(min_length=6, max_length=40)
+
+
 # --- helpers ------------------------------------------------------------------------
 
 
@@ -139,10 +158,23 @@ def _client_address(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def _set_session(response: Response, account: User, *, epoch: int | None = None) -> None:
+def _set_session(
+    response: Response,
+    account: User,
+    db,
+    request: Request,
+    method: str,
+    *,
+    epoch: int | None = None,
+) -> None:
+    """Sign this device in: a device row, and a cookie that names it."""
+    session_id = devices.start(db, account, request, method)
+    db.commit()
     response.set_cookie(
         COOKIE,
-        sign_session(account.id, (account.session_epoch or 0) if epoch is None else epoch),
+        sign_session(
+            account.id, (account.session_epoch or 0) if epoch is None else epoch, session_id
+        ),
         max_age=settings.session_seconds,
         httponly=True,
         secure=settings.environment == "production",
@@ -186,8 +218,68 @@ def _lock_credentials(db, account: User, request: Request | None = None) -> None
         raise HTTPException(401, "Please sign in")
     db.refresh(account)
     db.expire(account, ["recovery_codes"])
-    if request is not None and not session_epoch_matches(request, account):
+    if request is not None and not devices.session_ok(db, request, account):
         raise HTTPException(401, "Please sign in")
+
+
+def _use_recovery_code(db, account: User, code: str) -> bool:
+    """Spend one unused recovery code, comparing every code in constant time."""
+    wanted = passwords.hash_recovery_code(code)
+    match = None
+    for row in account.recovery_codes:
+        if row.used_at is None and hmac.compare_digest(row.code_hash, wanted):
+            match = match or row
+    if match is None:
+        return False
+    claimed = db.execute(
+        update(RecoveryCode)
+        .where(RecoveryCode.id == match.id, RecoveryCode.used_at.is_(None))
+        .values(used_at=utcnow())
+    )
+    return claimed.rowcount == 1
+
+
+def _second_step(db, account: User, code: str) -> bool:
+    """An authenticator code (not already used), or else a recovery code."""
+    if account.totp_secret:
+        step = totp.verify(account.totp_secret, code, last_step=account.totp_last_step)
+        if step is not None:
+            account.totp_last_step = step
+            return True
+    return len(code.strip()) >= 8 and _use_recovery_code(db, account, code.strip())
+
+
+_BROWSERS = [
+    ("Edg/", "Edge"),
+    ("OPR/", "Opera"),
+    ("Firefox/", "Firefox"),
+    ("Chrome/", "Chrome"),
+    ("Safari/", "Safari"),
+]
+_SYSTEMS = [
+    ("iPhone", "iPhone"),
+    ("iPad", "iPad"),
+    ("Android", "Android"),
+    ("CrOS", "ChromeOS"),
+    ("Mac OS X", "Mac"),
+    ("Windows", "Windows"),
+    ("Linux", "Linux"),
+]
+
+
+def _utc(moment):
+    """An ISO time that says it is UTC, which SQLite's naive values do not."""
+    if moment is None:
+        return None
+    return (moment if moment.tzinfo else moment.replace(tzinfo=UTC)).isoformat()
+
+
+def _describe(user_agent: str | None) -> dict:
+    """ "Chrome on Mac": enough to recognise a device in the list."""
+    ua = user_agent or ""
+    browser = next((name for mark, name in _BROWSERS if mark in ua), None)
+    system = next((name for mark, name in _SYSTEMS if re.search(re.escape(mark), ua)), None)
+    return {"browser": browser, "system": system}
 
 
 # --- routes -------------------------------------------------------------------------
@@ -218,7 +310,14 @@ def login(body: Login, request: Request, response: Response, db: DbSession):
             raise HTTPException(401, WRONG_SIGN_IN)
 
     refuse_if_suspended(account)
-    _set_session(response, account)
+    if account.totp_enabled_at is not None:
+        if not body.code:
+            # The first step was right; ask for the second. No cookie yet.
+            return {"signed_in": False, "two_factor_required": True}
+        _throttle("second-step", account.id, ATTEMPTS_PER_EMAIL, 900)
+        if not _second_step(db, account, body.code):
+            raise HTTPException(401, "That code isn't right. Check your authenticator app.")
+    _set_session(response, account, db, request, "key" if body.access_key else "password")
     return {"signed_in": True}
 
 
@@ -248,7 +347,7 @@ def signup(body: Signup, request: Request, response: Response, db: DbSession):
     codes = _issue_codes(db, account)
     db.commit()
 
-    _set_session(response, account)
+    _set_session(response, account, db, request, "signup")
     return {"signed_in": True, "recovery_codes": codes}
 
 
@@ -285,7 +384,7 @@ def recover(body: Recover, request: Request, response: Response, db: DbSession):
     issued_epoch = account.session_epoch
     db.commit()
 
-    _set_session(response, account, epoch=issued_epoch)
+    _set_session(response, account, db, request, "recovery", epoch=issued_epoch)
     return {"signed_in": True, "recovery_codes_left": _codes_left(account)}
 
 
@@ -296,6 +395,7 @@ def account_security(user: CurrentUser):
         "has_password": user.password_hash is not None,
         "recovery_codes_left": _codes_left(user),
         "email": user.email,
+        "two_factor": user.totp_enabled_at is not None,
     }
 
 
@@ -326,7 +426,8 @@ def change_password(
     codes = _issue_codes(db, user) if first_password else None
     db.commit()
 
-    _set_session(response, user, epoch=issued_epoch)  # this device stays signed in
+    # This device stays signed in, as a fresh device row; the others have ended.
+    _set_session(response, user, db, request, "refresh", epoch=issued_epoch)
     return {"changed": True, "recovery_codes": codes}
 
 
@@ -347,9 +448,112 @@ def regenerate_recovery_codes(
 
 
 @router.post("/logout")
-def logout(response: Response):
+def logout(request: Request, response: Response, db: DbSession):
+    """Sign this device out. Its device row ends too, so the cookie is dead even
+    if a copy of it survives somewhere."""
+    claims = session_claims(request.cookies.get(COOKIE, ""))
+    if claims and claims[2]:
+        account = get_by_id(db, claims[0])
+        if account is not None:
+            devices.revoke(db, account, claims[2])
     response.delete_cookie(COOKIE, path="/api")
     return {"signed_in": False}
+
+
+# --- devices ------------------------------------------------------------------------
+
+
+@router.get("/sessions")
+def list_sessions(request: Request, user: CurrentUser, db: DbSession):
+    """Where this account is signed in. Sessions from before devices were
+    tracked are not listed; "sign out every device" still ends them."""
+    current = devices.current_id(request)
+    return [
+        {
+            "id": row.id,
+            "current": row.id == current,
+            **_describe(row.user_agent),
+            "network": row.ip_prefix,
+            "method": row.method,
+            "signed_in_at": _utc(row.created_at),
+            "last_seen_at": _utc(row.last_seen_at),
+        }
+        for row in devices.active(db, user)
+    ]
+
+
+@router.delete("/sessions/{session_id}", status_code=204)
+def end_session(
+    session_id: str, request: Request, response: Response, user: CurrentUser, db: DbSession
+):
+    """Sign one device out. Its next request is refused and goes to sign-in."""
+    if not devices.revoke(db, user, session_id):
+        raise HTTPException(404, "That device is not signed in")
+    if session_id == devices.current_id(request):
+        response.delete_cookie(COOKIE, path="/api")
+
+
+# --- two-step sign-in -----------------------------------------------------------------
+
+
+@router.post("/2fa/setup")
+def two_factor_setup(body: ConfirmPassword, request: Request, user: CurrentUser, db: DbSession):
+    """Start setting up an authenticator: a new secret, shown once, confirmed by
+    the first code it makes. A password is needed first, because its recovery
+    codes are what gets you in if the phone is lost."""
+    _throttle("login", _normalise_email(user.email or user.id), ATTEMPTS_PER_EMAIL, 900)
+    _lock_credentials(db, user, request)
+    if user.password_hash is None:
+        raise HTTPException(
+            400,
+            "Set a password first: its recovery codes are your way back in "
+            "if you lose your phone.",
+        )
+    if not passwords.verify_password(body.password, user.password_hash):
+        raise HTTPException(403, "That password is not right.")
+    if user.totp_enabled_at is not None:
+        raise HTTPException(409, "Two-step sign-in is already on.")
+    user.totp_pending = totp.new_secret()
+    db.commit()
+    return {
+        "secret": user.totp_pending,
+        "uri": totp.provisioning_uri(user.totp_pending, user.email or user.display_name),
+    }
+
+
+@router.post("/2fa/enable")
+def two_factor_enable(body: TwoFactorCode, request: Request, user: CurrentUser, db: DbSession):
+    _throttle("second-step", user.id, ATTEMPTS_PER_EMAIL, 900)
+    _lock_credentials(db, user, request)
+    if not user.totp_pending:
+        raise HTTPException(400, "Start the setup again.")
+    step = totp.verify(user.totp_pending, body.code)
+    if step is None:
+        raise HTTPException(
+            403, "That code isn't right. Check the time on your phone, and try the newest code."
+        )
+    user.totp_secret, user.totp_pending = user.totp_pending, None
+    user.totp_last_step = step
+    user.totp_enabled_at = utcnow().replace(tzinfo=None)
+    db.commit()
+    return {"two_factor": True, "recovery_codes_left": _codes_left(user)}
+
+
+@router.post("/2fa/disable")
+def two_factor_disable(body: TwoFactorOff, request: Request, user: CurrentUser, db: DbSession):
+    """Turn it off: the password and a current code (or a recovery code)."""
+    _throttle("second-step", user.id, ATTEMPTS_PER_EMAIL, 900)
+    _lock_credentials(db, user, request)
+    if user.totp_enabled_at is None:
+        return {"two_factor": False}
+    if not passwords.verify_password(body.password, user.password_hash):
+        raise HTTPException(403, "That password is not right.")
+    if not _second_step(db, user, body.code):
+        raise HTTPException(403, "That code isn't right.")
+    user.totp_secret = user.totp_pending = None
+    user.totp_enabled_at = user.totp_last_step = None
+    db.commit()
+    return {"two_factor": False}
 
 
 @router.post("/sign-out-everywhere")
@@ -366,6 +570,7 @@ def sign_out_everywhere(user: CurrentUser, db: DbSession, response: Response, re
     """
     _lock_credentials(db, user, request)
     user.session_epoch = (user.session_epoch or 0) + 1
+    devices.revoke_all(db, user)
     db.commit()
     response.delete_cookie(COOKIE, path="/api")
     return {"signed_in": False, "sessions_revoked": True}

@@ -30,15 +30,19 @@ def _key_binding(user_id: str) -> str:
     return settings.auth_access_keys.get(user_id, "")
 
 
-def sign_session(user_id: str, epoch: int = 0) -> str:
+def sign_session(user_id: str, epoch: int = 0, session_id: str = "") -> str:
     """Mint a session cookie for one account.
 
     ``epoch`` is the account's session generation. It travels inside the signed
     payload so a person can invalidate their own sessions everywhere by bumping
     it, without rotating the shared signing secret — which would sign everyone
-    out — and without a database read on the hot verification path.
+    out. ``session_id`` names the signed-in device (app.core.sessions), so one
+    device can be signed out on its own.
     """
-    payload = f"{user_id}.{epoch}.{int(time.time()) + settings.session_seconds}"
+    expiry = int(time.time()) + settings.session_seconds
+    payload = (
+        f"{user_id}.{epoch}.{session_id}.{expiry}" if session_id else f"{user_id}.{epoch}.{expiry}"
+    )
     signature = hmac.new(
         settings.auth_secret.encode(),
         (payload + _key_binding(user_id)).encode(),
@@ -47,23 +51,30 @@ def sign_session(user_id: str, epoch: int = 0) -> str:
     return f"{payload}.{signature}"
 
 
-def session_claims(token: str) -> tuple[str, int] | None:
-    """Verify the cookie and return (user_id, epoch), or None.
+def session_claims(token: str) -> tuple[str, int, str | None] | None:
+    """Verify the cookie and return (user_id, epoch, device id or None), or None.
 
-    Deliberately does not touch the database: this runs on every request, and
-    the epoch is compared against the stored one where the account is loaded —
-    which is also what turns away a deleted account.
+    Does not touch the database: the epoch and the device are checked where the
+    account is loaded (app.core.sessions.session_ok) — which is also what turns
+    away a deleted account. Cookies minted before devices were tracked have no
+    device id and stay valid until they expire.
     """
     try:
-        user_id, epoch, expiry, signature = token.split(".")
+        parts = token.split(".")
+        if len(parts) == 5:
+            user_id, epoch, session_id, expiry, signature = parts
+            payload = f"{user_id}.{epoch}.{session_id}.{expiry}"
+        else:
+            user_id, epoch, expiry, signature = parts
+            session_id, payload = None, f"{user_id}.{epoch}.{expiry}"
         digest = _key_binding(user_id)
         expected = hmac.new(
             settings.auth_secret.encode(),
-            f"{user_id}.{epoch}.{expiry}{digest}".encode(),
+            f"{payload}{digest}".encode(),
             hashlib.sha256,
         ).hexdigest()
         if int(expiry) > time.time() and hmac.compare_digest(signature, expected):
-            return user_id, int(epoch)
+            return user_id, int(epoch), session_id or None
     except (ValueError, KeyError):
         pass
     return None

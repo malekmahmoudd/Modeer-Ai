@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { AgentGrid } from "@/components/AgentGrid";
 import { AgentPortrait } from "@/components/art/AgentPortrait";
+import { AskTeam } from "@/components/team/AskTeam";
 import { Scribble } from "@/components/art/Ink";
 import { Icon } from "@/components/ui/Icon";
 import { PageHeader, SectionHead } from "@/components/ui/primitives";
@@ -52,6 +53,8 @@ export default function TeamPage() {
           </div>
         </Link>
       )}
+
+      <AskTeam />
 
       {/* ---------- specialists ---------- */}
       <SectionHead

@@ -1,0 +1,110 @@
+{
+  "results": [
+    {
+      "name": "usage percentage on Account",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "password set, recovery codes shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "QR code drawn",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "wrong code refused",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "two-step turned on",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "password accepted, code asked for",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "wrong code refused at sign-in",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "recovery code works as the second step",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "both devices listed",
+      "ok": true,
+      "detail": "Safari on iPhoneLast active just now · Network 127.0.0.xSign out | Chrome on MacThis deviceLast active just now · Networ"
+    },
+    {
+      "name": "this device marked",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "signed-out phone is sent to sign in",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "laptop still signed in",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a fourth pick is refused",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "combined answer shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "three answers listed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "carry on with a teammate",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Leo keeps the combined answer",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "chat meter shows percentage",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ar /account fits",
+      "ok": true,
+      "detail": "overflow 0"
+    },
+    {
+      "name": "ar /team fits",
+      "ok": true,
+      "detail": "overflow 0"
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "pageErrors": []
+}

@@ -1,9 +1,16 @@
 import { currentLocale, intlTag, t, translateCount } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/i18n/en";
 
+/** The server keeps times in UTC; some arrive without saying so ("…T09:00:00").
+ *  Read those as UTC, not as this device's local time. */
+export function parseServerTime(iso: string): Date {
+  const zoned = /[zZ]|[+-]\d\d:?\d\d$/.test(iso) || !iso.includes("T");
+  return new Date(zoned ? iso : `${iso}Z`);
+}
+
 export function relativeTime(iso: string | null): string {
   if (!iso) return "";
-  const then = new Date(iso).getTime();
+  const then = parseServerTime(iso).getTime();
   const diff = Date.now() - then;
   const mins = Math.round(diff / 60000);
   if (mins < 1) return t("time.justNow");
@@ -13,7 +20,7 @@ export function relativeTime(iso: string | null): string {
   if (hrs < 24) return ago.format(-hrs, "hour");
   const days = Math.round(hrs / 24);
   if (days < 7) return ago.format(-days, "day");
-  return new Date(iso).toLocaleDateString(intlTag(), { month: "short", day: "numeric" });
+  return parseServerTime(iso).toLocaleDateString(intlTag(), { month: "short", day: "numeric" });
 }
 
 /** "Thu 1 Oct" from an ISO date, read as a calendar day (no timezone shift). */

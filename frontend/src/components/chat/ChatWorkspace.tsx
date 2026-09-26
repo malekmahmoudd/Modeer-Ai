@@ -774,7 +774,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                     style={{ width: `${usedPct}%` }}
                   />
                 </span>
-                {tn("usage.leftMessages", allowance.messages_left)}
+                {t("usage.usedPct", { pct: 100 - usedPct })} · {tn("usage.leftMessages", allowance.messages_left)}
               </span>
             )}
           </div>
