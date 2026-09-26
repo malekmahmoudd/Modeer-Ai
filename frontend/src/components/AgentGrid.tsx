@@ -2,6 +2,7 @@
 
 import { AgentPanel } from "@/components/AgentPanel";
 import { useApi } from "@/lib/api";
+import { usePrefs } from "@/lib/i18n";
 import type { Agent } from "@/types";
 
 export function AgentGrid({
@@ -14,6 +15,7 @@ export function AgentGrid({
   featured?: boolean;
 }) {
   const { data, loading, error } = useApi<Agent[]>("/agents");
+  const { t } = usePrefs();
 
   if (loading) {
     return (
@@ -34,7 +36,7 @@ export function AgentGrid({
         role="alert"
         className="border-2 border-ink bg-pink-pale px-4 py-3 text-[14px] font-semibold text-ink"
       >
-        Couldn&apos;t load your team: {error}
+        {t("team.loadError", { error })}
       </p>
     );
   }

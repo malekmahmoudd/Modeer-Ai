@@ -41,6 +41,8 @@ export interface Message {
   };
   completion?: Completion;
   created_at: string;
+  /** When the person saved this reply; null when not saved. */
+  pinned_at?: string | null;
 }
 
 export interface Conversation {
@@ -49,6 +51,44 @@ export interface Conversation {
   title: string;
   created_at: string;
   last_message_at: string | null;
+  incognito?: boolean;
+  expires_at?: string | null;
+}
+
+/** A message or title that matched a search. */
+export interface SearchHit {
+  conversation_id: string;
+  agent_id: string;
+  title: string;
+  message_id: string;
+  role: "user" | "assistant";
+  snippet: string;
+  created_at: string;
+}
+
+/** A reply the person saved. */
+export interface PinnedReply {
+  message_id: string;
+  conversation_id: string;
+  agent_id: string;
+  title: string;
+  content: string;
+  pinned_at: string;
+}
+
+/** GET /briefings/week: the last seven days and the next seven. */
+export interface WeekReview {
+  from: string;
+  to: string;
+  summary: string;
+  plan_steps_done: number;
+  checkins: Record<string, number>;
+  goals_done: string[];
+  followups_passed: string[];
+  coming_up: { title: string; due_on: string; agent: string }[];
+  plan_steps_due: number;
+  spending: Record<string, number>;
+  quiet_goals: string[];
 }
 
 export interface ConversationDetail extends Conversation {
@@ -180,6 +220,9 @@ export interface UserProfile {
   onboarded: boolean;
   profile: Record<string, unknown>;
   memory_auto: boolean;
+  timezone?: string | null;
+  /** Interface language; null follows the browser. */
+  locale?: "en" | "ar" | null;
   created_at: string;
 }
 
@@ -229,7 +272,7 @@ export interface UserDocument {
   agent_id: string;
   shared: boolean;
   filename: string;
-  kind: "pdf" | "docx" | "txt" | "md";
+  kind: "pdf" | "docx" | "txt" | "md" | "image";
   size_bytes: number;
   status: "processing" | "ready" | "failed";
   /** Why it failed, or a note such as "only the first part was kept". */

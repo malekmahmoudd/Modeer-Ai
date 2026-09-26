@@ -72,6 +72,17 @@ Rosetta, for `linux/amd64`:
 - The model loads, and `tzdata` resolves zones.
 - The image is 801 MB and runs as `app`.
 
+2026-09-26: 2 packages added for OCR, `pillow` 12.3.0 and `pypdfium2` 5.13.0
+(neither has dependencies). There are now 48 locked packages. Their hashes are
+PyPI's published SHA-256 values for the cp312 Linux x86_64 and aarch64 and macOS
+arm64 wheels. The image also installs Debian's `tesseract-ocr`, and
+`app/documents/fetch_ocr.py` downloads the Arabic and English data from
+`tessdata_best` 4.1.0 and checks each file's SHA-256 at build time.
+**Not verified:** the image has not been rebuilt with these changes (Colima was
+removed from the development Mac on 2026-09-25). Before the next deploy, run
+`docker build`, then `deploy/tests/image-check.sh`, then the test suite inside
+the image. Expect about 45 MB more.
+
 **Check for published advisories** whenever the lock changes — this is how the
 Starlette problem below was found:
 

@@ -19,6 +19,7 @@ class MessageRead(BaseModel):
     content: str
     meta: dict
     created_at: datetime
+    pinned_at: datetime | None = None
 
     @computed_field
     @property
@@ -35,6 +36,8 @@ class ConversationRead(BaseModel):
     title: str
     created_at: datetime
     last_message_at: datetime | None
+    incognito: bool = False
+    expires_at: datetime | None = None
 
 
 class ConversationDetail(ConversationRead):
@@ -58,6 +61,11 @@ class ChatRequest(BaseModel):
     #: Documents attached to this message (ids from POST /documents). They show
     #: in the conversation with the message, and this turn reads them first.
     attachments: list[str] = Field(default_factory=list, max_length=5)
+    #: Start an incognito conversation (only when ``conversation_id`` is not
+    #: given): nothing is learned, and saved context is sent only with
+    #: ``incognito_context``.
+    incognito: bool = False
+    incognito_context: bool = False
 
     @field_validator("message")
     @classmethod
@@ -76,3 +84,47 @@ class ChatRequest(BaseModel):
         elif self.message is None:
             raise ValueError("Message is required")
         return self
+
+
+class ConversationRename(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+
+    @field_validator("title")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Title cannot be empty")
+        return value.strip()
+
+
+class RewindRequest(BaseModel):
+    """``regenerate`` keeps the question and drops its reply; ``edit`` drops both."""
+
+    mode: str = Field(pattern="^(regenerate|edit)$")
+
+
+class RewindResult(BaseModel):
+    text: str
+
+
+class SearchHit(BaseModel):
+    conversation_id: str
+    agent_id: str
+    title: str
+    message_id: str
+    role: str
+    snippet: str
+    created_at: datetime
+
+
+class PinUpdate(BaseModel):
+    pinned: bool
+
+
+class PinnedReply(BaseModel):
+    message_id: str
+    conversation_id: str
+    agent_id: str
+    title: str
+    content: str
+    pinned_at: datetime

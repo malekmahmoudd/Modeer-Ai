@@ -87,8 +87,9 @@ def test_the_type_comes_from_the_bytes_not_the_name():
     assert detect_kind(make_docx(para("x")), "cv.docx") == "docx"
     assert detect_kind(b"# Title\n\ntext", "notes.md") == "md"
     assert detect_kind("نص عربي".encode(), "a.txt") == "txt"
+    assert detect_kind(b"\x89PNG\r\n\x1a\n....", "scan.pdf") == "image"  # read with OCR
     for data, name in [
-        (b"\x89PNG\r\n\x1a\n....", "scan.pdf"),
+        (b"GIF89a....", "anim.gif"),
         (b"PK\x03\x04zzzz", "archive.zip"),
         (b"MZ\x90\x00\x03\x00\x00\x00", "setup.txt"),
     ]:
@@ -181,7 +182,7 @@ def test_a_scanned_pdf_fails_with_a_clear_reason(client):
 
 
 def test_upload_limits(client, monkeypatch):
-    assert _upload(client, "photo.png", b"\x89PNG\r\n\x1a\n" + b"0" * 100).status_code == 415
+    assert _upload(client, "anim.gif", b"GIF89a" + b"0" * 100).status_code == 415
     assert _upload(client, "cv.md", b"x", agent="nobody").status_code == 404
     monkeypatch.setattr(settings, "document_max_bytes", 1024)
     assert _upload(client, "big.txt", b"a" * 2048).status_code == 413

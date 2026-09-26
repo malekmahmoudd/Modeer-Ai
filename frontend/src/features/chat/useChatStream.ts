@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { API_BASE } from "@/lib/api";
+import { t } from "@/lib/i18n";
 import type {
   Allowance,
   ChatStreamEvent,
@@ -28,6 +29,7 @@ interface Options {
   onDelta?: (fullText: string) => void;
   onEnd?: (turn: {
     conversationId: string;
+    messageId: string;
     context: ContextDiagnostics | null;
     contextUsed: boolean;
     content: string;
@@ -73,7 +75,14 @@ export function useChatStream(agentId: string, opts: Options = {}) {
 
   /** Send a message, or with `retry` regenerate the latest unfinished reply. */
   const send = useCallback(
-    async (message: string | null, conversationId: string | null, retry = false, attachments: string[] = []) => {
+    async (
+      message: string | null,
+      conversationId: string | null,
+      retry = false,
+      attachments: string[] = [],
+      // Only read when this turn starts a conversation: see ChatRequest.
+      incognito?: { context: boolean } | null,
+    ) => {
       if (abortRef.current) return;
       setText("");
       setReplyComplete(false);
@@ -98,16 +107,23 @@ export function useChatStream(agentId: string, opts: Options = {}) {
           body: JSON.stringify(
             retry
               ? { conversation_id: conversationId, retry: true }
-              : { message, conversation_id: conversationId, attachments },
+              : {
+                  message,
+                  conversation_id: conversationId,
+                  attachments,
+                  ...(incognito && !conversationId
+                    ? { incognito: true, incognito_context: incognito.context }
+                    : {}),
+                },
           ),
           signal: controller.signal,
         });
         if (res.status === 401) { window.location.assign("/login"); return; }
         if (!res.ok) {
           const body = await res.json().catch(() => null);
-          throw new Error(typeof body?.detail === "string" ? body.detail : `Stream failed (${res.status})`);
+          throw new Error(typeof body?.detail === "string" ? body.detail : t("stream.failed", { status: res.status }));
         }
-        if (!res.body) throw new Error("The connection could not be opened. Please try again.");
+        if (!res.body) throw new Error(t("stream.openFailed"));
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -152,6 +168,7 @@ export function useChatStream(agentId: string, opts: Options = {}) {
               convId = evt.conversation_id;
               opts.onEnd?.({
                 conversationId: evt.conversation_id,
+                messageId: evt.message_id,
                 context,
                 contextUsed: evt.context_used,
                 content: evt.content || acc,
@@ -179,14 +196,14 @@ export function useChatStream(agentId: string, opts: Options = {}) {
             }
           }
         }
-        if (!ended) throw new Error("The connection ended before the reply finished. Please try again.");
+        if (!ended) throw new Error(t("stream.ended"));
         void convId;
       } catch (err) {
         const unfinishedIn = ended ? null : started;
         if (controller.signal.reason === "timeout") {
-          opts.onError?.(ended ? "Your reply was saved, but memory processing timed out. Check Memory before relying on a new fact." : "The connection timed out. Please try again.", unfinishedIn);
+          opts.onError?.(ended ? t("stream.memoryTimeout") : t("stream.timeout"), unfinishedIn);
         } else if ((err as Error).name !== "AbortError") {
-          opts.onError?.(err instanceof Error ? err.message : "Stream error", unfinishedIn);
+          opts.onError?.(err instanceof Error ? err.message : t("stream.error"), unfinishedIn);
         }
       } finally {
         clearTimeout(timeout);

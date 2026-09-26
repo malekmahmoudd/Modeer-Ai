@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
+import { usePrefs } from "@/lib/i18n";
 
 export function ModeerHero({ onboarding = false }: { onboarding?: boolean }) {
   const router = useRouter();
+  const { t, dataSaver } = usePrefs();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   function open(e: React.FormEvent) {
@@ -23,20 +25,20 @@ export function ModeerHero({ onboarding = false }: { onboarding?: boolean }) {
     <section className="sunshine-hero" aria-labelledby="hero-title">
       {/* Artwork is separate; headings and controls remain real HTML. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="sunshine-hero-art" src="/art/sunshine/modeer-hero.webp" alt="Leo, your illustrated personal assistant, smiling at his desk" fetchPriority="high" />
+      {!dataSaver && <img className="sunshine-hero-art" src="/art/sunshine/modeer-hero.webp" alt={t("hero.alt")} fetchPriority="high" />}
       <div className="sunshine-hero-copy">
-        <h1 id="hero-title" className="display">Meet<br />Leo</h1>
-        <p className="sunshine-subtitle">Your personal AI team.</p>
+        <h1 id="hero-title" className="display">{t("hero.meet")}<br />{t("common.leo")}</h1>
+        <p className="sunshine-subtitle">{t("hero.subtitle")}</p>
         <form onSubmit={open} className="sunshine-composer">
           <Icon name="chat" size={21} aria-hidden />
-          <label htmlFor="hero-composer" className="sr-only">Message Leo</label>
-          <input id="hero-composer" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Message Leo…" disabled={pending} />
+          <label htmlFor="hero-composer" className="sr-only">{t("hero.messageLeo")}</label>
+          <input id="hero-composer" dir="auto" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t("hero.placeholder")} disabled={pending} />
           <button type="submit" disabled={pending}>
-            {pending ? "Opening…" : "Let's talk"}
+            {pending ? t("hero.opening") : t("hero.cta")}
             {!pending && <Icon name="arrow-right" size={20} aria-hidden />}
           </button>
         </form>
-        <p className="hand sunshine-margin-note" aria-hidden="true">Bigger possibilities.<br />Together.</p>
+        <p className="hand sunshine-margin-note" aria-hidden="true">{t("hero.note1")}<br />{t("hero.note2")}</p>
       </div>
     </section>
   );

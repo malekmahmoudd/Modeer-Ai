@@ -372,6 +372,13 @@ packaging==26.3 \
     #   -c (the venv the test suite ran in)
     #   huggingface-hub
     #   onnxruntime
+pillow==12.3.0 \
+    --hash=sha256:78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91 \
+    --hash=sha256:d9c7f76c0673154f044e9d78c8655fb4213f6ca31a836df48b40fe5d187717b9 \
+    --hash=sha256:ffd0c5368496f41b0944be820fcb7a838aa6e623d250b01acf2643939c3f99d7
+    # via
+    #   -c (the venv the test suite ran in)
+    #   -r requirements.txt
 protobuf==7.36.2 \
     --hash=sha256:89f23aa53c24553a2416fd4fd1ec06f74fa42b14b546d8883128813f775bbfd2 \
     --hash=sha256:cbc70b17ee27e28894c7fee8bb04be1abead49e936bc70eb60052531eee2079e \
@@ -584,6 +591,13 @@ pydantic-settings==2.15.0 \
     #   -r requirements.txt
 pypdf==6.19.0 \
     --hash=sha256:7e5d6e730e7dae87d560a2cee218b852f6498c8be61966f3cd02ead971e48d14
+    # via
+    #   -c (the venv the test suite ran in)
+    #   -r requirements.txt
+pypdfium2==5.13.0 \
+    --hash=sha256:81df25c1ab4c13ff773102d3cbea1967511d079123b067fc077bd0c4d57d91d8 \
+    --hash=sha256:9ee8c2bb2e68b396ab4a763215ac100dacb6b96d0da5bebeb239a021aecc3a7e \
+    --hash=sha256:da5c7b74eebf40b5c1fbe1de01aa1edc8827a79fb1efd999616bc20dcaf77ba4
     # via
     #   -c (the venv the test suite ran in)
     #   -r requirements.txt

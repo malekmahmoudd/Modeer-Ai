@@ -6,10 +6,14 @@ import { AgentBadge, AgentPortrait } from "@/components/art/AgentPortrait";
 import { HeroDiagonals, Scribble } from "@/components/art/Ink";
 import { Icon } from "@/components/ui/Icon";
 import { useAgents } from "@/features/agents/useAgents";
+import { usePrefs } from "@/lib/i18n";
+import { useAgentName } from "@/lib/i18n/agents";
 
 /** First run: meet Modeer, then a short conversation sets the team up. */
 export function MeetModeer() {
   const { agents } = useAgents();
+  const { t } = usePrefs();
+  const agentName = useAgentName();
   const specialists = agents.filter((a) => !a.is_assistant);
 
   return (
@@ -19,30 +23,29 @@ export function MeetModeer() {
 
         <div className="relative mx-auto grid w-full max-w-page grid-cols-1 items-end gap-x-6 px-4 pt-9 sm:px-7 md:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]">
           <div className="pb-8 md:pb-12">
-            <p className="eyebrow">First things first</p>
+            <p className="eyebrow">{t("meet.eyebrow")}</p>
             <h1 className="display mt-2 text-[clamp(42px,9vw,78px)] text-ink">
-              Meet
+              {t("hero.meet")}
               <br />
-              Leo
+              {t("common.leo")}
             </h1>
             <p className="mt-4 max-w-[44ch] text-[clamp(16px,2vw,19px)] font-semibold leading-snug text-ink">
-              Tell me a little about yourself — what you&apos;re studying or working on, what
-              you&apos;re aiming for — and I&apos;ll get your whole team on the same page.
+              {t("meet.intro")}
             </p>
 
             <Link href="/agents/modeer?onboarding=1" className="btn btn-pink mt-7 !text-[15px]">
-              Start with Leo
+              {t("meet.start")}
               <Icon name="arrow-right" size={17} />
             </Link>
 
             <p className="mt-3 text-[13px] font-semibold text-ink-soft">
-              Takes about a minute. You can edit everything later in Memory.
+              {t("meet.time")}
             </p>
 
             <Scribble className="mt-6 block max-w-[210px]" underline>
-              One conversation.
+              {t("meet.scribble1")}
               <br />
-              Nine specialists.
+              {t("meet.scribble2")}
             </Scribble>
           </div>
 
@@ -60,13 +63,13 @@ export function MeetModeer() {
 
       {specialists.length > 0 && (
         <section className="pt-8">
-          <p className="eyebrow text-center">Then your team is ready</p>
+          <p className="eyebrow text-center">{t("meet.then")}</p>
           <ul className="mt-4 flex flex-wrap items-center justify-center gap-3">
             {specialists.map((a) => (
               <li key={a.id} className="flex items-center gap-2 border-2 border-ink bg-paper-hi px-2.5 py-1.5 shadow-pop-xs">
                 <AgentBadge slug={a.id} size={30} />
                 <span className="text-[13px] font-bold text-ink">
-                  {a.name.replace(/ (Agent|Assistant)$/, "")}
+                  {agentName(a)}
                 </span>
               </li>
             ))}

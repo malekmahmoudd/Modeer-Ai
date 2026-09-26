@@ -4,14 +4,17 @@ import Link from "next/link";
 
 import { AgentGrid } from "@/components/AgentGrid";
 import { Scribble } from "@/components/art/Ink";
-import { TodayBand } from "@/components/home/TodayBand";
 import { ModeerHero } from "@/components/home/ModeerHero";
+import { RecentChats } from "@/components/home/RecentChats";
+import { TodayBand } from "@/components/home/TodayBand";
 import { SectionHead } from "@/components/ui/primitives";
 import { useApi } from "@/lib/api";
+import { usePrefs } from "@/lib/i18n";
 import type { UserProfile } from "@/types";
 
 export default function HomePage() {
   const { data: user, loading } = useApi<UserProfile>("/users/me");
+  const { t } = usePrefs();
 
   if (loading) {
     return (
@@ -26,14 +29,16 @@ export default function HomePage() {
     <div className="anim-fade sunshine-home">
       <ModeerHero onboarding={!!user && !user.onboarded} />
 
+      <RecentChats />
+
       <section className="sunshine-team-section">
         <SectionHead
-          title="Your team"
+          title={t("home.yourTeam")}
           aside={
-            <Scribble className="hidden max-w-[190px] text-right lg:block">
-              Different minds.
+            <Scribble className="hidden max-w-[190px] text-end lg:block">
+              {t("home.scribble1")}
               <br />
-              A brighter you.
+              {t("home.scribble2")}
             </Scribble>
           }
         />
@@ -41,7 +46,7 @@ export default function HomePage() {
 
         <div className="mt-5 flex justify-center md:justify-start">
           <Link href="/team" className="sunshine-all-team">
-            Meet the whole team <span aria-hidden="true">↗</span>
+            {t("home.meetAll")} <span aria-hidden="true" className="rtl-flip inline-block">↗</span>
           </Link>
         </div>
       </section>

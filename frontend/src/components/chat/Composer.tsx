@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 
 import { Icon } from "@/components/ui/Icon";
 import { Spinner } from "@/components/ui/primitives";
+import { usePrefs } from "@/lib/i18n";
 
 export function Composer({
   value,
@@ -17,6 +18,8 @@ export function Composer({
   chips,
   hasAttachments,
   waiting,
+  voice,
+  focusSignal = 0,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -33,8 +36,20 @@ export function Composer({
   hasAttachments?: boolean;
   /** Files still uploading or being read: sending waits for them. */
   waiting?: boolean;
+  /** The microphone button, shown beside send. */
+  voice?: React.ReactNode;
+  /** Changing this number moves the cursor into the box (after Edit). */
+  focusSignal?: number;
 }) {
+  const { t } = usePrefs();
   const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!focusSignal) return;
+    const el = ref.current;
+    el?.focus();
+    el?.setSelectionRange(el.value.length, el.value.length);
+  }, [focusSignal]);
 
   useEffect(() => {
     const el = ref.current;
@@ -81,10 +96,11 @@ export function Composer({
         disabled={disabled}
         className="max-h-[190px] min-h-[28px] flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed text-ink outline-none placeholder:text-ink-faint focus-visible:outline-none"
       />
+      {voice}
       <button
         type="submit"
         disabled={!canSend}
-        aria-label={streaming ? "Sending" : waiting ? "Waiting for your file" : "Send message"}
+        aria-label={t(streaming ? "composer.sending" : waiting ? "composer.waitingFile" : "composer.send")}
         className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-ink transition disabled:opacity-40"
         style={{
           background: canSend ? "var(--pink)" : "var(--paper-lo)",

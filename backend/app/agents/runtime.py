@@ -168,6 +168,13 @@ class AgentRuntime:
         learn: bool = True,
         attachments: list[str] | None = None,
     ) -> AsyncIterator[RuntimeEvent]:
+        # Incognito: nothing is learned or saved from this chat (facts, plans,
+        # follow-ups, notes, the running summary), and saved context is sent
+        # only if the person opted in when they started it.
+        incognito = bool(getattr(conversation, "incognito", False))
+        bare = incognito and not getattr(conversation, "incognito_context", False)
+        if incognito:
+            learn = False
         if retry:
             try:
                 user_row = convo_service.prepare_retry(db, conversation)
@@ -206,9 +213,11 @@ class AgentRuntime:
 
         team.expire_handoffs(db, user.id, now=now_for(user)[0])
         shared, agent_mem = memory_service.context_for_agent(db, user.id, agent)
-        if not private_notes:
+        if not private_notes or bare:
             agent_mem = []
-        goals = goal_service.list_goals(db, user.id)
+        if bare:
+            shared = []
+        goals = [] if bare else goal_service.list_goals(db, user.id)
         history = convo_service.history_for_model(
             [m for m in convo_service.history(db, conversation.id) if m.id != user_row.id]
         )
@@ -225,12 +234,12 @@ class AgentRuntime:
                 today=now.date(),
                 message=user_message,
             )
-            if private_notes
+            if private_notes and not bare
             else ([], [])
         )
         activity = (
             team.recent_activity(db, user.id, exclude_conversation=conversation.id, now=now)
-            if agent.is_assistant
+            if agent.is_assistant and not bare
             else None
         )
         # Explicit plan requests ("save this plan", "done with day 3", "shift my
@@ -242,9 +251,12 @@ class AgentRuntime:
             plan_actions = self._plan_requests(db, user, agent, user_message, history, now.date())
             user_row.meta = {**(user_row.meta or {}), "plan_actions": True}
 
-        documents, files = await self._documents_for(
-            db, user, agent, user_message, history, private_notes=private_notes, focus=focus
-        )
+        if bare and not focus:
+            documents, files = [], []
+        else:
+            documents, files = await self._documents_for(
+                db, user, agent, user_message, history, private_notes=private_notes, focus=focus
+            )
 
         packet = build_context(
             agent=agent,
@@ -456,8 +468,9 @@ class AgentRuntime:
                     )
             closed = tracking.close_followups(db, user.id, analysis.outcomes)
             # The reply went out with these in it: they have been asked about.
-            tracking.mark_asked(db, ask_about)
-            team.mark_seen(db, agent_mem)
+            if not incognito:
+                tracking.mark_asked(db, ask_about)
+                team.mark_seen(db, agent_mem)
             if agent.is_assistant:
                 team.apply_goal_changes(db, user.id, analysis.goal_changes)
             team.apply_handoffs(db, user.id, analysis.handoffs, source=agent.id)

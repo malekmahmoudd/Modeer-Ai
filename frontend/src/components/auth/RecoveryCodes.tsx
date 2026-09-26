@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { usePrefs } from "@/lib/i18n";
+
 /** Shows freshly issued recovery codes — the only time they are ever visible. */
 export function RecoveryCodes({
   codes,
@@ -12,16 +14,14 @@ export function RecoveryCodes({
   onDone: () => void;
   doneLabel?: string;
 }) {
+  const { t } = usePrefs();
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState("");
 
   return (
     <div>
-      <p className="my-3 text-ink-soft">
-        If you ever lose your password, one of these codes gets you back in. Each works once. Keep
-        them somewhere safe and private — they will not be shown again.
-      </p>
-      <ol className="my-4 grid grid-cols-2 gap-2 border-2 border-ink bg-paper p-4 font-mono text-[15px] font-bold tracking-wide text-ink">
+      <p className="my-3 text-ink-soft">{t("codes.help")}</p>
+      <ol dir="ltr" className="my-4 grid grid-cols-2 gap-2 border-2 border-ink bg-paper p-4 font-mono text-[15px] font-bold tracking-wide text-ink">
         {codes.map((code) => (
           <li key={code}>{code}</li>
         ))}
@@ -32,13 +32,13 @@ export function RecoveryCodes({
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(codes.join("\n"));
-            setCopied("Copied. Paste them somewhere safe.");
+            setCopied(t("codes.copied"));
           } catch {
-            setCopied("Copying isn't available here — write them down instead.");
+            setCopied(t("codes.cantCopy"));
           }
         }}
       >
-        Copy codes
+        {t("codes.copy")}
       </button>
       {copied && (
         <p role="status" className="mt-2 text-[13.5px] font-semibold text-ink-soft">
@@ -52,7 +52,7 @@ export function RecoveryCodes({
           checked={saved}
           onChange={(e) => setSaved(e.target.checked)}
         />
-        I&apos;ve saved these codes
+        {t("codes.saved")}
       </label>
       <button type="button" disabled={!saved} className="btn btn-pink mt-4 w-full" onClick={onDone}>
         {doneLabel}

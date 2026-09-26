@@ -1,20 +1,23 @@
 "use client";
 
 import { InkRule } from "@/components/art/Ink";
+import { usePrefs } from "@/lib/i18n";
 
 export function Spinner({ className = "" }: { className?: string }) {
+  const { t } = usePrefs();
   return (
     <span
       role="status"
-      aria-label="Loading"
+      aria-label={t("common.loading")}
       className={`inline-block h-[18px] w-[18px] animate-spin rounded-full border-[3px] border-ink border-t-transparent ${className}`}
     />
   );
 }
 
 export function ThinkingDots({ className = "" }: { className?: string }) {
+  const { t } = usePrefs();
   return (
-    <span className={`inline-flex items-center gap-1.5 ${className}`} role="status" aria-label="Thinking">
+    <span className={`inline-flex items-center gap-1.5 ${className}`} role="status" aria-label={t("common.thinking")}>
       {[0, 1, 2].map((i) => (
         <span
           key={i}

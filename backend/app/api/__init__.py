@@ -17,6 +17,7 @@ from app.api.routes import (
     team,
     tracking,
     users,
+    voice,
 )
 
 api_router = APIRouter(prefix="/api")
@@ -33,5 +34,6 @@ api_router.include_router(briefings.router)
 api_router.include_router(tracking.router)
 api_router.include_router(documents.router)
 api_router.include_router(team.router)
+api_router.include_router(voice.router)
 
 api_router.include_router(auth.router)

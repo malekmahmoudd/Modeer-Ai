@@ -20,3 +20,8 @@ pypdf>=6.1,<7
 onnxruntime>=1.20,<2
 tokenizers>=0.20,<1
 numpy>=2.0,<3
+# OCR for scanned PDFs and photos: Pillow cleans the image up, pypdfium2 renders
+# scanned PDF pages, and the Tesseract binary (apt/brew, not pip) reads them.
+# Its Arabic and English data are fetched and verified by app/documents/fetch_ocr.py.
+pillow>=11,<13
+pypdfium2>=4.30,<6

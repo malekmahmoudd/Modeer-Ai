@@ -123,11 +123,11 @@ body {
     text-transform: none;
   }
   .wordmark {
-    font-family: var(--font-brush), var(--font-display), cursive;
+    font-family: var(--font-brush), var(--font-display), var(--font-arabic), cursive;
     letter-spacing: 0.005em;
   }
   .hand {
-    font-family: var(--font-hand), cursive;
+    font-family: var(--font-hand), var(--font-arabic), cursive;
     font-weight: 700;
     letter-spacing: 0.03em;
     line-height: 1.12;
@@ -237,7 +237,7 @@ body {
   select.field {
     -webkit-appearance: none;
     appearance: none;
-    padding-right: 38px;
+    padding-inline-end: 38px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23151714' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
@@ -276,7 +276,7 @@ body {
     font-family: var(--font-display), var(--font-arabic), system-ui, sans-serif;
     letter-spacing: -0.01em;
     clip-path: polygon(0 0, 100% 0, calc(100% - 11px) 100%, 0 100%);
-    padding-right: 26px;
+    padding-inline-end: 26px;
   }
 }
 
@@ -326,7 +326,7 @@ body {
   padding: 0;
 }
 .prose-ink blockquote {
-  border-left: 3px solid var(--pink);
+  border-inline-start: 3px solid var(--pink);
 }
 
 /* ============================================================
@@ -381,7 +381,7 @@ body {
   display: inline-block;
   width: 9px;
   height: 1.05em;
-  margin-left: 3px;
+  margin-inline-start: 3px;
   transform: translateY(2px);
   background: var(--pink);
   animation: caret-blink 1s steps(2, start) infinite;
@@ -412,11 +412,11 @@ body {
 .sunshine-shell > header nav a { font-weight:500; }
 .sunshine-hero { position:relative; isolation:isolate; min-height:510px; height:39vw; max-height:625px; overflow:hidden; background:var(--paper); }
 .sunshine-hero::before { content:""; position:absolute; inset:0; z-index:-1; background:var(--sun); clip-path:polygon(0 0, 24% 0, 0 82%); }
-.sunshine-hero-art { position:absolute; right:0; top:0; width:82%; height:100%; object-fit:cover; object-position:right 30%; z-index:-1; }
-.sunshine-hero-copy { padding:4% 0 0 7.5%; width:48%; }
+.sunshine-hero-art { position:absolute; inset-inline-end:0; top:0; width:82%; height:100%; object-fit:cover; object-position:right 30%; z-index:-1; }
+.sunshine-hero-copy { padding:4% 0 0; padding-inline-start:7.5%; width:48%; }
 .sunshine-hero h1 { font-size:clamp(76px,8.2vw,128px); letter-spacing:-.065em; line-height:.86; }
 .sunshine-subtitle { margin-top:18px; font-size:clamp(19px,2vw,29px); letter-spacing:-.04em; }
-.sunshine-composer { margin-top:30px; display:flex; align-items:center; gap:12px; padding:6px 6px 6px 17px; border:1px solid #626454; border-radius:15px; background:var(--paper-hi); width:100%; position:relative; }
+.sunshine-composer { margin-top:30px; display:flex; align-items:center; gap:12px; padding:6px; padding-inline-start:17px; border:1px solid #626454; border-radius:15px; background:var(--paper-hi); width:100%; position:relative; }
 .sunshine-composer input { min-width:0; flex:1; background:transparent; padding:12px 0; outline:none; font-size:15px; }
 .sunshine-composer input:focus-visible { outline:none; }
 .sunshine-composer:focus-within { outline:3px solid var(--pink); outline-offset:3px; }
@@ -424,7 +424,7 @@ body {
 .sunshine-composer button:hover { background:#ff74a8; }
 .sunshine-composer button:disabled { opacity:.6; cursor:wait; }
 .sunshine-margin-note { margin-top:26px; font-size:23px; text-transform:uppercase; transform:rotate(-5deg); width:max-content; }
-.sunshine-margin-note::after { content:""; display:block; height:4px; width:80px; background:var(--pink); margin:5px 0 0 28px; transform:rotate(-5deg); }
+.sunshine-margin-note::after { content:""; display:block; height:4px; width:80px; background:var(--pink); margin:5px 0 0; margin-inline-start:28px; transform:rotate(-5deg); }
 .sunshine-team-section { padding:24px 3% 0; }
 .sunshine-team-section h2 { font-size:32px; }
 .sunshine-team-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; padding-top:4px; }
@@ -433,7 +433,7 @@ body {
 .sunshine-team-panel:nth-child(even) { transform:rotate(.8deg); }
 .sunshine-team-panel:hover { transform:translateY(-5px); }
 .sunshine-panel-image { position:relative; aspect-ratio:1/1; overflow:hidden; }
-.sunshine-team-panel .name-tab { left:-2px; top:-2px; font-size:20px; padding:9px 26px 9px 16px; z-index:2; }
+.sunshine-team-panel .name-tab { inset-inline-start:-2px; top:-2px; font-size:20px; padding-block:9px; padding-inline:16px 26px; z-index:2; }
 .sunshine-panel-caption { border-top:1px solid var(--ink); padding:10px 12px; }
 .sunshine-panel-caption p { font-size:12px; font-weight:500; }
 .sunshine-all-team { display:inline-flex; align-items:center; gap:16px; min-height:44px; border-bottom:2px solid var(--pink); font-size:14px; font-weight:600; }
@@ -445,7 +445,7 @@ body {
   .sunshine-shell > header > div { height:72px; padding-inline:4%; gap:5%; }
   .sunshine-shell .wordmark { font-size:28px; }
   .sunshine-hero { height:480px; min-height:0; }
-  .sunshine-hero-copy { padding:55px 0 0 5%; width:50%; }
+  .sunshine-hero-copy { padding:55px 0 0; padding-inline-start:5%; width:50%; }
   .sunshine-hero h1 { font-size:78px; }
   .sunshine-hero-art { width:80%; object-position:65% top; }
   .sunshine-composer { margin-top:24px; gap:8px; }
@@ -461,7 +461,7 @@ body {
   .sunshine-hero-copy { padding:22px 20px 0; width:100%; }
   .sunshine-hero h1 { font-size:66px; line-height:.88; }
   .sunshine-subtitle { margin-top:13px; font-size:20px; }
-  .sunshine-composer { margin-top:20px; padding-left:12px; gap:8px; }
+  .sunshine-composer { margin-top:20px; padding-inline-start:12px; gap:8px; }
   .sunshine-composer input { font-size:14px; }
   .sunshine-composer button { min-height:46px; padding-inline:13px; font-size:13px; gap:8px; }
   .sunshine-margin-note { display:none; }
@@ -471,7 +471,7 @@ body {
   .sunshine-team-grid { gap:16px 12px; }
   .sunshine-panel-image { aspect-ratio: .72; }
   .sunshine-team-panel { border-width:2px; }
-  .sunshine-team-panel .name-tab { font-size:13px; padding:6px 19px 6px 9px; }
+  .sunshine-team-panel .name-tab { font-size:13px; padding-block:6px; padding-inline:9px 19px; }
   .sunshine-panel-caption { padding:8px; min-height:47px; }
   .sunshine-panel-caption p { font-size:11px; }
   .sunshine-home > section:last-child { margin-inline:18px; padding:20px 14px; }
@@ -494,7 +494,7 @@ body {
 .team-page>header:after,.journal-page>header:after {
   content:"";
   position:absolute;
-  right:-35px;
+  inset-inline-end:-35px;
   top:0;
   width:130px;
   height:100%;
@@ -505,7 +505,7 @@ body {
 .team-page>header>div,.journal-page>header>div {
   position:relative;
   z-index:1;
-  padding-right:65px
+  padding-inline-end:65px
 }
 .team-page>header h1,.journal-page>header h1 {
   max-width:19ch;
@@ -520,7 +520,7 @@ body {
   border-width:1px
 }
 .team-feature>div:last-child {
-  border-left-width:1px;
+  border-inline-start-width:1px;
   min-height:250px
 }
 .team-directory {
@@ -549,6 +549,9 @@ body {
 .journal-page>header {
   grid-column:1/-1;
   margin-bottom:8px
+}
+.week-page>* {
+  grid-column:1/-1
 }
 .memory-page>section {
   min-width:0
@@ -609,10 +612,10 @@ body {
 .goal-summary strong {
   font-size:30px;
   color:var(--ink);
-  margin-right:6px
+  margin-inline-end:6px
 }
 .goal-summary p {
-  margin-left:auto;
+  margin-inline-start:auto;
   font-size:25px;
   transform:rotate(-4deg)
 }
@@ -623,7 +626,7 @@ body {
 }
 .goal-card {
   border-width:1px;
-  border-left:5px solid var(--sun);
+  border-inline-start:5px solid var(--sun);
   box-shadow:none;
   padding:16px;
   gap:14px
@@ -663,7 +666,7 @@ body {
   grid-template-columns:180px minmax(0,1fr);
   align-content:center;
   column-gap:30px;
-  text-align:left;
+  text-align:start;
   padding-block:32px
 }
 .workspace-welcome .welcome-portrait {
@@ -688,7 +691,7 @@ body {
   width:100%
 }
 .welcome-starters .chip {
-  text-align:left;
+  text-align:start;
   width:100%;
   justify-content:flex-start;
   font-size:13px;
@@ -778,7 +781,7 @@ body {
   padding:22px 18px
 }
 .team-page>header>div,.journal-page>header>div {
-  padding-right:25px
+  padding-inline-end:25px
 }
 .team-page>header:after,.journal-page>header:after {
   width:55px
@@ -807,10 +810,10 @@ body {
   flex-basis:calc(100% - 60px)
 }
 .goal-card>span:nth-of-type(2) {
-  margin-left:52px
+  margin-inline-start:52px
 }
 .goal-card>button:last-child {
-  margin-left:auto
+  margin-inline-start:auto
 }
 .workspace-identity>div {
   gap:8px;
@@ -855,4 +858,48 @@ body {
   line-height:1.75
 }
 
+}
+
+/* ============================================================
+   Right to left (Arabic). Layout flips through logical properties above;
+   these mirror what has a drawn direction: slants, arrows, the hero art.
+   ============================================================ */
+[dir="rtl"] select.field { background-position: left 12px center; }
+[dir="rtl"] .name-tab { clip-path: polygon(0 0, 100% 0, 100% 100%, 11px 100%); }
+[dir="rtl"] .sunshine-hero::before { clip-path: polygon(100% 0, 76% 0, 100% 82%); }
+[dir="rtl"] .sunshine-hero-art { transform: scaleX(-1); }
+[dir="rtl"] .team-page > header:after,
+[dir="rtl"] .journal-page > header:after { transform: skew(25deg); }
+[dir="rtl"] .rtl-flip { transform: scaleX(-1); }
+[dir="rtl"] .rtl-flip-g { transform: scaleX(-1); transform-origin: 12px 12px; }
+[dir="rtl"] .wordmark { transform: skewX(7deg) !important; }
+@media (max-width: 599px) {
+  [dir="rtl"] .sunshine-hero::before { clip-path: polygon(24% 0, 0 0, 0 44%, 56% 44%); }
+}
+/* Arabic reads better a touch larger and looser than the Latin sizes. */
+[dir="rtl"] body { line-height: 1.7; }
+[dir="rtl"] .eyebrow, [dir="rtl"] .tab-label { letter-spacing: 0; }
+[dir="rtl"] .display { letter-spacing: 0; }
+/* Archivo Black has one heavy weight and no Arabic; the Arabic fallback is
+   variable, so headings ask it for the same visual weight. */
+[dir="rtl"] .display, [dir="rtl"] .wordmark, [dir="rtl"] .name-tab, [dir="rtl"] .tab-label { font-weight: 800; }
+[dir="rtl"] .hand { font-weight: 600; letter-spacing: 0; }
+
+/* ============================================================
+   Data saver: system fonts instead of the decorative ones (which are not
+   preloaded, so they are then never downloaded), and no illustrations.
+   ============================================================ */
+html.data-saver {
+  --font-display: system-ui;
+  --font-brush: system-ui;
+  --font-hand: system-ui;
+}
+html.data-saver .anim-in,
+html.data-saver .anim-fade { animation: none; }
+
+/* Incognito: the chat looks different, so it is never mistaken for a normal one. */
+.incognito-workspace { background: #f1eee6; }
+.incognito-banner {
+  background: var(--navy);
+  color: #fffcf2;
 }

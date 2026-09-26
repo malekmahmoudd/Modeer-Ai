@@ -103,6 +103,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
             "profile": user.profile or {},
             "memory_auto": user.memory_auto,
             "timezone": user.timezone,
+            "locale": user.locale,
             # How the account signs in — never the password or code hashes.
             "signs_in_with": "password" if user.password_hash else "access key",
             "created_at": when(user.created_at),
@@ -115,12 +116,15 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "last_message_at": when(c.last_message_at),
                 "summary": c.summary,
                 "created_at": when(c.created_at),
+                "incognito": c.incognito,
+                "expires_at": when(c.expires_at),
                 "messages": [
                     {
                         "id": m.id,
                         "role": m.role,
                         "content": m.content,
                         "created_at": when(m.created_at),
+                        "pinned_at": when(m.pinned_at),
                     }
                     for m in messages_by_conversation[c.id]
                 ],

@@ -22,6 +22,8 @@ class ProfileUpdate(BaseModel):
     memory_auto: bool | None = None
     #: IANA timezone, e.g. "Europe/London". Null clears it (agents use UTC).
     timezone: str | None = Field(default=None, max_length=64)
+    #: Interface language. Null follows the browser.
+    locale: str | None = Field(default=None, pattern="^(en|ar)$")
 
     _required_values = field_validator(
         "display_name", "onboarded", "profile", "memory_auto", mode="before"
@@ -60,4 +62,5 @@ class UserRead(BaseModel):
     profile: dict
     memory_auto: bool
     timezone: str | None = None
+    locale: str | None = None
     created_at: datetime

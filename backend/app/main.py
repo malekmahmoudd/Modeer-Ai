@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import asyncio
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.agents.sync import sync_agents
 from app.api import api_router
+from app.conversations.service import purge_incognito
 from app.core.config import settings
 from app.core.observability import install as install_observability
 from app.db.base import Base
@@ -18,6 +20,29 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 logger = logging.getLogger("modeer")
+
+#: How often expired incognito chats are swept away, for everyone.
+INCOGNITO_SWEEP_SECONDS = 3600
+
+
+def sweep_incognito() -> int:
+    """Delete every incognito chat past its 24 hours. Also done per account
+    whenever someone lists their chats; this catches people who never return."""
+    with SessionLocal() as db:
+        removed = purge_incognito(db)
+        db.commit()
+    return removed
+
+
+async def _sweep_forever() -> None:
+    while True:
+        try:
+            removed = await asyncio.to_thread(sweep_incognito)
+            if removed:
+                logger.info("Removed %d expired incognito chats", removed)
+        except Exception as exc:  # noqa: BLE001 - try again next hour
+            logger.warning("Incognito sweep failed: %s", type(exc).__name__)
+        await asyncio.sleep(INCOGNITO_SWEEP_SECONDS)
 
 
 @asynccontextmanager
@@ -35,7 +60,13 @@ async def lifespan(app: FastAPI):
         logger.warning(
             "Agent sync skipped (has the database been migrated?): %s", type(exc).__name__
         )
-    yield
+    sweeper = asyncio.create_task(_sweep_forever())
+    try:
+        yield
+    finally:
+        sweeper.cancel()
+        with suppress(asyncio.CancelledError):
+            await sweeper
 
 
 def api_docs(environment: str) -> dict:

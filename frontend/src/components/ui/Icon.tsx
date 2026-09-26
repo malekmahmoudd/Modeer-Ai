@@ -18,7 +18,20 @@ type Name =
   | "history"
   | "calendar"
   | "file"
-  | "paperclip";
+  | "paperclip"
+  | "mic"
+  | "stop"
+  | "speaker"
+  | "copy"
+  | "bookmark"
+  | "forward"
+  | "refresh"
+  | "search"
+  | "incognito"
+  | "offline";
+
+/** Icons that point along the reading direction: mirrored in Arabic. */
+const DIRECTIONAL = new Set<Name>(["arrow-right", "chevron-left", "forward"]);
 
 const PATHS: Record<Name, React.ReactNode> = {
   home: <path d="M3 10.5 12 3l9 7.5M5 9.5V20h5v-6h4v6h5V9.5" />,
@@ -70,6 +83,54 @@ const PATHS: Record<Name, React.ReactNode> = {
       <path d="M14 3v4h4M9 12h6M9 16h6" />
     </>
   ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
+    </>
+  ),
+  stop: <rect x="6.5" y="6.5" width="11" height="11" rx="1.5" />,
+  speaker: (
+    <>
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5Z" />
+      <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="8.5" y="8.5" width="11" height="11" rx="1.5" />
+      <path d="M15.5 8.5V5.5A1.5 1.5 0 0 0 14 4H5.5A1.5 1.5 0 0 0 4 5.5V14a1.5 1.5 0 0 0 1.5 1.5h3" />
+    </>
+  ),
+  bookmark: <path d="M6.5 3.5h11v17L12 16l-5.5 4.5v-17Z" />,
+  forward: <path d="M14 5.5 20 11.5l-6 6M20 11.5H10a6 6 0 0 0-6 6v1" />,
+  refresh: (
+    <>
+      <path d="M20 11a8 8 0 0 0-14.3-4.5L4 8.5" />
+      <path d="M4 4v4.5h4.5M4 13a8 8 0 0 0 14.3 4.5l1.7-2" />
+      <path d="M20 20v-4.5h-4.5" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="m15.5 15.5 5 5" />
+    </>
+  ),
+  incognito: (
+    <>
+      <path d="M3 11h18M5.5 11l1.8-5.5h9.4L18.5 11" />
+      <circle cx="7.5" cy="16" r="3" />
+      <circle cx="16.5" cy="16" r="3" />
+      <path d="M10.5 16h3" />
+    </>
+  ),
+  offline: (
+    <>
+      <path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 4-2.4M19 13a10 10 0 0 0-2.5-1.8M2 9.5a15 15 0 0 1 4.5-3M22 9.5A15 15 0 0 0 11 5.1" />
+      <circle cx="12" cy="20" r="0.8" />
+    </>
+  ),
   history: (
     <>
       <path d="M3.5 12a8.5 8.5 0 1 0 2.9-6.4L3.5 8" />
@@ -98,7 +159,7 @@ export function Icon({
       focusable="false"
       {...props}
     >
-      {PATHS[name]}
+      {DIRECTIONAL.has(name) ? <g className="rtl-flip-g">{PATHS[name]}</g> : PATHS[name]}
     </svg>
   );
 }

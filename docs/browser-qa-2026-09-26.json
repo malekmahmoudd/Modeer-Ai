@@ -1,0 +1,275 @@
+{
+  "results": [
+    {
+      "name": "signed in (English, LTR)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "manifest served",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "service worker served uncached",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "reply actions shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "copy puts the reply on the clipboard",
+      "ok": true,
+      "detail": "[Nova — offline preview response]\n\nYou a"
+    },
+    {
+      "name": "save pins the reply",
+      "ok": true,
+      "detail": "1 saved"
+    },
+    {
+      "name": "saved reply has no Regenerate",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "regenerate answers again in place",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "edit puts the message back in the box",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "edited message sent",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "draft survives a reload",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "offline banner shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "message waits for the connection",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "queued message sent when back online",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "conversation renamed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "search finds the message",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "search result opens the conversation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "teammate opens with the reply quoted",
+      "ok": true,
+      "detail": "About this, from Nova:\n\n> [Nova — offline preview "
+    },
+    {
+      "name": "incognito banner shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "incognito chat not listed",
+      "ok": true,
+      "detail": "1 → 1"
+    },
+    {
+      "name": "incognito learned nothing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "saved reply on Plans",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "week page renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "home shows recent chats",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "switches to Arabic, right to left",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "language saved on the account",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Arabic kept after reload (server-rendered)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Arabic navigation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ar desktop / fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar desktop /team fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar desktop /agents/study fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar desktop /plans fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar desktop /week fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar desktop /memory fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar desktop /goals fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar desktop /account fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar mobile / fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar mobile /team fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar mobile /agents/study fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar mobile /plans fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar mobile /week fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar mobile /memory fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar mobile /goals fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "ar mobile /account fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "Arabic agent name in chat",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Arabic starters",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "data saver: no illustrations downloaded",
+      "ok": true,
+      "detail": "0 art images"
+    },
+    {
+      "name": "data saver class on html",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "back to English",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "en mobile / fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "en mobile /agents/study fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "en mobile /plans fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "en mobile /week fits the width",
+      "ok": true,
+      "detail": "overflow 0px"
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "pageErrors": []
+}

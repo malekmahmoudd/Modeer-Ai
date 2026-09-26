@@ -46,6 +46,17 @@ class Settings(BaseSettings):
     rag_similarity_margin: float = Field(default=0.05, ge=0.0, le=1.0)
     #: Seconds a document may take to parse in its sandboxed subprocess.
     document_parse_seconds: float = Field(default=30, ge=1, le=300)
+    #: Extra seconds for a photo or scanned PDF read with OCR (up to 15 pages).
+    ocr_parse_seconds: float = Field(default=150, ge=0, le=600)
+
+    # --- Voice ---
+    #: Speech to text for the mic button (Groq's free Whisper endpoint). Needs
+    #: LLM_PROVIDER=groq; audio is sent for transcription and never stored.
+    voice_enabled: bool = True
+    transcribe_model: str = Field(default="whisper-large-v3-turbo")
+    voice_max_bytes: int = Field(default=4 * 1024 * 1024, ge=1024)
+    #: Transcriptions per account per UTC day. Groq limits audio separately.
+    voice_per_day: int = Field(default=60, ge=0)
 
     # --- Features ---
     #: Ask My Team (POST /api/team/ask). Off for the initial release: no screen

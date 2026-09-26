@@ -3,8 +3,8 @@
 An upload is checked (size, count, real file type), recorded as "processing",
 and then read in the background: parsed in a sandboxed child process, split into
 chunks, and embedded locally. The file's bytes are discarded after parsing;
-only the text is kept. A file with no extractable text — a scanned PDF, since
-there is no OCR — fails with a message that says so.
+only the text is kept. Photos and scanned PDF pages are read with local OCR
+(app/documents/ocr.py); a file with no readable text fails and says so.
 """
 
 from __future__ import annotations
@@ -29,9 +29,10 @@ logger = logging.getLogger(__name__)
 #: Fewer characters than this after extraction means there was no real text.
 _MIN_CHARS = 40
 NO_TEXT = (
-    "No text found in this file. Scanned PDFs and photos need OCR, which isn't "
-    "supported: upload a file whose text you can select."
+    "No readable text found in this file. For a photo or scan, try a sharper, "
+    "brighter picture taken straight on."
 )
+OCR_NOTE = "Read from an image, so some words may be wrong. Check anything important."
 
 
 class Rejected(ValueError):
@@ -97,7 +98,10 @@ async def ingest(document_id: str, data: bytes) -> None:
         if doc is None:
             return
         try:
-            pages = await parse_isolated(data, doc.kind, seconds=settings.document_parse_seconds)
+            seconds = settings.document_parse_seconds
+            if doc.kind in ("pdf", "image"):
+                seconds += settings.ocr_parse_seconds  # a scan is read page by page
+            pages = await parse_isolated(data, doc.kind, seconds=seconds)
             text_chars = sum(len(p.text) for p in pages)
             if text_chars < _MIN_CHARS:
                 raise Unsupported(NO_TEXT)
@@ -125,6 +129,8 @@ async def ingest(document_id: str, data: bytes) -> None:
             doc.chars = sum(len(c.text) for c in chunks)
             doc.embed_model = emb.MODEL_ID if vectors is not None else None
             doc.status = "ready"
+            if any(p.ocr for p in pages):
+                doc.error = OCR_NOTE
             if text_chars > settings.document_max_chars:
                 doc.error = "Only the first part of this file was kept: it is very long."
         except Unsupported as exc:

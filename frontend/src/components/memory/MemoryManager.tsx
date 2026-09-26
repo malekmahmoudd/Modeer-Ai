@@ -10,6 +10,8 @@ import { EmptyState, PageHeader, SectionHead, Spinner } from "@/components/ui/pr
 import { useAgents } from "@/features/agents/useAgents";
 import { apiFetch, useApi } from "@/lib/api";
 import { categoryLabel } from "@/lib/format";
+import { usePrefs } from "@/lib/i18n";
+import { useAgentName } from "@/lib/i18n/agents";
 import type { AgentMemory, SharedMemory } from "@/types";
 
 const EMPTY = { key: "", value: "" };
@@ -31,6 +33,7 @@ function AddForm({
   label: string;
 }) {
   const [v, setV] = useState(EMPTY);
+  const { t } = usePrefs();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -48,7 +51,7 @@ function AddForm({
       onSubmit={async (e) => {
         e.preventDefault();
         if (!v.key.trim() || !v.value.trim()) {
-          setErr("Give it a short label and a value.");
+          setErr(t("memory.needBoth"));
           return;
         }
         setBusy(true);
@@ -58,7 +61,7 @@ function AddForm({
           setV(EMPTY);
           setOpen(false);
         } catch (ex) {
-          setErr(ex instanceof Error ? ex.message : "Couldn't save that.");
+          setErr(ex instanceof Error ? ex.message : t("memory.saveError"));
         } finally {
           setBusy(false);
         }
@@ -68,15 +71,17 @@ function AddForm({
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           className="field sm:w-52"
-          placeholder="Label (e.g. Career goal)"
-          aria-label="Label"
+          dir="auto"
+          placeholder={t("memory.labelPlaceholder")}
+          aria-label={t("memory.label")}
           value={v.key}
           onChange={(e) => setV({ ...v, key: e.target.value })}
         />
         <input
           className="field flex-1"
-          placeholder="What should the team know?"
-          aria-label="Value"
+          dir="auto"
+          placeholder={t("memory.valuePlaceholder")}
+          aria-label={t("memory.value")}
           value={v.value}
           onChange={(e) => setV({ ...v, value: e.target.value })}
         />
@@ -88,7 +93,7 @@ function AddForm({
       )}
       <div className="mt-3 flex gap-2">
         <button type="submit" disabled={busy} className="btn btn-pink !min-h-[40px] !text-[13.5px]">
-          {busy ? "Saving…" : "Save"}
+          {busy ? t("common.saving") : t("common.save")}
         </button>
         <button
           type="button"
@@ -98,7 +103,7 @@ function AddForm({
           }}
           className="btn !min-h-[40px] !text-[13.5px]"
         >
-          Cancel
+          {t("common.cancel")}
         </button>
       </div>
     </form>
@@ -107,6 +112,8 @@ function AddForm({
 
 export function MemoryManager() {
   const { agents } = useAgents();
+  const { t } = usePrefs();
+  const agentName = useAgentName();
   const specialists = agents.filter((a) => !a.is_assistant);
 
   const { data: shared, loading, error, refetch } = useApi<SharedMemory[]>("/memory/shared");
@@ -126,11 +133,11 @@ export function MemoryManager() {
       const rows = await apiFetch<AgentMemory[]>(`/memory/agent/${slug}`);
       if (request === memoryRequest.current) setAgentMem(rows);
     } catch (error) {
-      if (request === memoryRequest.current) setAgentError(error instanceof Error ? error.message : "Could not load notes.");
+      if (request === memoryRequest.current) setAgentError(error instanceof Error ? error.message : t("memory.notesError"));
     } finally {
       if (request === memoryRequest.current) setAgentLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (agentId) loadAgent(agentId);
@@ -142,29 +149,25 @@ export function MemoryManager() {
   return (
     <div className="anim-fade journal-page memory-page">
       <PageHeader
-        eyebrow="Your memory book"
-        title="A little more you."
-        lede="Inspect, edit or delete anything saved here. Leo tries to filter sensitive details, but can miss them. Turn off automatic learning in Account."
+        eyebrow={t("memory.eyebrow")}
+        title={t("memory.title")}
+        lede={t("memory.lede")}
       />
 
       {/* ---------- shared ---------- */}
       <section className="memory-shared">
-        <SectionHead title="Shared with your team" />
-        <p className="-mt-2 mb-5 text-[14px] font-semibold text-ink-soft">
-          Every specialist can see these.
-        </p>
+        <SectionHead title={t("memory.shared")} />
+        <p className="-mt-2 mb-5 text-[14px] font-semibold text-ink-soft">{t("memory.sharedHelp")}</p>
 
         {loading && <Spinner />}
         {error && (
           <p role="alert" className="border-2 border-ink bg-pink-pale px-3 py-2 text-[14px] font-semibold">
-            Couldn&apos;t load your memory: {error}
+            {t("memory.loadError", { error })}
           </p>
         )}
 
         {!loading && !error && (shared ?? []).length === 0 && (
-          <EmptyState title="Nothing shared yet">
-            Tell Leo something lasting about yourself and it shows up here.
-          </EmptyState>
+          <EmptyState title={t("memory.nothingShared")}>{t("memory.nothingSharedHelp")}</EmptyState>
         )}
 
         {sharedGroups.map(([category, rows]) => (
@@ -198,7 +201,7 @@ export function MemoryManager() {
         ))}
 
         <AddForm
-          label="Add something"
+          label={t("memory.addSomething")}
           onAdd={async (v) => {
             await apiFetch("/memory/shared", {
               method: "POST",
@@ -214,10 +217,8 @@ export function MemoryManager() {
 
       {/* ---------- specialist ---------- */}
       <section className="memory-private">
-        <SectionHead title="Known by one specialist" />
-        <p className="-mt-2 mb-5 text-[14px] font-semibold text-ink-soft">
-          Private notes a specialist keeps — only that agent sees them.
-        </p>
+        <SectionHead title={t("memory.private")} />
+        <p className="-mt-2 mb-5 text-[14px] font-semibold text-ink-soft">{t("memory.privateHelp")}</p>
 
         <ul className="mb-6 flex flex-wrap gap-2.5" role="list">
           {specialists.map((a) => {
@@ -227,12 +228,12 @@ export function MemoryManager() {
                 <button
                   onClick={() => setAgentId(on ? "" : a.id)}
                   aria-pressed={on}
-                  className={`flex items-center gap-2 border-2 border-ink py-1.5 pl-1.5 pr-3 text-[13px] font-bold transition ${
+                  className={`flex items-center gap-2 border-2 border-ink py-1.5 pe-3 ps-1.5 text-[13px] font-bold transition ${
                     on ? "bg-pink text-ink shadow-pop-xs" : "bg-paper-hi text-ink hover:bg-sun-pale"
                   }`}
                 >
                   <AgentBadge slug={a.id} size={30} />
-                  {a.name.replace(/ (Agent|Assistant)$/, "")}
+                  {agentName(a)}
                 </button>
               </li>
             );
@@ -240,9 +241,7 @@ export function MemoryManager() {
         </ul>
 
         {!agentId && (
-          <EmptyState title="Pick a specialist">
-            Choose an agent above to see and manage the notes it keeps about you.
-          </EmptyState>
+          <EmptyState title={t("memory.pick")}>{t("memory.pickHelp")}</EmptyState>
         )}
 
         {agentId && activeAgent && (
@@ -251,15 +250,13 @@ export function MemoryManager() {
 
             {agentError && <p role="alert">{agentError}</p>}
             {!agentLoading && !agentError && agentMem.length === 0 && (
-              <EmptyState title="No notes yet">
-                As you chat with {activeAgent.name}, useful specialist details land here.
-              </EmptyState>
+              <EmptyState title={t("memory.noNotes")}>{t("memory.noNotesHelp", { name: agentName(activeAgent) })}</EmptyState>
             )}
 
             {agentMem.length > 0 && (
               <div className="border-2 border-ink bg-paper-hi shadow-pop-xs">
                 <p className="border-b-2 border-ink bg-sun px-3 py-1.5 text-[11.5px] font-black uppercase tracking-[0.13em] text-ink">
-                  {activeAgent.name}&apos;s private notes
+                  {t("memory.privateNotes", { name: agentName(activeAgent) })}
                 </p>
                 <ul>
                   {agentMem.map((m) => (
@@ -287,7 +284,7 @@ export function MemoryManager() {
             )}
 
             <AddForm
-              label={`Add a note for ${activeAgent.name.replace(/ (Agent|Assistant)$/, "")}`}
+              label={t("memory.addNote", { name: agentName(activeAgent) })}
               onAdd={async (v) => {
                 await apiFetch("/memory/agent", {
                   method: "POST",

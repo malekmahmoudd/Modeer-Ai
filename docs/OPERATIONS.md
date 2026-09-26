@@ -10,6 +10,10 @@ Deployment itself is in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 Nothing here runs itself. A backup script nobody scheduled is not a backup.
 
+One exception runs inside the backend: every hour it deletes incognito chats
+older than 24 hours (`app/main.py`, `sweep_incognito`). It needs no setup. With
+more than one backend process, each runs the sweep; that is harmless.
+
 Install Docker Compose, host `openssl`, `flock`, coreutils, Python 3 and curl.
 Run as a dedicated operator with Docker access. Create a private, operator-owned
 `/etc/modeer/operations.env` (mode 600), containing shell-quoted assignments:
@@ -253,3 +257,17 @@ downgrade a production database; rehearse a schema rollback on a copy.
 **Always rebuild before migrating.** `docker compose run backend alembic upgrade
 head` runs the migrations inside the image, not the ones in your working tree; a
 stale image migrates to its own head and reports success.
+
+## Voice and photos
+
+- **Voice input** needs `LLM_PROVIDER=groq`. It uses Groq's free Whisper
+  endpoint (`TRANSCRIBE_MODEL`, default `whisper-large-v3-turbo`) with the same
+  key. Each account gets 60 transcriptions a day (`VOICE_PER_DAY`), each at most
+  4 MB (`VOICE_MAX_BYTES`, about a minute). Groq limits audio separately from
+  text: when it says no, people see "Voice input is at its limit for now".
+  `VOICE_ENABLED=false` hides the mic.
+- **OCR** needs the `tesseract` program and `models/tessdata/{ara,eng}.traineddata`.
+  The image has both. On a development machine, install Tesseract (`brew install
+  tesseract`) and run `python -m app.documents.fetch_ocr`. Without them, photo
+  uploads fail with "Reading text from photos isn't set up on this server".
+

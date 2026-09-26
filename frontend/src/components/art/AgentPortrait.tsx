@@ -2,8 +2,11 @@
  * Slug -> artwork. Renders the finished `image` when a character has one,
  * otherwise the generated SVG portrait. Layout never needs to know which.
  */
+"use client";
+
 import { Portrait, type Framing } from "@/components/art/Portrait";
 import { characterFor } from "@/lib/characters";
+import { usePrefs } from "@/lib/i18n";
 
 export function AgentPortrait({
   slug,
@@ -24,8 +27,11 @@ export function AgentPortrait({
 }) {
   const character = characterFor(slug);
   const alt = altOverride ?? character.alt;
+  // Data saver: the drawn SVG portrait (in the page already) instead of a
+  // downloaded illustration.
+  const { dataSaver } = usePrefs();
 
-  if (character.image) {
+  if (character.image && !dataSaver) {
     return (
       // Character art is an arbitrary replaceable asset; plain <img> keeps the
       // swap a one-line change in lib/characters.ts.

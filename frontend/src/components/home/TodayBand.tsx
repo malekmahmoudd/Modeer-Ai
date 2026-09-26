@@ -9,6 +9,8 @@ import { Icon } from "@/components/ui/Icon";
 import { ThinkingDots } from "@/components/ui/primitives";
 import { useAgents } from "@/features/agents/useAgents";
 import { apiFetch, useApi } from "@/lib/api";
+import { usePrefs } from "@/lib/i18n";
+import { useAgentName } from "@/lib/i18n/agents";
 import type { Briefing, Goal } from "@/types";
 
 /**
@@ -18,6 +20,8 @@ import type { Briefing, Goal } from "@/types";
 export function TodayBand() {
   const router = useRouter();
   const { byId } = useAgents();
+  const { t, tn } = usePrefs();
+  const agentName = useAgentName();
   const { data: briefing, loading, error, setData } = useApi<Briefing>("/briefings/today");
   const { data: goals } = useApi<Goal[]>("/goals?status=active");
   const [refreshing, setRefreshing] = useState(false);
@@ -38,19 +42,22 @@ export function TodayBand() {
     <section className="relative -mx-4 mt-12 border-y-2 border-ink bg-sun px-4 py-8 sm:-mx-7 sm:px-7">
       <div className="mx-auto w-full max-w-page">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <h2 className="display text-[clamp(22px,3vw,30px)] text-ink">Today</h2>
+          <h2 className="display text-[clamp(22px,3vw,30px)] text-ink">{t("today.title")}</h2>
           <span className="h-[2px] flex-1 bg-ink" aria-hidden />
+          <Link href="/week" className="chip">
+            {t("today.week")}
+          </Link>
           {activeGoals > 0 && (
             <Link href="/goals" className="chip">
-              {activeGoals} active goal{activeGoals === 1 ? "" : "s"}
+              {tn("today.goals", activeGoals)}
             </Link>
           )}
           <button
             onClick={refresh}
             disabled={refreshing}
             className="btn-icon !h-10 !w-10"
-            aria-label="Refresh today's briefing"
-            title="Refresh"
+            aria-label={t("today.refresh")}
+            title={t("today.refreshShort")}
           >
             <Icon name="history" size={17} className={refreshing ? "animate-spin" : ""} />
           </button>
@@ -58,19 +65,19 @@ export function TodayBand() {
 
         {loading && (
           <p className="mt-5 flex items-center gap-2 text-[14px] font-semibold text-ink-soft">
-            <ThinkingDots /> Leo is reading your priorities…
+            <ThinkingDots /> {t("today.loading")}
           </p>
         )}
 
         {error && (
           <p role="alert" className="mt-5 border-2 border-ink bg-paper-hi px-3 py-2 text-[14px] font-semibold">
-            Couldn&apos;t load today&apos;s briefing: {error}
+            {t("today.error", { error })}
           </p>
         )}
 
         {briefing && !loading && (
           <>
-            <p className="mt-4 max-w-[62ch] text-[clamp(16px,2vw,20px)] font-semibold leading-snug text-ink">
+            <p dir="auto" className="mt-4 max-w-[62ch] text-[clamp(16px,2vw,20px)] font-semibold leading-snug text-ink">
               {briefing.summary}
             </p>
 
@@ -84,7 +91,7 @@ export function TodayBand() {
                         onClick={() =>
                           agent ? router.push(`/agents/${agent.id}`) : router.push("/agents/modeer")
                         }
-                        className="group flex w-full items-center gap-3 border-2 border-ink bg-paper-hi px-3 py-2.5 text-left shadow-pop-xs transition hover:-translate-y-[2px] hover:shadow-pop-sm"
+                        className="group flex w-full items-center gap-3 border-2 border-ink bg-paper-hi px-3 py-2.5 text-start shadow-pop-xs transition hover:-translate-y-[2px] hover:shadow-pop-sm"
                       >
                         {agent ? (
                           <AgentBadge slug={agent.id} size={38} />
@@ -96,10 +103,10 @@ export function TodayBand() {
                         <span className="min-w-0 flex-1">
                           {agent && (
                             <span className="block text-[11px] font-black uppercase tracking-wider text-pink-deep">
-                              {agent.name.replace(/ (Agent|Assistant)$/, "")}
+                              {agentName(agent)}
                             </span>
                           )}
-                          <span className="block text-[14px] font-semibold leading-snug text-ink">
+                          <span dir="auto" className="block text-[14px] font-semibold leading-snug text-ink">
                             {item.text}
                           </span>
                         </span>

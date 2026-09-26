@@ -69,7 +69,14 @@ async def chat_stream(
     try:
         user = _resolve_user(db, x_user_id, request)
         try:
-            convo = convo_service.get_or_create(db, user.id, agent_id, body.conversation_id)
+            convo = convo_service.get_or_create(
+                db,
+                user.id,
+                agent_id,
+                body.conversation_id,
+                incognito=body.incognito,
+                incognito_context=body.incognito_context,
+            )
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="Conversation not found") from exc
         except ValueError as exc:
@@ -136,7 +143,14 @@ async def chat_sync(
     try:
         user = _resolve_user(db, x_user_id, request)
         try:
-            convo = convo_service.get_or_create(db, user.id, agent_id, body.conversation_id)
+            convo = convo_service.get_or_create(
+                db,
+                user.id,
+                agent_id,
+                body.conversation_id,
+                incognito=body.incognito,
+                incognito_context=body.incognito_context,
+            )
         except (KeyError, ValueError) as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         db.commit()

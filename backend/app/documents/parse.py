@@ -23,7 +23,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from xml.etree import ElementTree
 
-KINDS = ("pdf", "docx", "txt", "md")
+KINDS = ("pdf", "docx", "txt", "md", "image")
+#: A PDF page with less text than this is treated as scanned and read with OCR.
+_SCANNED_PAGE_CHARS = 20
 _MAX_PAGES = 500
 # Zip-bomb guards for DOCX: entries, total unpacked size, and the ratio.
 _ZIP_MAX_ENTRIES = 2000
@@ -40,6 +42,7 @@ class Unsupported(ValueError):
 class Page:
     number: int | None  # None for formats without pages
     text: str
+    ocr: bool = False  # read from an image, so words may be wrong
 
 
 def detect_kind(data: bytes, filename: str) -> str:
@@ -51,10 +54,14 @@ def detect_kind(data: bytes, filename: str) -> str:
         if filename.lower().endswith(".docx"):
             return "docx"
         raise Unsupported("Only .docx is accepted of the zip-based formats.")
+    if head.startswith((b"\x89PNG", b"\xff\xd8\xff")) or (
+        head.startswith(b"RIFF") and head[8:12] == b"WEBP"
+    ):
+        return "image"
+    if head.startswith((b"GIF8", b"RIFF")) or head[4:12] in (b"ftypheic", b"ftypmif1"):
+        raise Unsupported("That image format isn't supported. Use a JPEG, PNG or WebP photo.")
     if b"\x00" in data[:8192] and not data.startswith((b"\xff\xfe", b"\xfe\xff")):
-        raise Unsupported("That looks like a binary file. Upload PDF, DOCX, TXT or MD.")
-    if head.startswith((b"\x89PNG", b"\xff\xd8\xff", b"GIF8", b"RIFF")):
-        raise Unsupported("Images aren't supported: there is no text to read in them.")
+        raise Unsupported("That looks like a binary file. Upload a PDF, DOCX, TXT, MD or a photo.")
     return "md" if filename.lower().endswith((".md", ".markdown")) else "txt"
 
 
@@ -137,10 +144,40 @@ def _paragraph(p) -> str:
     return text
 
 
+def _image(data: bytes) -> list[Page]:
+    from app.documents import ocr
+
+    if not ocr.available():
+        raise Unsupported("Reading text from photos isn't set up on this server.")
+    try:
+        image = ocr.open_image(data)
+    except Exception as exc:  # noqa: BLE001 - damaged, truncated or a bomb
+        raise Unsupported("The image could not be opened.") from exc
+    return [Page(None, ocr.read_image(ocr.prepare(image)), ocr=True)]
+
+
+def _ocr_scanned(data: bytes, pages: list[Page]) -> list[Page]:
+    """Read the pages of a PDF that have no text layer, if OCR is available."""
+    from app.documents import ocr
+
+    scanned = [p.number for p in pages if len(p.text.strip()) < _SCANNED_PAGE_CHARS]
+    if not scanned or not ocr.available():
+        return pages
+    by_number = {p.number: p for p in pages}
+    try:
+        for number, image in ocr.pdf_pages(data, scanned[: ocr.MAX_OCR_PAGES]):
+            by_number[number] = Page(number, ocr.read_image(ocr.prepare(image)), ocr=True)
+    except Exception:  # noqa: BLE001 - keep whatever text the PDF did have
+        pass
+    return [by_number[p.number] for p in pages]
+
+
 def parse(data: bytes, kind: str) -> list[Page]:
     """Pages of text. Raises :class:`Unsupported` with a message for the user."""
     if kind == "pdf":
-        pages = _pdf(data)
+        pages = _ocr_scanned(data, _pdf(data))
+    elif kind == "image":
+        pages = _image(data)
     elif kind == "docx":
         pages = _docx(data)
     else:
@@ -166,7 +203,8 @@ def _limit_child() -> None:  # pragma: no cover - runs in the child process
     try:
         import resource
 
-        resource.setrlimit(resource.RLIMIT_CPU, (25, 30))
+        # Per process: Tesseract, started from here for OCR, gets its own.
+        resource.setrlimit(resource.RLIMIT_CPU, (90, 100))
         resource.setrlimit(resource.RLIMIT_AS, (_CHILD_MEMORY, _CHILD_MEMORY))
     except (ImportError, ValueError, OSError):
         pass  # macOS may refuse RLIMIT_AS; the wall-clock timeout still applies
@@ -197,7 +235,7 @@ async def parse_isolated(data: bytes, kind: str, *, seconds: float) -> list[Page
         raise Unsupported("The file could not be read.") from exc
     if not result.get("ok"):
         raise Unsupported(result.get("error") or "The file could not be read.")
-    return [Page(p["number"], p["text"]) for p in result["pages"]]
+    return [Page(p["number"], p["text"], p.get("ocr", False)) for p in result["pages"]]
 
 
 def _main() -> None:  # pragma: no cover - exercised through parse_isolated
@@ -205,7 +243,10 @@ def _main() -> None:  # pragma: no cover - exercised through parse_isolated
     data = sys.stdin.buffer.read()
     try:
         pages = parse(data, kind)
-        payload = {"ok": True, "pages": [{"number": p.number, "text": p.text} for p in pages]}
+        payload = {
+            "ok": True,
+            "pages": [{"number": p.number, "text": p.text, "ocr": p.ocr} for p in pages],
+        }
     except Unsupported as exc:
         payload = {"ok": False, "error": str(exc)}
     except Exception:  # noqa: BLE001 - never echo parser internals

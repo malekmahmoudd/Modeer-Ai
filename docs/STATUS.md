@@ -3,6 +3,77 @@
 _Last updated: 2026-09-25 · phase: production readiness, invite-only or open signup_
 
 
+## Features for you — 2026-09-26
+
+Six features, chosen from the council review. Migration **0009**. Tests:
+`backend/tests/test_user_features.py`, 480 backend tests in total.
+
+1. **Arabic interface.** Every screen is in Arabic and mirrored right to left:
+   - Switch with the header button or on Account. The choice is saved on the
+     account and follows you to other devices.
+   - The server reads the language cookie, so the first paint is already
+     right to left.
+   - There is a typed dictionary (`frontend/src/lib/i18n`) with Arabic plural
+     forms, plus Arabic names, roles and starter prompts for each agent.
+   - Physical left/right CSS became logical start/end, and arrows, slants and
+     the hero art are mirrored.
+   - Still English: text the server writes (briefing summaries, error
+     details) and the portraits' alt text.
+2. **Voice.** A mic in every chat records up to a minute:
+   - Groq's free Whisper writes it out, and the text lands in the message box
+     to check before sending.
+   - "Listen" on any reply uses the device's own voices.
+   - Checked live: synthetic Arabic speech came back with one slip
+     ("مقابل" for "مقابلة").
+   - The mic is hidden when the provider isn't Groq, so it wasn't
+     browser-tested with a real microphone.
+3. **Weak connections.**
+   - Drafts survive reloads.
+   - A message sent while offline waits and sends when the connection
+     returns.
+   - An installable app with a service worker: pages are fetched from the
+     network first, built files are cached, and `/api` is never cached.
+     After a deploy you're offered a reload.
+   - Data saver drops the illustrations and decorative fonts. It is on by
+     default when the browser asks for Save-Data.
+4. **Incognito chats.**
+   - Nothing is learned from them, and they're hidden from lists, search and
+     Leo.
+   - They send no saved context unless you opt in.
+   - They're deleted when you leave, or after 24 hours by an hourly sweep.
+   - The wording says "not remembered by Fareeq", because Groq still receives
+     the text.
+5. **Everyday chat tools.**
+   - Copy, save, listen and "Ask a teammate" (opens them with the reply
+     quoted, handed over through sessionStorage, not the URL).
+   - Regenerate and Edit on the latest turn. A saved reply can't be taken
+     back.
+   - Search across all chats with Ctrl/⌘‑K; Arabic letter variants match.
+   - Rename conversations.
+   - "Pick up where you left off" on Home.
+   - Saved replies on Plans.
+   - A weekly review page, `/week`.
+   - Today's allowance under the message box.
+6. **Photos and scans (OCR).**
+   - Tesseract reads Arabic and English with the "best" models, locally.
+   - Pillow cleans the image up first, and the browser shrinks photos and
+     strips their metadata before upload.
+   - Scanned PDF pages are read too. See `rag.md`.
+   - Groq lists no vision model, so there is no image understanding beyond
+     the text.
+
+**Browser QA** in Chrome (Playwright, mock model, throwaway database): 54/54
+checks, no page errors (`browser-qa-2026-09-26.json`). It found and fixed two
+things:
+- Regenerating a saved reply deleted it silently. It is now refused, and the
+  button is hidden.
+- The week page's columns were squeezed.
+
+Every page fits the width in Arabic and English at 1440 px and 390 px.
+
+**Not verified:** the Docker image with Tesseract and the two new packages (see
+`DEPLOYMENT.md`).
+
 ## Team extras — 2026-09-25 (last batch)
 
 Details in `tracking.md` (last section) and `OPERATIONS.md` (suspension).

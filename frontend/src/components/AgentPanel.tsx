@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 
 import { AgentPortrait } from "@/components/art/AgentPortrait";
+import { usePrefs } from "@/lib/i18n";
+import { agentText } from "@/lib/i18n/agents";
 import type { Agent } from "@/types";
 
 /**
@@ -20,6 +24,8 @@ export function AgentPanel({
   featured?: boolean;
 }) {
   const tabPink = index % 2 === 1;
+  const { locale } = usePrefs();
+  const text = agentText(agent, locale);
 
   return (
     <Link
@@ -41,16 +47,16 @@ export function AgentPanel({
 
         {/* slanted name tab — text upright */}
         <span
-          className="name-tab absolute left-0 top-3 text-[14px] sm:text-[15px]"
+          className="name-tab absolute start-0 top-3 text-[14px] sm:text-[15px]"
           style={{ background: tabPink ? "var(--pink)" : "var(--sun)", color: "var(--ink)" }}
         >
-          {agent.name.replace(/ (Agent|Assistant)$/, "")}
+          {text.name}
         </span>
       </div>
 
       {/* caption bar */}
       <div className={featured ? "sunshine-panel-caption" : "border-t-2 border-ink bg-paper-hi px-3 py-2.5"}>
-        <p className="text-[13px] font-bold leading-tight text-ink">{agent.tagline}</p>
+        <p className="text-[13px] font-bold leading-tight text-ink">{text.tagline}</p>
       </div>
     </Link>
   );

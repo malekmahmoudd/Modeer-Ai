@@ -19,8 +19,24 @@ cites file and page, and says so when the answer isn't in them.
    - **DOCX** is read with the standard library (zip plus XML). Entity
      declarations are refused, and the zip-bomb limits are 2,000 entries,
      100 MB unpacked, and a 100:1 ratio.
-   - **Scanned files fail.** A file with no text (a scanned PDF or a photo)
-     fails with a message saying so. There is no OCR.
+   - **Photos and scans are read with OCR** (since 2026-09-26,
+     `app/documents/ocr.py`). JPEG, PNG and WebP photos, and any PDF page with
+     almost no text layer, go through Tesseract with its Arabic and English
+     "best" models, locally.
+     - Pillow first turns the image upright (EXIF), makes it greyscale,
+       scales it to about 2,400 px on its long side, and stretches the
+       contrast. Bidi marks Tesseract adds are stripped.
+     - At most 15 pages of a scan are read. OCR gets extra wall time
+       (`OCR_PARSE_SECONDS`, 150) inside the same sandboxed child.
+     - A document read this way carries the note "Read from an image, so some
+       words may be wrong".
+     - The browser shrinks a photo to 2,400 px before upload, which also
+       drops the camera's metadata (GPS included).
+     - Without Tesseract or its data, photos fail with a clear message and
+       scanned pages simply stay empty.
+     - Checked: clean English text reads exactly. A small, skewed Arabic
+       photo reads its first line exactly but garbles digits and a word on
+       the second.
 3. **Kept as text only.**
    - The uploaded bytes are discarded after parsing. No file is stored, backed
      up or served.
@@ -108,7 +124,8 @@ and MRR ≥ 0.75, and no leaks either way.
 
 ## Not in v1
 
-No OCR, images, spreadsheets, `.eml`, web pages, Google Drive or Gmail import;
+No image understanding beyond OCR (Groq lists no vision model on this key),
+no spreadsheets, `.eml`, web pages, Google Drive or Gmail import;
 no reranker or query rewriting; no pgvector (not needed at 5 files × a few
 hundred chunks).
 

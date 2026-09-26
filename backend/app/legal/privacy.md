@@ -64,6 +64,38 @@ it may remain in encrypted server backups for up to their retention period.
 Only upload files you have the right to share: if a file contains other
 people's personal details, they are stored and processed too.
 
+**Photos and scans.** A photo or a scanned page is read on the Fareeq server
+itself (optical character recognition); it is not sent anywhere to be read.
+Before it is uploaded, your browser redraws a photo at a smaller size, which
+also removes the information a camera writes into the file, such as where it
+was taken. The picture is then thrown away like any other file, and only the
+text read from it is kept. That text can contain misread words.
+
+**Voice messages.** When you use the microphone, the recording (at most a
+minute) is sent to the model provider below to be written out as text, and the
+text comes back to your message box. Fareeq does not keep the recording or the
+text it returns; nothing is saved unless you then send the message. **Read
+aloud** uses your own device's voices, and nothing leaves your device for it.
+
+**Saved replies and your settings.** Replies you save, your interface language
+and whether Data saver is on are stored with your account and included in your
+export. Data saver itself is remembered by your browser.
+
+**Incognito chats.** A chat you start in incognito is not remembered by
+Fareeq: nothing is learned from it (no facts, dates, plans or notes), it is not
+shown in your conversation lists, search or to Leo, and it is deleted when you
+leave it or 24 hours after it started, whichever comes first. Until then it is
+stored like any other conversation, and it is in your data export if you take
+one. It is not private from the model provider: your messages still go to them
+so they can answer. It sends none of your saved facts or files unless you tick
+the box to allow it when you start it.
+
+**In this browser.** What you are typing is kept in this browser until you send
+it, so a lost connection or a reload does not lose it; signing out clears it.
+If you install Fareeq on your home screen, the app's pages and pictures are kept
+by the browser so it opens without a connection. Your messages, memories and
+files are never kept this way.
+
 ## Where it lives
 
 In one PostgreSQL database on the server running your deployment. Nothing is
@@ -120,6 +152,7 @@ that backup was taken.
 | Stop it learning from your messages | Account → What Leo learns → switch off "Learn from my messages automatically". Nothing already saved is removed, and you can still save facts yourself |
 | Correct or delete a single fact | Memory — edit or delete it. An edit is yours: Fareeq will not overwrite it automatically later |
 | Delete one conversation | Open conversation history, then choose its delete button |
+| Keep a chat out of your memory | Start it in incognito (the mask button in a chat) |
 | Take everything with you | Account → Download my data — a JSON file, messages included |
 | Delete everything | Account → Delete my account → type DELETE |
 | Sign out every device | Account → Sign out every device |

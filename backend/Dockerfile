@@ -16,6 +16,14 @@ RUN pip install --no-cache-dir --require-hashes --no-deps -r requirements.lock \
 # code changes do not download it again. The server never fetches anything.
 COPY app/documents/fetch_model.py /tmp/fetch_model.py
 RUN python /tmp/fetch_model.py /app/models/multilingual-e5-small && rm /tmp/fetch_model.py
+# OCR for photos and scanned PDFs: the Tesseract program from Debian, and its
+# Arabic and English data at a pinned release, checked like the model above.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr \
+    && rm -rf /var/lib/apt/lists/*
+COPY app/documents/fetch_ocr.py /tmp/fetch_ocr.py
+RUN python /tmp/fetch_ocr.py /app/models/tessdata && rm /tmp/fetch_ocr.py
+ENV OCR_TESSDATA_DIR=/app/models/tessdata
 COPY . .
 USER app
 EXPOSE 8000

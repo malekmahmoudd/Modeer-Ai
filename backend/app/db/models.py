@@ -53,6 +53,8 @@ class User(UUIDMixin, TimestampMixin, Base):
     #: Set by an operator to stop an account from signing in or using the API.
     #: Reversible; nothing is deleted.
     suspended_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    #: Interface language: "en" or "ar". None follows the browser.
+    locale: Mapped[str | None] = mapped_column(String(8), nullable=True)
 
     recovery_codes: Mapped[list[RecoveryCode]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
@@ -125,6 +127,16 @@ class Conversation(UUIDMixin, TimestampMixin, Base):
     summary_count: Mapped[int] = mapped_column(
         Integer, default=0, nullable=False, server_default="0"
     )
+    #: Incognito: nothing is learned from it, it is hidden from lists and from
+    #: Leo, and it is deleted at ``expires_at`` (or when the person closes it).
+    incognito: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default="0"
+    )
+    #: An incognito chat sends no saved context unless the person opts in.
+    incognito_context: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default="0"
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     user: Mapped[User] = relationship(back_populates="conversations")
     agent: Mapped[Agent] = relationship(back_populates="conversations")
@@ -148,6 +160,8 @@ class Message(UUIDMixin, TimestampMixin, Base):
     content: Mapped[str] = mapped_column(Text)
     # Diagnostics: which context was injected, token counts, model, etc.
     meta: Mapped[dict] = mapped_column(JSON, default=dict)
+    #: Kept by the person ("Saved replies"). Goes when the conversation does.
+    pinned_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     conversation: Mapped[Conversation] = relationship(back_populates="messages")
 
@@ -321,7 +335,7 @@ class Document(UUIDMixin, TimestampMixin, Base):
     shared: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     #: Display name only, cleaned of control characters; never used as a path.
     filename: Mapped[str] = mapped_column(String(200))
-    kind: Mapped[str] = mapped_column(String(8))  # pdf | docx | txt | md
+    kind: Mapped[str] = mapped_column(String(8))  # pdf | docx | txt | md | image
     size_bytes: Mapped[int] = mapped_column(Integer)
     sha256: Mapped[str] = mapped_column(String(64))
     status: Mapped[str] = mapped_column(String(16), default="processing")  # processing|ready|failed

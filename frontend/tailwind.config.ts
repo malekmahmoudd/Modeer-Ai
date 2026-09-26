@@ -7,8 +7,8 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "var(--font-arabic)", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "var(--font-arabic)", "system-ui", "sans-serif"],
-        brush: ["var(--font-brush)", "cursive"],
-        hand: ["var(--font-hand)", "cursive"],
+        brush: ["var(--font-brush)", "var(--font-arabic)", "cursive"],
+        hand: ["var(--font-hand)", "var(--font-arabic)", "cursive"],
       },
       colors: {
         paper: {

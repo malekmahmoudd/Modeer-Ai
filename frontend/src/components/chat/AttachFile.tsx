@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/Icon";
 import { UPLOAD_TYPES, apiFetch, uploadDocument } from "@/lib/api";
+import { t as tr, usePrefs } from "@/lib/i18n";
 import type { Attachment, UserDocument } from "@/types";
 
 /** A file picked in the message box, before the message is sent. */
@@ -60,9 +61,9 @@ export function useAttachments(agentId: string) {
           doc = await apiFetch<UserDocument>(`/documents/${doc.id}`);
         }
         if (doc.status === "ready") update(key, { status: "ready", doc, error: doc.error ?? undefined });
-        else update(key, { status: "failed", doc, error: doc.error || "This file could not be read." });
+        else update(key, { status: "failed", doc, error: doc.error || tr("attach.readFailed") });
       } catch (e) {
-        update(key, { status: "failed", error: e instanceof Error ? e.message : "The upload failed." });
+        update(key, { status: "failed", error: e instanceof Error ? e.message : tr("upload.failed") });
       } finally {
         aborts.current.delete(key);
       }
@@ -102,6 +103,7 @@ export function AttachButton({
   disabled?: boolean;
   onPick: (file: File) => void;
 }) {
+  const { t } = usePrefs();
   const input = useRef<HTMLInputElement>(null);
   return (
     <>
@@ -122,8 +124,8 @@ export function AttachButton({
         type="button"
         onClick={() => input.current?.click()}
         disabled={disabled}
-        aria-label={`Attach a file for ${agentName} (PDF, DOCX, TXT or MD)`}
-        title="Attach a file"
+        aria-label={t("attach.label", { name: agentName })}
+        title={t("attach.title")}
         className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft transition hover:bg-sun-pale hover:text-ink disabled:opacity-40"
       >
         <Icon name="paperclip" size={20} />
@@ -134,28 +136,29 @@ export function AttachButton({
 
 /** Chips for the files on the message being written, with their progress. */
 export function AttachmentChips({ files, onRemove }: { files: PendingFile[]; onRemove: (file: PendingFile) => void }) {
+  const { t } = usePrefs();
   if (!files.length) return null;
   return (
-    <ul className="flex flex-wrap gap-2 px-1 pb-1.5 pt-0.5" aria-label="Attached files">
+    <ul className="flex flex-wrap gap-2 px-1 pb-1.5 pt-0.5" aria-label={t("attach.files")}>
       {files.map((f) => {
         const state =
           f.status === "uploading"
-            ? `Uploading ${Math.round(f.progress * 100)}%`
+            ? t("attach.uploading", { n: Math.round(f.progress * 100) })
             : f.status === "reading"
-              ? "Reading…"
+              ? t("attach.reading")
               : f.status === "failed"
                 ? f.error
                 : sizeLabel(f.size);
         return (
           <li
             key={f.key}
-            className={`flex max-w-full items-center gap-2 border-2 border-ink py-1 pl-2 pr-1 text-[13px] ${
+            className={`flex max-w-full items-center gap-2 border-2 border-ink py-1 pe-1 ps-2 text-[13px] ${
               f.status === "failed" ? "bg-pink-pale" : "bg-sun-pale"
             }`}
           >
             <Icon name="file" size={16} className="shrink-0" />
             <span className="min-w-0">
-              <span className="block truncate font-bold text-ink">{f.filename}</span>
+              <span className="block truncate font-bold text-ink" dir="auto">{f.filename}</span>
               <span
                 className={`block text-[11.5px] font-semibold ${f.status === "failed" ? "text-pink-deep" : "text-ink-soft"}`}
                 role={f.status === "failed" ? "alert" : undefined}
@@ -166,7 +169,7 @@ export function AttachmentChips({ files, onRemove }: { files: PendingFile[]; onR
             <button
               type="button"
               onClick={() => onRemove(f)}
-              aria-label={`Remove ${f.filename}`}
+              aria-label={t("attach.remove", { name: f.filename })}
               className="grid h-8 w-8 shrink-0 place-items-center rounded-full hover:bg-paper-lo"
             >
               <Icon name="x" size={14} />
@@ -181,10 +184,10 @@ export function AttachmentChips({ files, onRemove }: { files: PendingFile[]; onR
 /** A file shown on a sent message in the conversation. */
 export function FileCard({ file }: { file: Attachment }) {
   return (
-    <span className="flex items-center gap-2.5 border-2 border-ink bg-paper-hi px-2.5 py-1.5 text-left">
+    <span className="flex items-center gap-2.5 border-2 border-ink bg-paper-hi px-2.5 py-1.5 text-start">
       <Icon name="file" size={20} className="shrink-0 text-ink-soft" />
       <span className="min-w-0">
-        <span className="block truncate text-[13.5px] font-bold text-ink">{file.filename}</span>
+        <span className="block truncate text-[13.5px] font-bold text-ink" dir="auto">{file.filename}</span>
         <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-faint">
           {file.kind} · {sizeLabel(file.size_bytes)}
         </span>

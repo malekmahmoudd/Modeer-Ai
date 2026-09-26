@@ -5,18 +5,15 @@ import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyState, PageHeader, SectionLabel, Spinner } from "@/components/ui/primitives";
 import { apiFetch, useApi } from "@/lib/api";
+import { usePrefs } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/en";
 import type { Goal } from "@/types";
 
-const PRIORITIES = [
-  { value: 1, label: "Top" },
-  { value: 2, label: "High" },
-  { value: 3, label: "Medium" },
-  { value: 4, label: "Low" },
-  { value: 5, label: "Someday" },
-];
+const PRIORITIES = [1, 2, 3, 4, 5].map((value) => ({ value, label: `priority.${value}` as MessageKey }));
 
 export function GoalsManager() {
   const { data, loading, error, refetch } = useApi<Goal[]>("/goals");
+  const { t } = usePrefs();
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState(3);
   const [adding, setAdding] = useState(false);
@@ -37,7 +34,7 @@ export function GoalsManager() {
       setPriority(3);
       refetch();
     } catch (ex) {
-      setAddErr(ex instanceof Error ? ex.message : "Couldn't add that goal.");
+      setAddErr(ex instanceof Error ? ex.message : t("goals.addError"));
     } finally {
       setAdding(false);
     }
@@ -55,27 +52,28 @@ export function GoalsManager() {
   return (
     <div className="anim-fade journal-page goals-page">
       <PageHeader
-        eyebrow="Your next chapter"
-        title="Make room for what matters."
-        lede="Leo and your team use these to shape advice and your daily briefing. Keep it short — a handful of things that actually matter."
+        eyebrow={t("goals.eyebrow")}
+        title={t("goals.title")}
+        lede={t("goals.lede")}
       />
 
-      <div className="goal-summary" role="group" aria-label="Goal progress"><span><strong>{active.length}</strong> in progress</span><span><strong>{done.length}</strong> completed</span><p className="hand">One step at a time.</p></div>
+      <div className="goal-summary" role="group" aria-label={t("goals.progress")}><span><strong>{active.length}</strong> {t("goals.inProgress")}</span><span><strong>{done.length}</strong> {t("goals.completed")}</span><p className="hand">{t("goals.note")}</p></div>
       <form onSubmit={add} className="goal-form mb-9">
         <div className="flex flex-col gap-2.5 sm:flex-row">
           <label htmlFor="goal-title" className="sr-only">
-            What do you want to achieve?
+            {t("goals.what")}
           </label>
           <input
             id="goal-title"
+            dir="auto"
             className="field flex-1"
-            placeholder="What do you want to achieve?"
+            placeholder={t("goals.what")}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
           <div className="flex gap-2.5">
             <label htmlFor="goal-priority" className="sr-only">
-              Priority
+              {t("goals.priority")}
             </label>
             <select
               id="goal-priority"
@@ -85,7 +83,7 @@ export function GoalsManager() {
             >
               {PRIORITIES.map((p) => (
                 <option key={p.value} value={p.value}>
-                  {p.label}
+                  {t(p.label)}
                 </option>
               ))}
             </select>
@@ -94,7 +92,7 @@ export function GoalsManager() {
               disabled={adding || !title.trim()}
               className="btn btn-pink shrink-0"
             >
-              {adding ? "Adding…" : "Add goal"}
+              {adding ? t("goals.adding") : t("goals.add")}
             </button>
           </div>
         </div>
@@ -105,15 +103,15 @@ export function GoalsManager() {
         )}
       </form>
 
-      <SectionLabel>Active</SectionLabel>
+      <SectionLabel>{t("goals.active")}</SectionLabel>
       {loading && <Spinner />}
       {error && (
         <p role="alert" className="border-2 border-ink bg-pink-pale px-3 py-2 text-[14px] font-semibold">
-          Couldn&apos;t load your goals: {error}
+          {t("goals.loadError", { error })}
         </p>
       )}
       {!loading && !error && active.length === 0 && (
-        <EmptyState title="No active goals">Add one above to get started.</EmptyState>
+        <EmptyState title={t("goals.none")}>{t("goals.noneHelp")}</EmptyState>
       )}
 
       <ul className="flex flex-col gap-2.5">
@@ -129,7 +127,7 @@ export function GoalsManager() {
 
       {done.length > 0 && (
         <div className="mt-11">
-          <SectionLabel>Completed</SectionLabel>
+          <SectionLabel>{t("goals.done")}</SectionLabel>
           <ul className="flex flex-col gap-2.5 opacity-70">
             {done.map((g) => (
               <li key={g.id}>
@@ -152,7 +150,9 @@ function GoalItem({
   onPatch: (id: string, body: Partial<Goal>) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
-  const label = PRIORITIES.find((p) => p.value === goal.priority)?.label ?? "—";
+  const { t } = usePrefs();
+  const key = PRIORITIES.find((p) => p.value === goal.priority)?.label;
+  const label = key ? t(key) : "—";
   const done = goal.status === "done";
   const isTop = goal.priority <= 1 && !done;
 
@@ -161,7 +161,7 @@ function GoalItem({
       <button
         onClick={() => onPatch(goal.id, { status: done ? "active" : "done" })}
         aria-pressed={done}
-        aria-label={done ? `Mark "${goal.title}" as active` : `Mark "${goal.title}" as done`}
+        aria-label={t(done ? "goals.markActive" : "goals.markDone", { title: goal.title })}
         className={`grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-ink transition ${
           done ? "bg-sun text-ink" : "bg-paper-hi text-transparent hover:bg-sun-pale hover:text-ink-faint"
         }`}
@@ -170,6 +170,7 @@ function GoalItem({
       </button>
 
       <span
+        dir="auto"
         className={`min-w-0 flex-1 text-[15px] font-semibold leading-snug ${
           done ? "text-ink-soft line-through" : "text-ink"
         }`}
@@ -188,7 +189,7 @@ function GoalItem({
       <button
         onClick={() => onRemove(goal.id)}
         className="btn-icon !h-11 !w-11 shrink-0 hover:!bg-pink hover:!text-ink"
-        aria-label={`Delete goal "${goal.title}"`}
+        aria-label={t("goals.delete", { title: goal.title })}
       >
         <Icon name="trash" size={17} />
       </button>

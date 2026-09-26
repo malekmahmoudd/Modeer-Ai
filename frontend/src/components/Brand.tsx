@@ -1,23 +1,28 @@
+"use client";
+
 import Link from "next/link";
+
+import { usePrefs } from "@/lib/i18n";
 
 /** The Fareeq wordmark: heavy brush lettering with a pink ink underline. */
 export function Brand({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
+  const { t } = usePrefs();
   const text =
     size === "lg" ? "text-[34px]" : size === "sm" ? "text-[20px]" : "text-[26px]";
   const rule = size === "lg" ? "h-[7px]" : size === "sm" ? "h-[4px]" : "h-[5px]";
 
   return (
-    <Link href="/" className="group inline-block leading-none" aria-label="Fareeq — home">
+    <Link href="/" className="group inline-block leading-none" aria-label={t("brand.home")}>
       <span
         className={`wordmark block ${text} text-ink`}
         style={{ transform: "skewX(-7deg)" }}
       >
-        Fareeq
+        {t("common.brand")}
       </span>
       <svg
         viewBox="0 0 120 8"
         preserveAspectRatio="none"
-        className={`mt-1 block w-[74%] ${rule}`}
+        className={`rtl-flip mt-1 block w-[74%] ${rule}`}
         aria-hidden
       >
         <path

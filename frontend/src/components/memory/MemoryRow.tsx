@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { apiFetch } from "@/lib/api";
 import { humanizeKey, relativeTime } from "@/lib/format";
+import { usePrefs } from "@/lib/i18n";
 import type { MemorySource } from "@/types";
 
 export interface EditableMemory {
@@ -31,6 +32,7 @@ export function MemoryRow({
   /** Called after an undo changed the value. */
   onChanged: () => void;
 }) {
+  const { t } = usePrefs();
   const [why, setWhy] = useState<MemorySource | null>(null);
   const [whyOpen, setWhyOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -40,7 +42,7 @@ export function MemoryRow({
 
   async function save() {
     if (!draft.key.trim() || !draft.value.trim()) {
-      setErr("Both fields are needed.");
+      setErr(t("memory.bothNeeded"));
       return;
     }
     setBusy(true);
@@ -49,7 +51,7 @@ export function MemoryRow({
       await onSave(draft);
       setEditing(false);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Couldn't save.");
+      setErr(e instanceof Error ? e.message : t("memory.saveError"));
     } finally {
       setBusy(false);
     }
@@ -65,7 +67,7 @@ export function MemoryRow({
       setWhy(await apiFetch<MemorySource>(`/memory/${scope}/${memory.id}/source`));
       setWhyOpen(true);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Couldn't load where this came from.");
+      setErr(e instanceof Error ? e.message : t("memory.whyError"));
     }
   }
 
@@ -77,7 +79,7 @@ export function MemoryRow({
       setWhyOpen(false);
       onChanged();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Couldn't undo.");
+      setErr(e instanceof Error ? e.message : t("memory.undoError"));
     } finally {
       setBusy(false);
     }
@@ -89,7 +91,7 @@ export function MemoryRow({
     try {
       await onDelete();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Couldn't delete.");
+      setErr(e instanceof Error ? e.message : t("memory.deleteError"));
       setBusy(false);
     }
   }
@@ -98,19 +100,21 @@ export function MemoryRow({
     return (
       <div className="bg-sun-pale/60 p-3">
         <label className="eyebrow mb-1 block" htmlFor={`k-${memory.id}`}>
-          Label
+          {t("memory.label")}
         </label>
         <input
           id={`k-${memory.id}`}
+          dir="auto"
           className="field mb-2"
           value={draft.key}
           onChange={(e) => setDraft({ ...draft, key: e.target.value })}
         />
         <label className="eyebrow mb-1 block" htmlFor={`v-${memory.id}`}>
-          What the team knows
+          {t("memory.whatTeamKnows")}
         </label>
         <textarea
           id={`v-${memory.id}`}
+          dir="auto"
           className="field min-h-[76px]"
           value={draft.value}
           onChange={(e) => setDraft({ ...draft, value: e.target.value })}
@@ -122,7 +126,7 @@ export function MemoryRow({
         )}
         <div className="mt-3 flex gap-2">
           <button onClick={save} disabled={busy} className="btn btn-pink !min-h-[40px] !text-[13px]">
-            {busy ? "Saving…" : "Save"}
+            {busy ? t("common.saving") : t("common.save")}
           </button>
           <button
             onClick={() => {
@@ -132,7 +136,7 @@ export function MemoryRow({
             }}
             className="btn !min-h-[40px] !text-[13px]"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       </div>
@@ -143,12 +147,12 @@ export function MemoryRow({
     <div>
       <div className="flex items-center gap-3 px-3 py-2.5">
         <div className="min-w-0 flex-1">
-          <p className="text-[14.5px] font-semibold leading-snug text-ink">{memory.value}</p>
+          <p className="text-[14.5px] font-semibold leading-snug text-ink" dir="auto">{memory.value}</p>
           <p className="mt-0.5 text-[11.5px] font-bold uppercase tracking-wide text-ink-faint">
             {humanizeKey(memory.key)}
             {memory.sensitive && (
-              <span className="ml-2 border border-ink bg-pink-pale px-1.5 py-0.5 text-[10px] normal-case tracking-normal text-ink">
-                sensitive
+              <span className="ms-2 border border-ink bg-pink-pale px-1.5 py-0.5 text-[10px] normal-case tracking-normal text-ink">
+                {t("memory.sensitive")}
               </span>
             )}
           </p>
@@ -163,14 +167,14 @@ export function MemoryRow({
             onClick={toggleWhy}
             aria-expanded={whyOpen}
             className="btn-icon !h-11 !w-11"
-            aria-label={`Why the team knows ${humanizeKey(memory.key)}`}
+            aria-label={t("memory.why", { label: humanizeKey(memory.key) })}
           >
             <Icon name="history" size={17} />
           </button>
           <button
             onClick={() => setEditing(true)}
             className="btn-icon !h-11 !w-11"
-            aria-label={`Edit ${humanizeKey(memory.key)}`}
+            aria-label={t("memory.edit", { label: humanizeKey(memory.key) })}
           >
             <Icon name="pencil" size={17} />
           </button>
@@ -178,7 +182,7 @@ export function MemoryRow({
             onClick={remove}
             disabled={busy}
             className="btn-icon !h-11 !w-11 hover:!bg-pink hover:!text-ink"
-            aria-label={`Delete ${humanizeKey(memory.key)}`}
+            aria-label={t("memory.delete", { label: humanizeKey(memory.key) })}
           >
             <Icon name="trash" size={17} />
           </button>
@@ -187,20 +191,20 @@ export function MemoryRow({
       {whyOpen && why && (
         <div className="mx-3 mb-2.5 border-2 border-ink bg-sun-pale/60 px-3 py-2.5 text-[13.5px] leading-relaxed text-ink">
           {why.saved_by_you ? (
-            <p className="font-semibold">You saved or edited this yourself.</p>
+            <p className="font-semibold">{t("memory.savedByYou")}</p>
           ) : why.learned_from ? (
             <p>
-              <span className="font-semibold">Learned from what you said</span>
+              <span className="font-semibold">{t("memory.learnedFrom")}</span>
               {why.learned_from.said_at && ` ${relativeTime(why.learned_from.said_at)}`}:{" "}
-              <q className="italic">{why.learned_from.excerpt}</q>
+              <q className="italic" dir="auto">{why.learned_from.excerpt}</q>
             </p>
           ) : (
-            <p className="font-semibold">Learned automatically; the message it came from is no longer there.</p>
+            <p className="font-semibold">{t("memory.learnedGone")}</p>
           )}
           {why.history.length > 0 && (
             <>
-              <p className="mt-2 font-semibold">Earlier values</p>
-              <ul className="list-disc pl-5">
+              <p className="mt-2 font-semibold">{t("memory.earlier")}</p>
+              <ul className="list-disc ps-5">
                 {why.history.slice().reverse().map((h, i) => (
                   <li key={i}>
                     {h.value} <span className="text-ink-soft">({relativeTime(h.replaced_at)})</span>
@@ -208,7 +212,7 @@ export function MemoryRow({
                 ))}
               </ul>
               <button onClick={undo} disabled={busy} className="btn mt-2.5 !min-h-[40px] !text-[13px]">
-                Undo the last change
+                {t("memory.undo")}
               </button>
             </>
           )}

@@ -1,15 +1,53 @@
+import { currentLocale, intlTag, t, translateCount } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n/en";
+
 export function relativeTime(iso: string | null): string {
   if (!iso) return "";
   const then = new Date(iso).getTime();
   const diff = Date.now() - then;
   const mins = Math.round(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("time.justNow");
+  const ago = new Intl.RelativeTimeFormat(intlTag() ?? "en", { numeric: "auto", style: "narrow" });
+  if (mins < 60) return ago.format(-mins, "minute");
   const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return ago.format(-hrs, "hour");
   const days = Math.round(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (days < 7) return ago.format(-days, "day");
+  return new Date(iso).toLocaleDateString(intlTag(), { month: "short", day: "numeric" });
+}
+
+/** "Thu 1 Oct" from an ISO date, read as a calendar day (no timezone shift). */
+export function calendarDay(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(intlTag(), {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
+/** Whole days from today to an ISO calendar date (negative when past). */
+export function daysFromToday(iso: string): number {
+  const [y, m, d] = iso.split("-").map(Number);
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.round((new Date(y, m - 1, d).getTime() - start.getTime()) / 86400000);
+}
+
+/** "Today", "Tomorrow", "In 3 days", "2 days ago". */
+export function countdown(iso: string): string {
+  const n = daysFromToday(iso);
+  if (n === 0) return t("time.today");
+  if (n === 1) return t("time.tomorrow");
+  if (n === -1) return t("time.yesterday");
+  return n > 1
+    ? translateCount(currentLocale(), "time.inDays", n)
+    : translateCount(currentLocale(), "time.daysAgo", -n);
+}
+
+/** A number as the interface language writes it. */
+export function formatNumber(value: number, digits = 0): string {
+  return new Intl.NumberFormat(intlTag(), { maximumFractionDigits: digits }).format(value);
 }
 
 export function firstName(name?: string | null): string | undefined {
@@ -19,7 +57,7 @@ export function firstName(name?: string | null): string | undefined {
 
 export function greeting(name?: string): string {
   const h = new Date().getHours();
-  const part = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  const part = t(h < 12 ? "greeting.morning" : h < 18 ? "greeting.afternoon" : "greeting.evening");
   return name ? `${part}, ${name}` : `${part}`;
 }
 
@@ -39,22 +77,13 @@ export function humanizeKey(key: string): string {
     .join(" ");
 }
 
-export const CATEGORY_LABELS: Record<string, string> = {
-  education: "Education",
-  career: "Career",
-  goals: "Goals & priorities",
-  context: "About you",
-  finance: "Finance",
-  health: "Health",
-  preferences: "Preferences",
-  weak_topics: "Areas to work on",
-  targets: "Targets",
-  routine: "Routine",
-  general: "General",
-};
+const CATEGORIES = new Set([
+  "education", "career", "goals", "context", "finance", "health",
+  "preferences", "weak_topics", "targets", "routine", "general",
+]);
 
 export function categoryLabel(category: string): string {
-  return CATEGORY_LABELS[category] || humanizeKey(category);
+  return CATEGORIES.has(category) ? t(`category.${category}` as MessageKey) : humanizeKey(category);
 }
 
 export function hexToRgba(hex: string, alpha: number): string {

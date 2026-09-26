@@ -8,17 +8,19 @@ import { Scribble } from "@/components/art/Ink";
 import { Icon } from "@/components/ui/Icon";
 import { PageHeader, SectionHead } from "@/components/ui/primitives";
 import { useAgents } from "@/features/agents/useAgents";
+import { usePrefs } from "@/lib/i18n";
 
 export default function TeamPage() {
   const { byId, loading } = useAgents();
+  const { t } = usePrefs();
   const modeer = byId("modeer");
 
   return (
     <div className="anim-fade team-page">
       <PageHeader
-        eyebrow="Your AI team"
-        title="Choose who to talk to"
-        lede="Leo keeps everyone in sync with what your team knows about you. Each specialist keeps its own conversation and its own private notes — you pick who you need."
+        eyebrow={t("team.eyebrow")}
+        title={t("team.title")}
+        lede={t("team.lede")}
       />
 
       {/* ---------- Modeer, featured ---------- */}
@@ -30,18 +32,17 @@ export default function TeamPage() {
           className="team-feature group relative mb-10 grid grid-cols-[minmax(0,1fr)_128px] items-stretch overflow-hidden border-2 border-ink bg-sun shadow-pop transition-transform duration-150 hover:-translate-y-[3px] sm:grid-cols-[minmax(0,1fr)_210px]"
         >
           <div className="p-5 sm:p-7">
-            <span className="tab-label">Personal assistant</span>
-            <h2 className="display mt-3 text-[clamp(26px,4vw,40px)] text-ink">Leo</h2>
+            <span className="tab-label">{t("team.assistant")}</span>
+            <h2 className="display mt-3 text-[clamp(26px,4vw,40px)] text-ink">{t("common.leo")}</h2>
             <p className="mt-2 max-w-[46ch] text-[14.5px] font-semibold leading-snug text-ink">
-              Learns you, keeps the shared context, plans your day, and points you to the right
-              specialist.
+              {t("team.leoBlurb")}
             </p>
             <span className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-black text-pink-deep">
-              Talk to Leo
+              {t("team.talkToLeo")}
               <Icon name="arrow-right" size={16} className="transition group-hover:translate-x-1" />
             </span>
           </div>
-          <div className="relative overflow-hidden border-l-2 border-ink">
+          <div className="relative overflow-hidden border-s-2 border-ink">
             <AgentPortrait
               slug="modeer"
               framing="panel"
@@ -54,12 +55,12 @@ export default function TeamPage() {
 
       {/* ---------- specialists ---------- */}
       <SectionHead
-        title="Specialists"
+        title={t("team.specialists")}
         aside={
-          <Scribble className="hidden max-w-[170px] text-right lg:block">
-            Nine minds,
+          <Scribble className="hidden max-w-[170px] text-end lg:block">
+            {t("team.scribble1")}
             <br />
-            Shared purpose.
+            {t("team.scribble2")}
           </Scribble>
         }
       />
