@@ -1,6 +1,6 @@
-# What Fareeq stores about you
+# What Fareeq AI stores about you
 
-Fareeq is a personal assistant with a team of specialists that share what they
+Fareeq AI is a personal assistant with a team of specialists that share what they
 know about you. That only works because it remembers things, so this page says
 exactly what it keeps, where that lives, and who can reach it.
 
@@ -10,7 +10,7 @@ assume the more cautious reading and ask.
 ## What it keeps
 
 - **Your messages and the replies**, in full, for every specialist you talk to.
-- **Facts it learns about you.** As you chat, Fareeq extracts durable personal
+- **Facts it learns about you.** As you chat, Fareeq AI extracts durable personal
   facts: what you study, where you work, what you are training for, what you
   can afford, what you are avoiding. Some are shared across the whole team; some
   stay with one specialist.
@@ -31,7 +31,7 @@ assume the more cautious reading and ask.
   your devices and lets you sign one out. A record is deleted 30 days after
   that device is signed out or its session expires.
 - **Two-step sign-in**, if you turn it on: the setup key your authenticator
-  app shares with Fareeq, and the last code used (so a code can't be used
+  app shares with Fareeq AI, and the last code used (so a code can't be used
   twice). Like everything else here, whoever runs the server can read it, and
   it is in encrypted backups. Your export says whether it is on, never the key.
 - **Sign-in attempt counters**: how many times someone tried to sign in or reset
@@ -40,14 +40,14 @@ assume the more cautious reading and ask.
   address, not the address itself, and exist to stop guessing.
 
 Some of what it remembers is sensitive by nature: health, money, work. When
-Fareeq recognises a fact as sensitive it does not store it automatically unless
+Fareeq AI recognises a fact as sensitive it does not store it automatically unless
 the deployment has opted in (`MEMORY_STORE_SENSITIVE`). **Recognising it is best
 effort**, not a guarantee: a health or money detail phrased in an ordinary way
 can be saved as an ordinary fact. Everything stored is visible to you in Memory,
 where you can edit or delete it, so it is worth a look now and then. Anything
 you save yourself is stored exactly as you wrote it, sensitive or not.
 
-When Fareeq updates a fact automatically, it keeps the last few earlier values
+When Fareeq AI updates a fact automatically, it keeps the last few earlier values
 with it, so a wrong update can be undone. Editing that fact yourself clears
 them, and deleting it deletes them. Text you paste in, such as someone else's
 email, is not learned from. When you ask one assistant to pass something to
@@ -63,7 +63,7 @@ from. All of it is included in your data export and deleted with your account.
 Follow-ups, check-ins and learned facts stop when you switch automatic memory
 off.
 
-**Documents you upload.** When you give an assistant a file, Fareeq reads the
+**Documents you upload.** When you give an assistant a file, Fareeq AI reads the
 text out of it and throws the file itself away; it keeps only the text, split
 into passages. Only the assistant you gave it to reads it, unless you share it
 with the team (you can undo that). When a passage is relevant to a message, it
@@ -74,7 +74,7 @@ it may remain in encrypted server backups for up to their retention period.
 Only upload files you have the right to share: if a file contains other
 people's personal details, they are stored and processed too.
 
-**Photos and scans.** A photo or a scanned page is read on the Fareeq server
+**Photos and scans.** A photo or a scanned page is read on the Fareeq AI server
 itself (optical character recognition); it is not sent anywhere to be read.
 Before it is uploaded, your browser redraws a photo at a smaller size, which
 also removes the information a camera writes into the file, such as where it
@@ -83,7 +83,7 @@ text read from it is kept. That text can contain misread words.
 
 **Voice messages.** When you use the microphone, the recording (at most a
 minute) is sent to the model provider below to be written out as text, and the
-text comes back to your message box. Fareeq does not keep the recording or the
+text comes back to your message box. Fareeq AI does not keep the recording or the
 text it returns; nothing is saved unless you then send the message. **Read
 aloud** uses your own device's voices, and nothing leaves your device for it.
 
@@ -92,7 +92,7 @@ and whether Data saver is on are stored with your account and included in your
 export. Data saver itself is remembered by your browser.
 
 **Incognito chats.** A chat you start in incognito is not remembered by
-Fareeq: nothing is learned from it (no facts, dates, plans or notes), it is not
+Fareeq AI: nothing is learned from it (no facts, dates, plans or notes), it is not
 shown in your conversation lists, search or to Leo, and it is deleted when you
 leave it or 24 hours after it started, whichever comes first. Until then it is
 stored like any other conversation, and it is in your data export if you take
@@ -102,7 +102,7 @@ the box to allow it when you start it.
 
 **In this browser.** What you are typing is kept in this browser until you send
 it, so a lost connection or a reload does not lose it; signing out clears it.
-If you install Fareeq on your home screen, the app's pages and pictures are kept
+If you install Fareeq AI on your home screen, the app's pages and pictures are kept
 by the browser so it opens without a connection. Your messages, memories and
 files are never kept this way.
 
@@ -120,9 +120,9 @@ that backup was taken.
 
 - **You.**
 - **Whoever runs the server.** They hold the database and the backup passphrase,
-  so they can read anything in it. Fareeq is self-hosted: trust
+  so they can read anything in it. Fareeq AI is self-hosted: trust
   in the operator is part of the arrangement, and no software here changes that.
-- **Your model provider.** To answer you, Fareeq sends the specialist's
+- **Your model provider.** To answer you, Fareeq AI sends the specialist's
   instructions, the relevant facts it remembers about you, what it is keeping
   track of for that specialist (dates, saved plans, logged progress), notes a
   teammate left at your request, the recent messages of that conversation (up to
@@ -146,10 +146,10 @@ that backup was taken.
 - **Nobody else.** Other accounts on the same deployment cannot read your
   conversations, memories or goals; that isolation is enforced and tested.
 
-## What Fareeq does not do
+## What Fareeq AI does not do
 
 - No advertising, profiling for advertising, or selling data.
-- No training of any model on your conversations by Fareeq itself.
+- No training of any model on your conversations by Fareeq AI itself.
 - No sharing between accounts.
 - No logging of your message content in server logs: logs record timings,
   status codes and error types only.
@@ -160,7 +160,7 @@ that backup was taken.
 |---|---|
 | See what it remembers | Memory, in the app: every stored fact, editable |
 | Stop it learning from your messages | Account → What Leo learns → switch off "Learn from my messages automatically". Nothing already saved is removed, and you can still save facts yourself |
-| Correct or delete a single fact | Memory: edit or delete it. An edit is yours: Fareeq will not overwrite it automatically later |
+| Correct or delete a single fact | Memory: edit or delete it. An edit is yours: Fareeq AI will not overwrite it automatically later |
 | Delete one conversation | Open conversation history, then choose its delete button |
 | Keep a chat out of your memory | Start it in incognito (the mask button in a chat) |
 | Take everything with you | Account → Download my data (a JSON file, messages included) |
@@ -177,7 +177,7 @@ backup retention schedule, 30 days by default.
 ## Sessions and access
 
 You sign in with your email and password, or with an invitation key if the
-operator gave you one. Fareeq stores only hashes of passwords, keys and recovery
+operator gave you one. Fareeq AI stores only hashes of passwords, keys and recovery
 codes, never the secrets themselves. A session is a signed, HttpOnly,
 SameSite=Strict cookie that expires after seven days.
 

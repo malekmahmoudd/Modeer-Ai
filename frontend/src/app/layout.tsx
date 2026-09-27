@@ -45,11 +45,11 @@ const hand = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "Fareeq — Personal AI Team",
+  title: "Fareeq AI: Personal AI Team",
   description:
     "Leo, your personal assistant, plus a team of specialist AI agents that share your context.",
-  applicationName: "Fareeq",
-  appleWebApp: { capable: true, title: "Fareeq", statusBarStyle: "default" },
+  applicationName: "Fareeq AI",
+  appleWebApp: { capable: true, title: "Fareeq AI", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

@@ -30,7 +30,7 @@ export const ar: Record<MessageKey, string> & Partial<Record<Counted, string>> =
   "common.copyFailed": "النسخ غير متاح هنا.",
   "common.you": "أنت",
   "common.leo": "ليو",
-  "common.brand": "فريق",
+  "common.brand": "فريق AI",
 
   // --- time ---
   "time.justNow": "الآن",
@@ -66,12 +66,12 @@ export const ar: Record<MessageKey, string> & Partial<Record<Counted, string>> =
   "nav.otherLanguage": "English",
   "nav.otherLanguageLabel": "حوّل الواجهة إلى الإنجليزية",
   "nav.skip": "انتقل إلى المحتوى",
-  "brand.home": "الصفحة الرئيسية لفريق",
+  "brand.home": "الصفحة الرئيسية لفريق AI",
   "app.offline": "أنت غير متصل. ما فتحته يعمل كما هو، والرسائل الجديدة تنتظر حتى يعود الاتصال.",
-  "app.update": "نسخة جديدة من فريق جاهزة.",
+  "app.update": "نسخة جديدة من فريق AI جاهزة.",
   "app.reload": "إعادة التحميل",
-  "app.install": "ثبّت فريق",
-  "app.installHelp": "أضف فريق إلى الشاشة الرئيسية: اضغط «مشاركة» ثم «إضافة إلى الشاشة الرئيسية».",
+  "app.install": "ثبّت فريق AI",
+  "app.installHelp": "أضف فريق AI إلى الشاشة الرئيسية: اضغط «مشاركة» ثم «إضافة إلى الشاشة الرئيسية».",
 
   // --- home ---
   "home.yourTeam": "فريقك",
@@ -175,10 +175,10 @@ export const ar: Record<MessageKey, string> & Partial<Record<Counted, string>> =
   "chat.incognitoEnd": "اخرج من الوضع المتخفي",
   "chat.incognitoTitle": "محادثة متخفية",
   "chat.incognitoHelp":
-    "لا يتذكرها فريق: لا يُتعلَّم منها شيء، وتُخفى عن ليو وعن قوائمك، وتُحذف عند خروجك أو بعد ٢٤ ساعة. ما زال مزوّد الذكاء الاصطناعي يستقبل رسائلك ليتمكن من الرد.",
+    "لا يتذكرها فريق AI: لا يُتعلَّم منها شيء، وتُخفى عن ليو وعن قوائمك، وتُحذف عند خروجك أو بعد ٢٤ ساعة. ما زال مزوّد الذكاء الاصطناعي يستقبل رسائلك ليتمكن من الرد.",
   "chat.incognitoContext": "اسمح لهذه المحادثة باستخدام ما يعرفه الفريق عني",
   "chat.incognitoGo": "ابدأ",
-  "chat.incognitoBanner": "وضع متخفٍّ: لا يتذكره فريق. تُحذف عند خروجك أو بعد ٢٤ ساعة.",
+  "chat.incognitoBanner": "وضع متخفٍّ: لا يتذكره فريق AI. تُحذف عند خروجك أو بعد ٢٤ ساعة.",
   "chat.incognitoFooter": "وضع متخفٍّ: لا يُحفظ شيء من هذه المحادثة.",
   "chat.editing": "عدّل رسالتك ثم أرسلها من جديد.",
   "chat.rewindError": "تعذّر التراجع عن ذلك. حاول مرة أخرى.",
@@ -495,14 +495,14 @@ export const ar: Record<MessageKey, string> & Partial<Record<Counted, string>> =
   "account.signOutAll": "سجّل الخروج من كل الأجهزة",
   "account.delete": "احذف حسابي.",
   "account.deleteHelp":
-    "احذف حسابك ومحادثاتك وذكرياتك وأهدافك نهائيًا من قاعدة بيانات فريق. لا يمكن التراجع عن هذا. تنتهي النسخ الاحتياطية الموجودة حسب جدول المشغّل، عادةً خلال ٣٠ يومًا.",
+    "احذف حسابك ومحادثاتك وذكرياتك وأهدافك نهائيًا من قاعدة بيانات فريق AI. لا يمكن التراجع عن هذا. تنتهي النسخ الاحتياطية الموجودة حسب جدول المشغّل، عادةً خلال ٣٠ يومًا.",
   "account.typeDelete": "اكتب DELETE للتأكيد",
   "account.deleting": "جارٍ الحذف…",
   "account.deleteButton": "احذف حسابي نهائيًا",
   "account.retry": "حاول مرة أخرى.",
 
   "auth.codeTitle": "أدخل الرمز.",
-  "auth.codeHelp": "افتح تطبيق المصادقة واكتب الرمز المكوّن من ٦ أرقام الخاص بفريق. فقدت هاتفك؟ اكتب أحد رموز الاسترداد بدلًا منه.",
+  "auth.codeHelp": "افتح تطبيق المصادقة واكتب الرمز المكوّن من ٦ أرقام الخاص بفريق AI. فقدت هاتفك؟ اكتب أحد رموز الاسترداد بدلًا منه.",
   "auth.codeLabel": "الرمز",
   "auth.startAgain": "ابدأ من جديد",
   "account.usage": "رصيد اليوم من الذكاء الاصطناعي.",

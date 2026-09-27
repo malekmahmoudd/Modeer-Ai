@@ -19,7 +19,7 @@ STEP_SECONDS = 30
 DIGITS = 6
 #: Steps either side of now that still count: phone clocks drift.
 WINDOW = 1
-ISSUER = "Fareeq"
+ISSUER = "Fareeq AI"
 
 
 def new_secret() -> str:

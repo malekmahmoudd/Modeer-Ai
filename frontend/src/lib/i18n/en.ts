@@ -26,7 +26,7 @@ export const en = {
   "common.copyFailed": "Copying isn't available here.",
   "common.you": "You",
   "common.leo": "Leo",
-  "common.brand": "Fareeq",
+  "common.brand": "Fareeq AI",
 
   // --- time ---
   "time.justNow": "just now",
@@ -56,12 +56,12 @@ export const en = {
   "nav.otherLanguage": "العربية",
   "nav.otherLanguageLabel": "Switch the interface to Arabic",
   "nav.skip": "Skip to content",
-  "brand.home": "Fareeq home",
+  "brand.home": "Fareeq AI home",
   "app.offline": "You're offline. What's already open still works; new messages wait until you're back.",
-  "app.update": "A new version of Fareeq is ready.",
+  "app.update": "A new version of Fareeq AI is ready.",
   "app.reload": "Reload",
-  "app.install": "Install Fareeq",
-  "app.installHelp": "Add Fareeq to your home screen: tap Share, then “Add to Home Screen”.",
+  "app.install": "Install Fareeq AI",
+  "app.installHelp": "Add Fareeq AI to your home screen: tap Share, then “Add to Home Screen”.",
 
   // --- home ---
   "home.yourTeam": "Your team",
@@ -158,10 +158,10 @@ export const en = {
   "chat.incognitoEnd": "Leave incognito",
   "chat.incognitoTitle": "Incognito chat",
   "chat.incognitoHelp":
-    "Not remembered by Fareeq: nothing is learned from it, it's hidden from Leo and from your lists, and it's deleted when you leave or after 24 hours. The AI provider still receives your messages in order to answer them.",
+    "Not remembered by Fareeq AI: nothing is learned from it, it's hidden from Leo and from your lists, and it's deleted when you leave or after 24 hours. The AI provider still receives your messages in order to answer them.",
   "chat.incognitoContext": "Let this chat use what the team already knows about me",
   "chat.incognitoGo": "Start",
-  "chat.incognitoBanner": "Incognito: not remembered by Fareeq. Deleted when you leave or after 24 hours.",
+  "chat.incognitoBanner": "Incognito: not remembered by Fareeq AI. Deleted when you leave or after 24 hours.",
   "chat.incognitoFooter": "Incognito: nothing from this chat is saved.",
   "chat.editing": "Change your message, then send it again.",
   "chat.rewindError": "Couldn't take that back. Please try again.",
@@ -465,14 +465,14 @@ export const en = {
   "account.signOutAll": "Sign out every device",
   "account.delete": "Delete my account.",
   "account.deleteHelp":
-    "Permanently remove your account, chats, memories and goals from Fareeq’s live database. This cannot be undone. Existing backups expire on the operator’s retention schedule, normally within 30 days.",
+    "Permanently remove your account, chats, memories and goals from Fareeq AI’s live database. This cannot be undone. Existing backups expire on the operator’s retention schedule, normally within 30 days.",
   "account.typeDelete": "Type DELETE to confirm",
   "account.deleting": "Deleting…",
   "account.deleteButton": "Permanently delete my account",
   "account.retry": "Please try again.",
 
   "auth.codeTitle": "Enter your code.",
-  "auth.codeHelp": "Open your authenticator app and type the 6-digit code for Fareeq. Lost your phone? Type one of your recovery codes instead.",
+  "auth.codeHelp": "Open your authenticator app and type the 6-digit code for Fareeq AI. Lost your phone? Type one of your recovery codes instead.",
   "auth.codeLabel": "Code",
   "auth.startAgain": "Start again",
   "account.usage": "Today's AI allowance.",
