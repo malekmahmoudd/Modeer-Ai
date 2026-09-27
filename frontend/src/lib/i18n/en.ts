@@ -71,7 +71,7 @@ export const en = {
   "home.recent": "Pick up where you left off",
   "home.recentWith": "with {name}",
   "hero.meet": "Meet",
-  "hero.subtitle": "Your personal AI team.",
+  "hero.subtitle": "Knows you. Knows who can help.",
   "hero.messageLeo": "Message Leo",
   "hero.placeholder": "Message Leo…",
   "hero.opening": "Opening…",

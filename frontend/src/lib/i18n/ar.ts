@@ -81,7 +81,7 @@ export const ar: Record<MessageKey, string> & Partial<Record<Counted, string>> =
   "home.recent": "أكمل من حيث توقفت",
   "home.recentWith": "مع {name}",
   "hero.meet": "تعرّف على",
-  "hero.subtitle": "فريقك الشخصي من الذكاء الاصطناعي.",
+  "hero.subtitle": "يعرفك، ويعرف من يساعدك.",
   "hero.messageLeo": "راسل ليو",
   "hero.placeholder": "اكتب لليو…",
   "hero.opening": "جارٍ الفتح…",
