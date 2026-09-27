@@ -26,10 +26,10 @@ export function AgentPortrait({
   fit?: "cover" | "contain";
 }) {
   const character = characterFor(slug);
-  const alt = altOverride ?? character.alt;
   // Data saver: the drawn SVG portrait (in the page already) instead of a
   // downloaded illustration.
-  const { dataSaver } = usePrefs();
+  const { dataSaver, locale } = usePrefs();
+  const alt = altOverride ?? (locale === "ar" && character.altAr ? character.altAr : character.alt);
 
   if (character.image && !dataSaver) {
     return (

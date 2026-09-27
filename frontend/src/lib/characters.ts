@@ -43,6 +43,8 @@ export interface PortraitSpec {
 export interface CharacterAsset {
   /** Meaningful alt text for the illustration. */
   alt: string;
+  /** The same description in Arabic, read by screen readers in the Arabic interface. */
+  altAr?: string;
   /** Optional finished-artwork override; when set, the SVG engine is bypassed. */
   image?: string;
   imagePosition?: string;
@@ -72,6 +74,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
     image: "/art/sunshine/modeer-hero.webp",
     imagePosition: "78% 25%",
     alt: "Leo, a person with dark tousled hair and a warm, attentive smile",
+    altAr: "ليو، شخص بشعر داكن أشعث وابتسامة دافئة منتبهة",
     art: {
       uid: "modeer",
       skin: SKIN.fair[0],
@@ -96,6 +99,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   study: {
     image: "/art/sunshine/study.webp",
     alt: "Nova, the study specialist: a person with dark hair in a bun, bright and encouraging, among books",
+    altAr: "نوفا، متخصصة الدراسة: شخص بشعر داكن مرفوع، مشرق ومشجّع، بين الكتب",
     art: {
       uid: "study",
       skin: SKIN.olive[0],
@@ -119,6 +123,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   career: {
     image: "/art/sunshine/career.webp",
     alt: "Harvey, the career specialist: a person with a short fade and glasses in a smart jacket, city behind",
+    altAr: "هارفي، متخصص العمل: شخص بشعر قصير ونظارة وسترة أنيقة، والمدينة خلفه",
     art: {
       uid: "career",
       skin: SKIN.deep[0],
@@ -144,6 +149,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   research: {
     image: "/art/sunshine/research.webp",
     alt: "Clara, the research specialist: a person with voluminous curly hair, thoughtful, beside a bookshelf",
+    altAr: "كلارا، متخصصة البحث: شخص بشعر مجعّد كثيف، متأمّل، بجانب رف كتب",
     art: {
       uid: "research",
       skin: SKIN.light[0],
@@ -167,6 +173,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   writing: {
     image: "/art/sunshine/writing.webp",
     alt: "Alex, the writing specialist: a person with glasses and a side parting at a desk of notes",
+    altAr: "أليكس، متخصص الكتابة: شخص بنظارة وشعر مفروق جانبيًا، على مكتب مليء بالملاحظات",
     art: {
       uid: "writing",
       skin: SKIN.olive[0],
@@ -191,6 +198,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   travel: {
     image: "/art/sunshine/travel.webp",
     alt: "Tessa, the travel specialist: a person with long wavy hair at a cafe table with a map and camera",
+    altAr: "تيسا، متخصصة السفر: شخص بشعر طويل مموّج على طاولة مقهى مع خريطة وكاميرا",
     art: {
       uid: "travel",
       skin: SKIN.tan[0],
@@ -214,6 +222,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   shopping: {
     image: "/art/sunshine/shopping.webp",
     alt: "Nate, the shopping specialist: a person with cropped hair beside a set of shopping bags",
+    altAr: "نيت، متخصص التسوّق: شخص بشعر قصير بجانب أكياس تسوّق",
     art: {
       uid: "shopping",
       skin: SKIN.fair[0],
@@ -237,6 +246,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   finance: {
     image: "/art/sunshine/finance.webp",
     alt: "Emma, the finance specialist: a person with a neat bob with a calculator and budgeting notebook",
+    altAr: "إيما، متخصصة المال: شخص بقصة شعر قصيرة مرتبة مع آلة حاسبة ودفتر ميزانية",
     art: {
       uid: "finance",
       skin: SKIN.light[0],
@@ -260,6 +270,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   fitness: {
     image: "/art/sunshine/fitness.webp",
     alt: "Maddie, the fitness specialist: a person with a high ponytail beside dumbbells and a weight plate",
+    altAr: "مادي، متخصصة اللياقة: شخص بذيل حصان مرتفع بجانب دمبلز وقرص أوزان",
     art: {
       uid: "fitness",
       skin: SKIN.brown[0],
@@ -283,6 +294,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
   email: {
     image: "/art/sunshine/email-nora-v3.png",
     alt: "Nora, the email specialist: a woman with wavy chestnut hair in a purple blouse at a laptop holding an envelope",
+    altAr: "نورا، متخصصة البريد: امرأة بشعر كستنائي مموّج وبلوزة بنفسجية أمام حاسوب تحمل ظرفًا",
     art: {
       uid: "email",
       skin: SKIN.deep[0],
@@ -307,6 +319,7 @@ export const CHARACTERS: Record<string, CharacterAsset> = {
 
 const FALLBACK: CharacterAsset = {
   alt: "A member of your AI team",
+  altAr: "عضو في فريقك الذكي",
   art: {
     uid: "fallback",
     skin: SKIN.olive[0],
