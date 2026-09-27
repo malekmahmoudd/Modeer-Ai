@@ -13,6 +13,7 @@ A specialist never receives another agent's raw transcript.
 
 from __future__ import annotations
 
+import hashlib
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -390,6 +391,20 @@ def build_context(
     msgs.append(LLMMessage(role="user", content=_with_documents(user_message, documents or [])))
 
     diagnostics = {
+        "receipt": [
+            {"label": label, "text": text}
+            for label, text in [
+                ("profile", _about_user(user)),
+                ("shared", personal_block),
+                ("private", agent_block),
+                ("handoffs", _handoff_block(handed)),
+                ("goals", _goals_block(goals)),
+                ("tracking", "\n\n".join(tracking or [])),
+                ("activity", "\n".join(team_activity or [])),
+                ("summary", as_data(summary[:2000], single_line=False) if summary else ""),
+            ]
+            if text
+        ],
         "agent_id": agent.id,
         "prompt_version": agent.prompt_version,
         "shared_memory_used": shared_used,
@@ -404,6 +419,9 @@ def build_context(
                 "filename": d.filename,
                 "page": d.page,
                 "score": d.score,
+                "chunk_id": d.chunk_id,
+                "chars": len(d.text),
+                "sha256": hashlib.sha256(d.text.encode()).hexdigest(),
             }
             for d in documents or []
         ],

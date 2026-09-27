@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { AgentGrid } from "@/components/AgentGrid";
+import { FrontDesk } from "@/components/home/FrontDesk";
 import { Scribble } from "@/components/art/Ink";
 import { ModeerHero } from "@/components/home/ModeerHero";
 import { RecentChats } from "@/components/home/RecentChats";
@@ -42,7 +42,7 @@ export default function HomePage() {
             </Scribble>
           }
         />
-        <AgentGrid specialistsOnly featured />
+        <FrontDesk />
 
         <div className="mt-5 flex justify-center md:justify-start">
           <Link href="/team" className="sunshine-all-team">

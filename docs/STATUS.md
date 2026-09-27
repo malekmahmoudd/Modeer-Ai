@@ -3,6 +3,10 @@
 _Last updated: 2026-09-25 · phase: production readiness, invite-only or open signup_
 
 
+## Design add-ons — 2026-09-27
+
+Implemented My Front Desk, Today drafts, Reading Desk, Source Peek, Context Drawer, Team Comparison, selected-text actions and Pocket Cards. See [DESIGN-ADDONS.md](DESIGN-ADDONS.md) for behavior, storage and migration 0011. No deployment performed.
+
 ## Sign-in security, Ask My Team, usage — 2026-09-26 (later)
 
 Migration **0010**. 492 backend tests (`test_sign_in_security.py` is new).

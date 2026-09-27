@@ -66,6 +66,8 @@ def update_profile(db: Session, user: User, data: ProfileUpdate) -> User:
         merged.update(payload.pop("profile"))
         # Validate the complete stored state, not just this request's additions.
         user.profile = ProfileUpdate(profile=merged).profile
+    if "ui_preferences" in payload:
+        user.ui_preferences = {**(user.ui_preferences or {}), **payload.pop("ui_preferences")}
     for field, value in payload.items():
         setattr(user, field, value)
     db.flush()
@@ -101,6 +103,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
             "display_name": user.display_name,
             "onboarded": user.onboarded,
             "profile": user.profile or {},
+            "ui_preferences": user.ui_preferences or {},
             "memory_auto": user.memory_auto,
             "timezone": user.timezone,
             "locale": user.locale,
@@ -138,6 +141,8 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                         "content": m.content,
                         "created_at": when(m.created_at),
                         "pinned_at": when(m.pinned_at),
+                        "design": (m.meta or {}).get("design", {}),
+                        "context_receipt": (m.meta or {}).get("context", {}).get("receipt", []),
                     }
                     for m in messages_by_conversation[c.id]
                 ],

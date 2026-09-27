@@ -1,5 +1,6 @@
 "use client";
 
+import { TeamComparison } from "@/components/design/TeamComparison";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -146,6 +147,7 @@ export function AskTeam() {
               </Link>
             )}
           </div>
+          {answer.conversation_id && <TeamComparison conversationId={answer.conversation_id} />}
           <h3 className="eyebrow mb-2 mt-5">{t("team.answers")}</h3>
           <ul className="flex flex-col gap-2.5">
             {answer.takes.map((take) => (

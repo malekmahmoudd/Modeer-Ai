@@ -1,6 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { ReplyDetails } from "@/components/design/ReplyDetails";
+import { ExcerptActions } from "@/components/design/ExcerptActions";
+import { TeamComparison } from "@/components/design/TeamComparison";
 
 import { AgentBadge } from "@/components/art/AgentPortrait";
 import { FileCard } from "@/components/chat/AttachFile";
@@ -10,19 +12,7 @@ import { ThinkingDots } from "@/components/ui/primitives";
 import { usePrefs } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/i18n/en";
 import { renderMarkdown } from "@/lib/markdown";
-import type { Completion, Message, RetrievedPassage } from "@/types";
-
-/** "cv.pdf p.2, p.3" — one entry per file, its pages in order. */
-function sourcesOf(passages: RetrievedPassage[]): string[] {
-  const pages = new Map<string, Set<number>>();
-  for (const p of passages) {
-    if (!pages.has(p.filename)) pages.set(p.filename, new Set());
-    if (p.page) pages.get(p.filename)!.add(p.page);
-  }
-  return [...pages].map(([file, set]) =>
-    set.size ? `${file} ${[...set].sort((a, b) => a - b).map((n) => `p.${n}`).join(", ")}` : file,
-  );
-}
+import type { Completion, Message } from "@/types";
 
 // Shown under a reply that did not finish, when the server gave no notice.
 const UNFINISHED: Record<Exclude<Completion, "completed">, MessageKey> = {
@@ -33,6 +23,9 @@ const UNFINISHED: Record<Exclude<Completion, "completed">, MessageKey> = {
 
 export function MessageBubble({
   message,
+  conversationId,
+  onDraft,
+  allowSave = true,
   agentId,
   agentName,
   streaming = false,
@@ -43,6 +36,9 @@ export function MessageBubble({
   queued,
 }: {
   message: Message;
+  conversationId?: string | null;
+  onDraft?: (text: string) => void;
+  allowSave?: boolean;
   agentId: string;
   agentName: string;
   streaming?: boolean;
@@ -96,11 +92,6 @@ export function MessageBubble({
     );
   }
 
-  const ctx = message.meta?.context;
-  const contextUsed =
-    Boolean(message.meta?.context_used) ||
-    (ctx?.personal_context_count ?? 0) > 0 ||
-    (ctx?.agent_memory_used?.length ?? 0) > 0;
   const empty = !message.content;
   const ended = message.completion ?? "completed";
 
@@ -126,27 +117,9 @@ export function MessageBubble({
           </p>
         )}
 
-        {!streaming && (ctx?.documents?.length ?? 0) > 0 && ended !== "failed" && (
-          <p className="mt-2.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11.5px] font-bold uppercase tracking-wide text-ink-soft">
-            <span className="h-2 w-2 rounded-full bg-sun" aria-hidden />
-            {t("msg.fromFiles")}
-            {sourcesOf(ctx?.documents ?? []).map((s) => (
-              <span key={s} className="normal-case tracking-normal text-ink" dir="auto">
-                {s}
-              </span>
-            ))}
-          </p>
-        )}
-
-        {!streaming && contextUsed && ended !== "failed" && (
-          <Link
-            href="/memory"
-            className="mt-2.5 inline-flex items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-wide text-ink-soft transition hover:text-pink-deep"
-          >
-            <span className="h-2 w-2 rounded-full bg-pink" aria-hidden />
-            {t("msg.personalised")}
-          </Link>
-        )}
+        {!streaming && conversationId && !empty && <ReplyDetails message={message} conversationId={conversationId} />}
+        {!streaming && conversationId && !empty && onDraft && <ExcerptActions message={message} conversationId={conversationId} agentId={agentId} agentName={agentName} onDraft={onDraft} allowSave={allowSave} />}
+        {!streaming && conversationId && message.meta.team && <TeamComparison conversationId={conversationId} />}
 
         {!streaming && !empty && (
           <ReplyActions

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import hashlib
+
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
+from sqlalchemy import select
 
 from app.agents.registry import get_agent
 from app.api.deps import CurrentUser, DbSession
@@ -16,6 +20,7 @@ from app.conversations.schemas import (
     RewindResult,
     SearchHit,
 )
+from app.db.models import Conversation, Document, DocumentChunk, Message
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
@@ -53,6 +58,94 @@ def pinned_replies(user: CurrentUser, db: DbSession) -> list[PinnedReply]:
         )
         for m, c in convo_service.pinned(db, user.id)
     ]
+
+
+@router.get("/excerpts")
+def excerpts(user: CurrentUser, db: DbSession):
+    rows = db.execute(
+        select(Message, Conversation)
+        .join(Conversation)
+        .where(Conversation.user_id == user.id, Conversation.incognito.is_(False))
+        .order_by(Message.created_at.desc())
+    )
+    return [
+        {
+            "message_id": m.id,
+            "conversation_id": c.id,
+            "agent_id": c.agent_id,
+            "title": c.title,
+            "excerpts": m.meta["design"]["excerpts"],
+        }
+        for m, c in rows
+        if (m.meta or {}).get("design", {}).get("excerpts")
+    ]
+
+
+class DesignNotes(BaseModel):
+    excerpts: list[str] | None = Field(default=None, max_length=20)
+    tradeoffs: str | None = Field(default=None, max_length=4000)
+    choice: str | None = Field(default=None, max_length=2000)
+
+
+def _own_reply(db, user_id: str, conversation_id: str, message_id: str):
+    msg = db.scalar(
+        select(Message)
+        .join(Conversation)
+        .where(
+            Conversation.user_id == user_id,
+            Conversation.id == conversation_id,
+            Message.id == message_id,
+            Message.role == "assistant",
+        )
+    )
+    if msg is None:
+        raise HTTPException(404, "Reply not found")
+    return msg
+
+
+@router.patch("/{conversation_id}/messages/{message_id}/design")
+def save_design(
+    conversation_id: str, message_id: str, data: DesignNotes, user: CurrentUser, db: DbSession
+):
+    msg = _own_reply(db, user.id, conversation_id, message_id)
+    if db.get(Conversation, conversation_id).incognito:
+        raise HTTPException(409, "Incognito excerpts cannot be saved")
+    changes = data.model_dump(exclude_none=True)
+    if any(not s.strip() or len(s) > 8000 for s in changes.get("excerpts", [])):
+        raise HTTPException(422, "Excerpts must contain 1–8000 characters")
+    if ("tradeoffs" in changes or "choice" in changes) and not msg.meta.get("team"):
+        raise HTTPException(422, "This is not a team consultation")
+    msg.meta = {**msg.meta, "design": {**msg.meta.get("design", {}), **changes}}
+    db.flush()
+    return msg.meta["design"]
+
+
+@router.get("/{conversation_id}/messages/{message_id}/sources/{label}")
+def source_peek(
+    conversation_id: str, message_id: str, label: str, user: CurrentUser, db: DbSession
+):
+    msg = _own_reply(db, user.id, conversation_id, message_id)
+    ref = next(
+        (p for p in msg.meta.get("context", {}).get("documents", []) if p["label"] == label), None
+    )
+    if not ref or not ref.get("chunk_id"):
+        raise HTTPException(404, "The exact passage was not recorded for this reply")
+    doc = db.scalar(
+        select(Document).where(Document.id == ref["document_id"], Document.user_id == user.id)
+    )
+    chunk = db.get(DocumentChunk, ref["chunk_id"]) if doc else None
+    if chunk is None or chunk.document_id != doc.id:
+        raise HTTPException(404, "This source has been deleted")
+    text = chunk.text[: ref["chars"]]
+    if hashlib.sha256(text.encode()).hexdigest() != ref["sha256"]:
+        raise HTTPException(409, "The source changed; the original passage is unavailable")
+    return {
+        "text": text,
+        "filename": ref["filename"],
+        "page": ref.get("page"),
+        "note": doc.error,
+        "heading": chunk.heading,
+    }
 
 
 @router.post("", response_model=ConversationDetail, status_code=201)

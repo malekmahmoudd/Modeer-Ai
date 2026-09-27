@@ -13,7 +13,28 @@ MAX_PROFILE_KEYS = 20
 MAX_PROFILE_VALUE = 300
 
 
+class UIPreferences(BaseModel):
+    """Interface state only; never included in model context."""
+
+    front_desk: list[str] = Field(
+        default_factory=lambda: ["study", "career", "research", "writing"], max_length=9
+    )
+    reading_size: int = Field(default=16, ge=14, le=24)
+    reading_spacing: float = Field(default=1.85, ge=1.4, le=2.4)
+    reading_width: int = Field(default=720, ge=480, le=960)
+
+    @field_validator("front_desk")
+    @classmethod
+    def _specialists(cls, ids: list[str]) -> list[str]:
+        from app.agents.registry import get_agent
+
+        if len(ids) != len(set(ids)) or any(not get_agent(i) or i == "modeer" for i in ids):
+            raise ValueError("Choose distinct specialists")
+        return ids
+
+
 class ProfileUpdate(BaseModel):
+    ui_preferences: UIPreferences | None = None
     display_name: str | None = Field(default=None, min_length=1, max_length=60)
     email: EmailStr | None = None
     onboarded: bool | None = None
@@ -26,7 +47,7 @@ class ProfileUpdate(BaseModel):
     locale: str | None = Field(default=None, pattern="^(en|ar)$")
 
     _required_values = field_validator(
-        "display_name", "onboarded", "profile", "memory_auto", mode="before"
+        "display_name", "onboarded", "profile", "memory_auto", "ui_preferences", mode="before"
     )(reject_null)
 
     @field_validator("timezone")
@@ -60,6 +81,7 @@ class UserRead(BaseModel):
     display_name: str
     onboarded: bool
     profile: dict
+    ui_preferences: dict = Field(default_factory=dict)
     memory_auto: bool
     timezone: str | None = None
     locale: str | None = None

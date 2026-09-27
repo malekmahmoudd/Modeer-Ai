@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { stageDraft } from "@/lib/design";
+import { useDesignText } from "@/components/design/text";
 import { useState } from "react";
 
 import { AgentBadge } from "@/components/art/AgentPortrait";
@@ -19,6 +21,8 @@ import type { Briefing, Goal } from "@/types";
  */
 export function TodayBand() {
   const router = useRouter();
+  const dt = useDesignText();
+  const [draftError, setDraftError] = useState("");
   const { byId } = useAgents();
   const { t, tn } = usePrefs();
   const agentName = useAgentName();
@@ -63,6 +67,7 @@ export function TodayBand() {
           </button>
         </div>
 
+        {draftError && <p role="alert">{draftError}</p>}
         {loading && (
           <p className="mt-5 flex items-center gap-2 text-[14px] font-semibold text-ink-soft">
             <ThinkingDots /> {t("today.loading")}
@@ -88,9 +93,10 @@ export function TodayBand() {
                   return (
                     <li key={i}>
                       <button
-                        onClick={() =>
-                          agent ? router.push(`/agents/${agent.id}`) : router.push("/agents/modeer")
-                        }
+                        onClick={() => {
+                          try { stageDraft(`${dt("continue")}\n${item.text}\n${item.detail ?? ""}`); router.push(`/agents/${agent?.id ?? "modeer"}?handoff=1`); }
+                          catch { setDraftError(dt("error")); }
+                        }}
                         className="group flex w-full items-center gap-3 border-2 border-ink bg-paper-hi px-3 py-2.5 text-start shadow-pop-xs transition hover:-translate-y-[2px] hover:shadow-pop-sm"
                       >
                         {agent ? (

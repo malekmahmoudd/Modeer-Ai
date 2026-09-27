@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
+import { ReadingDesk } from "@/components/design/ReadingDesk";
+import { useDesignText } from "@/components/design/text";
+import type { DesignPreferences } from "@/lib/design";
 import { AgentBadge, AgentPortrait } from "@/components/art/AgentPortrait";
 import { AttachButton, AttachmentChips, useAttachments } from "@/components/chat/AttachFile";
 import { Composer } from "@/components/chat/Composer";
@@ -19,6 +22,7 @@ import { usePrefs } from "@/lib/i18n";
 import { agentText } from "@/lib/i18n/agents";
 import { draftKey, readDraft, useOnline, writeDraft } from "@/lib/offline";
 import type {
+  UserProfile,
   AgentDetail,
   Allowance,
   Conversation,
@@ -39,6 +43,11 @@ function discardIncognito(conversationId: string) {
 
 export function ChatWorkspace({ agentId }: { agentId: string }) {
   const router = useRouter();
+  const dt = useDesignText();
+  const [reading, setReading] = useState<DesignPreferences>({});
+  const [readingFocus, setReadingFocus] = useState(false);
+  useEffect(() => { let active = true; apiFetch<UserProfile>("/users/me").then(u => { if(active) { const p=u.ui_preferences; setReading({reading_size:p?.reading_size,reading_spacing:p?.reading_spacing,reading_width:p?.reading_width}); } }).catch(() => undefined); return () => {active=false;}; }, []);
+  useEffect(() => { if(!readingFocus) return; const key=(e:KeyboardEvent) => {if(e.key === "Escape") setReadingFocus(false);}; document.addEventListener("keydown",key); return () => document.removeEventListener("keydown",key); },[readingFocus]);
   const params = useSearchParams();
   const { t, tn, locale } = usePrefs();
   const online = useOnline();
@@ -80,6 +89,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const [queued, setQueued] = useState<{ id: string; text: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const seededRef = useRef(false);
+  const incomingDraft = useRef(false);
   const followReply = useRef(true);
   const historyRef = useRef<HTMLDivElement>(null);
   const liveConversation = useRef<string | null>(null);
@@ -129,6 +139,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     setErr(null);
     setIncognito(null);
     seededRef.current = false;
+    incomingDraft.current = Boolean(params.get("handoff") || params.get("draft") || params.get("compose"));
     liveConversation.current = null;
     // Only when the agent changes; a later ?c= is handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,8 +155,8 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   }, [openConversation, focusMessage]);
 
   useEffect(() => {
-    if (incognito || openConversation) return;
-    if (conversationId === null && conversations && conversations.length > 0 && !seed && !params.get("handoff") && !params.get("draft")) {
+    if (incognito || openConversation || incomingDraft.current) return;
+    if (conversationId === null && conversations && conversations.length > 0 && !seed && !params.get("handoff") && !params.get("draft") && !params.get("compose")) {
       setConversationId(conversations[0].id);
     }
   }, [conversations, conversationId, seed, incognito, openConversation, params]);
@@ -213,11 +224,14 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       }
     }
     if (!draft) return;
+    incomingDraft.current = true;
+    draftFor.current = draftKey(agentId, null);
+    writeDraft(draftFor.current, draft);
     setConversationId(null);
     setMessages([]);
     setInput(draft);
     setFocusSignal((n) => n + 1);
-    router.replace(`/agents/${agentId}`);
+    router.replace(`/agents/${agentId}?compose=1`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
@@ -517,7 +531,8 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const usedPct = allowance ? Math.max(0, Math.min(100, Math.round((allowance.remaining / Math.max(1, allowance.limit)) * 100))) : null;
 
   return (
-    <div className={`comic-workspace flex h-[calc(100dvh-var(--nav-h))] flex-col bg-paper-hi ${incognito ? "incognito-workspace" : ""}`}>
+    <div style={{"--reading-size": `${reading.reading_size ?? 16}px`, "--reading-spacing": reading.reading_spacing ?? 1.85, "--reading-width": `${reading.reading_width ?? 720}px`} as CSSProperties} className={`${readingFocus ? "reading-focus" : ""} comic-workspace flex h-[calc(100dvh-var(--nav-h))] flex-col bg-paper-hi ${incognito ? "incognito-workspace" : ""}`}>
+      <button className="reading-exit btn btn-sun" onClick={() => setReadingFocus(false)}>{dt("exit")}</button>
       {/* ---------- identity header ---------- */}
       <header className="workspace-identity shrink-0 border-b-2 border-ink bg-paper">
         <div className="mx-auto flex w-full max-w-page items-center gap-3 px-3 py-2.5 sm:px-7">
@@ -612,9 +627,10 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
         )}
       </header>
 
+      <div className="reading-toolbar flex justify-end px-4 py-2"><ReadingDesk prefs={reading} onChange={setReading} onFocus={() => setReadingFocus(true)} /></div>
       {/* ---------- transcript ---------- */}
       <div ref={scrollRef} onScroll={() => { const el = scrollRef.current; if (el) followReply.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; }} className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-7">
-        <div className="mx-auto flex min-h-full w-full max-w-read flex-col py-6">
+        <div className="reading-transcript mx-auto flex min-h-full w-full max-w-read flex-col py-6">
           {justOnboarded && (
             <div className="anim-in mb-6 flex flex-wrap items-center gap-3 border-2 border-ink bg-sun px-4 py-3 shadow-pop-sm">
               <Icon name="check" size={18} className="shrink-0 text-ink" />
@@ -656,6 +672,9 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                   <MessageBubble
                     key={m.id}
                     message={m}
+                    conversationId={conversationId}
+                    allowSave={!incognito}
+                    onDraft={(text) => { setInput(text); setFocusSignal(n => n + 1); }}
                     agentId={agent.id}
                     agentName={text.name}
                     streaming={m.id === "streaming" && streaming}

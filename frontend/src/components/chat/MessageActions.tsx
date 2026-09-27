@@ -218,7 +218,7 @@ export function ReplyActions({
   }
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-0.5" role="group" aria-label={t("msg.actions")}>
+    <div className="reply-actions mt-2 flex flex-wrap items-center gap-0.5" role="group" aria-label={t("msg.actions")}>
       <Action icon={copied ? "check" : "copy"} label={copied ? t("msg.copied") : t("msg.copy")} onClick={copy} />
       {onToggleSave && (
         <Action

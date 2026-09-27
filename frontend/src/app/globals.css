@@ -903,3 +903,24 @@ html.data-saver .anim-fade { animation: none; }
   background: var(--navy);
   color: #fffcf2;
 }
+
+/* Optional workspace tools retain Sunshine & Ink's reading surfaces. */
+.design-drawer { position:fixed; inset:0 0 0 auto; margin:0; height:100dvh; max-height:100dvh; width:min(620px,100vw); max-width:100vw; padding:0; border:0; border-inline-start:2px solid var(--ink); color:var(--ink); background:var(--paper-hi); overflow:auto; }
+[dir=rtl] .design-drawer { inset:0 auto 0 0; }
+.design-drawer::backdrop { background:#15171466; }
+.design-actions { display:flex; flex-wrap:wrap; gap:8px; margin-block:12px; }
+.design-actions button,.design-actions select { min-height:44px; }
+.reading-transcript { max-width:var(--reading-width,720px)!important; }
+.reading-transcript .assistant-message .prose-ink { font-size:var(--reading-size,16px); line-height:var(--reading-spacing,1.85); }
+.reading-focus { position:fixed; inset:0; z-index:45; height:100dvh!important; }
+.reading-focus .workspace-identity,.reading-focus .workspace-composer,.reading-focus .reply-actions { display:none; }
+.reading-focus .reading-exit { display:block; }
+.reading-exit { display:none; position:absolute; inset-block-start:10px; inset-inline-end:16px; z-index:2; }
+.reading-focus .reading-transcript { padding-top:70px; }
+.pocket-preview { white-space:pre-wrap; overflow-wrap:anywhere; border:2px solid var(--ink); border-top:12px solid var(--sun); padding:24px; background:var(--paper-hi); box-shadow:4px 4px 0 var(--ink); }
+.pocket-packing { border-top-color:var(--pink); }
+.pocket-study { border-top-color:var(--navy); }
+@media(max-width:639px) { .design-drawer { inset:auto 0 0!important; width:100%; height:90dvh; border-inline-start:0; border-top:2px solid var(--ink); border-radius:16px 16px 0 0; } }
+
+.reading-focus .reading-toolbar, .reading-focus .user-message button { display:none; }
+body:has(.reading-focus) header.sticky, body:has(.reading-focus) nav[aria-label] { visibility:hidden; }

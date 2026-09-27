@@ -1,5 +1,6 @@
 "use client";
 
+import { SavedExcerpts } from "@/components/design/SavedExcerpts";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -182,6 +183,7 @@ export function TrackingManager() {
         ))}
       </ul>
 
+      <SavedExcerpts />
       <SectionLabel>{t("plans.logged")}</SectionLabel>
       {checkins.loading && <Spinner />}
       {checkins.error && <ErrorNote message={t("plans.checkinsError", { error: checkins.error })} />}

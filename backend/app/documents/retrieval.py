@@ -61,6 +61,7 @@ class Hit:
     heading: str | None
     text: str
     score: float
+    chunk_id: str | None = None
 
 
 def _tokens(text: str) -> list[str]:
@@ -205,6 +206,7 @@ def retrieve(
         hits.append(
             Hit(
                 label=f"D{len(hits) + 1}",
+                chunk_id=chunk.id,
                 document_id=doc.id,
                 filename=doc.filename,
                 page=chunk.page,

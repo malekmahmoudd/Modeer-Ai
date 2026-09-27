@@ -38,6 +38,8 @@ export interface Message {
     provider?: string;
     model?: string;
     notice?: string;
+    design?: { excerpts?: string[]; tradeoffs?: string; choice?: string };
+    team?: { agent_id: string; conversation_id: string }[];
   };
   completion?: Completion;
   created_at: string;
@@ -96,6 +98,7 @@ export interface ConversationDetail extends Conversation {
 }
 
 export interface ContextDiagnostics {
+  receipt?: { label: string; text: string }[];
   agent_id: string;
   prompt_version: number;
   shared_memory_used: string[];
@@ -219,6 +222,7 @@ export interface UserProfile {
   display_name: string;
   onboarded: boolean;
   profile: Record<string, unknown>;
+  ui_preferences?: import("@/lib/design").DesignPreferences;
   memory_auto: boolean;
   timezone?: string | null;
   /** Interface language; null follows the browser. */

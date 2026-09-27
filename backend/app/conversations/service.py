@@ -302,9 +302,14 @@ def rewind(db: Session, convo: Conversation, *, keep_question: bool) -> str:
     replies = messages[messages.index(last_user) + 1 :]
     if not replies and keep_question:
         raise NothingToRewind("The latest message has no reply yet.")
-    if any(r.pinned_at is not None for r in replies):
+    if any(
+        r.pinned_at is not None or any((r.meta or {}).get("design", {}).values()) for r in replies
+    ):
         # Taking it back would delete it from Saved replies without a word.
-        raise NothingToRewind("That reply is saved. Remove it from Saved replies first.")
+        raise NothingToRewind(
+            "That reply has saved content. "
+            "Remove saved replies, excerpts and comparison notes first."
+        )
     for reply in replies:
         db.delete(reply)
     text = last_user.content

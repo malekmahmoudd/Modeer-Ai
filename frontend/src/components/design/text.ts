@@ -1,0 +1,72 @@
+"use client";
+
+import { usePrefs } from "@/lib/i18n";
+const words = {
+  desk: ["My Front Desk", "مكتبي"],
+  customize: ["Choose and reorder", "اختيار وترتيب"],
+  pin: ["Pin", "تثبيت"],
+  unpin: ["Unpin", "إلغاء التثبيت"],
+  up: ["Move earlier", "نقل للأعلى"],
+  down: ["Move later", "نقل للأسفل"],
+  reset: ["Reset", "إعادة ضبط"],
+  save: ["Save", "حفظ"],
+  saved: ["Saved", "تم الحفظ"],
+  close: ["Close", "إغلاق"],
+  cancel: ["Cancel", "إلغاء"],
+  reading: ["Reading Desk", "مساحة القراءة"],
+  size: ["Text size", "حجم النص"],
+  spacing: ["Line spacing", "تباعد الأسطر"],
+  width: ["Reading width", "عرض القراءة"],
+  focus: ["Focus on reading", "التركيز على القراءة"],
+  exit: ["Exit reading focus", "إنهاء التركيز"],
+  source: ["Source Peek", "عرض المصدر"],
+  sourceHelp: ["This extracted passage was sent with this reply. It is not proof of every claim. The original file is not retained.", "أُرسل هذا المقطع المستخرج مع الرد. ليس دليلاً على صحة كل ادعاء. الملف الأصلي غير محفوظ."],
+  context: ["Context sent with this reply", "السياق المرسل مع هذا الرد"],
+  contextHelp: ["A record of personal context sent at the time, not proof of what influenced the answer. Instructions and the conversation transcript are not repeated here.", "سجل للسياق الشخصي المرسل وقت الرد، وليس دليلاً على ما أثر فيه. لا نكرر هنا التعليمات أو سجل المحادثة."],
+  legacy: ["This older reply has no detailed receipt.", "هذا الرد القديم لا يحتوي على سجل تفصيلي."],
+  profile: ["Profile", "الملف الشخصي"],
+  shared: ["Shared facts", "معلومات مشتركة"],
+  private: ["Specialist notes", "ملاحظات المتخصص"],
+  handoffs: ["Handoff notes", "ملاحظات التسليم"],
+  goals: ["Goals", "الأهداف"],
+  tracking: ["Plans and follow-ups", "الخطط والمتابعات"],
+  activity: ["Team activity", "نشاط الفريق"],
+  summary: ["Earlier conversation summary", "ملخص المحادثة السابقة"],
+  history: ["Earlier messages included", "الرسائل السابقة المرسلة"],
+  select: ["Work with an excerpt", "العمل على مقتطف"],
+  selectionHelp: ["Select text in the reply, or edit the excerpt below. AI actions fill an editable draft; nothing sends automatically.", "حدد نصًا من الرد أو عدّل المقتطف أدناه. إجراءات الذكاء الاصطناعي تملأ مسودة قابلة للتعديل ولا ترسل تلقائيًا."],
+  excerpt: ["Excerpt", "مقتطف"],
+  explain: ["Explain", "شرح"],
+  translate: ["Translate", "ترجمة"],
+  target: ["Translate into", "الترجمة إلى"],
+  pass: ["Pass to teammate", "تمرير لزميل"],
+  savedExcerpt: ["Save excerpt", "حفظ المقتطف"],
+  pocket: ["Pocket Cards", "بطاقات الجيب"],
+  cardTitle: ["Card title", "عنوان البطاقة"],
+  cardType: ["Card style", "نوع البطاقة"],
+  interview: ["Interview cues", "تذكيرات المقابلة"],
+  packing: ["Packing list", "قائمة الأمتعة"],
+  study: ["Study sheet", "ورقة مراجعة"],
+  download: ["Download card", "تنزيل البطاقة"],
+  cardHelp: ["Check personal details before downloading. Downloads a printable HTML card; open it in a browser to print or save as PDF.", "راجع المعلومات الشخصية قبل التنزيل. تُنزّل بطاقة HTML قابلة للطباعة؛ افتحها في المتصفح للطباعة أو الحفظ بصيغة PDF."],
+  compare: ["Team Comparison", "مقارنة الفريق"],
+  tradeoffs: ["Trade-offs that matter to me", "المفاضلات المهمة لي"],
+  choice: ["My choice and why", "اختياري وأسبابه"],
+  compareHelp: ["Compare the existing answers. Your notes are saved with this consultation and are not sent to the model.", "قارن الإجابات الحالية. تُحفظ ملاحظاتك مع الاستشارة ولا تُرسل للنموذج."],
+  notes: ["Saved excerpts", "المقتطفات المحفوظة"],
+  remove: ["Remove", "إزالة"],
+  empty: ["No excerpts saved yet.", "لا توجد مقتطفات محفوظة بعد."],
+  open: ["Open conversation", "فتح المحادثة"],
+  continue: ["Help me continue with this item:", "ساعدني في متابعة هذا البند:"],
+  continueHint: ["Review this draft before sending.", "راجع هذه المسودة قبل الإرسال."],
+  error: ["Could not save. Please try again.", "تعذر الحفظ. حاول مرة أخرى."],
+  loading: ["Loading…", "جارٍ التحميل…"],
+  noPins: ["Choose specialists to pin to your Front Desk.", "اختر متخصصين لتثبيتهم في مكتبك."]
+} as const;
+export type DesignKey = keyof typeof words;
+export function useDesignText() {
+  const {
+    locale
+  } = usePrefs();
+  return (key: DesignKey) => words[key][locale === "ar" ? 1 : 0];
+}

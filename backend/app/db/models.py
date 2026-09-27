@@ -33,6 +33,7 @@ class User(UUIDMixin, TimestampMixin, Base):
     display_name: Mapped[str] = mapped_column(String(120), default="You")
     onboarded: Mapped[bool] = mapped_column(Boolean, default=False)
     profile: Mapped[dict] = mapped_column(JSON, default=dict)
+    ui_preferences: Mapped[dict] = mapped_column(JSON, default=dict, server_default="{}")
     #: Session generation. Bumping it invalidates this account's cookies
     #: everywhere without touching anyone else's — the shared signing secret
     #: cannot do that, since rotating it signs out every account at once.
