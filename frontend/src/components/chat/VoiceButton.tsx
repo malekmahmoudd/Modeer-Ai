@@ -144,7 +144,7 @@ export function VoiceButton({
       disabled={disabled && state !== "recording"}
       aria-pressed={state === "recording"}
       aria-label={state === "recording" ? t("voice.recording", { time: clock }) : t("voice.start")}
-      title={state === "recording" ? t("voice.stop") : `${t("voice.start")} — ${t("voice.privacy")}`}
+      title={state === "recording" ? t("voice.stop") : `${t("voice.start")}. ${t("voice.privacy")}`}
       className={`grid h-11 shrink-0 place-items-center rounded-full transition disabled:opacity-40 ${
         state === "recording"
           ? "min-w-11 gap-1 border-2 border-ink bg-pink px-2.5 text-[12px] font-black text-ink"

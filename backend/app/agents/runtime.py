@@ -384,7 +384,7 @@ class AgentRuntime:
                     agent.id,
                     assistant_msg,
                     today=now.date(),
-                    fallback_title=f"Plan with {agent.name} — {now:%d %b}",
+                    fallback_title=f"Plan with {agent.name}, {now:%d %b}",
                 )
                 if plan is not None:
                     saved_plans.append(plan)
@@ -575,7 +575,7 @@ class AgentRuntime:
     def _plan_requests(self, db, user, agent, message, history, today) -> PlanActions:
         """Carry out explicit plan requests and say what happened, for the prompt."""
         actions = PlanActions()
-        fallback = f"Plan with {agent.name} — {today:%d %b}"
+        fallback = f"Plan with {agent.name}, {today:%d %b}"
         if plans.asks_to_save(message):
             previous = next((m for m in reversed(history) if m.role == "assistant"), None)
             if _ASKS_FOR_NEW.search(plans._fold(message)):

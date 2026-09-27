@@ -1,7 +1,7 @@
 # What Fareeq stores about you
 
 Fareeq is a personal assistant with a team of specialists that share what they
-know about you. That only works because it remembers things — so this page says
+know about you. That only works because it remembers things, so this page says
 exactly what it keeps, where that lives, and who can reach it.
 
 Written for the person using it, not for a lawyer. If anything here is unclear,
@@ -11,13 +11,13 @@ assume the more cautious reading and ask.
 
 - **Your messages and the replies**, in full, for every specialist you talk to.
 - **Facts it learns about you.** As you chat, Fareeq extracts durable personal
-  facts — what you study, where you work, what you are training for, what you
+  facts: what you study, where you work, what you are training for, what you
   can afford, what you are avoiding. Some are shared across the whole team; some
   stay with one specialist.
 - **Goals** you set, and **daily briefings** it generates.
 - **Your account**: display name, email address, when you joined, and whether
   automatic learning is on.
-- **Your password and recovery codes — never in readable form.** The password
+- **Your password and recovery codes: never in readable form.** The password
   is stored as a scrypt hash and each recovery code as a SHA-256 hash; neither
   can be read back, by you or by the operator. A code is marked used once used.
 - **Usage counters**: how many requests and roughly how many tokens your account
@@ -27,7 +27,7 @@ assume the more cautious reading and ask.
 - **Your signed-in devices**: for each sign-in, when it started and was last
   used, how you signed in, what your browser says it is (for example "Chrome
   on Mac"), and the first part of your network address (for example
-  "203.0.113.x" — never the whole address). It is how the Account page lists
+  "203.0.113.x", never the whole address). It is how the Account page lists
   your devices and lets you sign one out. A record is deleted 30 days after
   that device is signed out or its session expires.
 - **Two-step sign-in**, if you turn it on: the setup key your authenticator
@@ -39,12 +39,12 @@ assume the more cautious reading and ask.
   network address, for up to an hour. They are stored as one-way hashes of the
   address, not the address itself, and exist to stop guessing.
 
-Some of what it remembers is sensitive by nature — health, money, work. When
+Some of what it remembers is sensitive by nature: health, money, work. When
 Fareeq recognises a fact as sensitive it does not store it automatically unless
 the deployment has opted in (`MEMORY_STORE_SENSITIVE`). **Recognising it is best
 effort**, not a guarantee: a health or money detail phrased in an ordinary way
 can be saved as an ordinary fact. Everything stored is visible to you in Memory,
-where you can edit or delete it — so it is worth a look now and then. Anything
+where you can edit or delete it, so it is worth a look now and then. Anything
 you save yourself is stored exactly as you wrote it, sensitive or not.
 
 When Fareeq updates a fact automatically, it keeps the last few earlier values
@@ -127,7 +127,7 @@ that backup was taken.
   track of for that specialist (dates, saved plans, logged progress), notes a
   teammate left at your request, the recent messages of that conversation (up to
   the last 12 exchanges, and a short summary of anything older) and your new
-  message to the configured provider — by default Groq. When you talk to Leo, the
+  message to the configured provider (by default, Groq). When you talk to Leo, the
   titles of your other recent conversations go too, except titles that look
   sensitive, which are replaced with "a private topic".
   Two other requests can happen after a reply:
@@ -151,19 +151,19 @@ that backup was taken.
 - No advertising, profiling for advertising, or selling data.
 - No training of any model on your conversations by Fareeq itself.
 - No sharing between accounts.
-- No logging of your message content in server logs — logs record timings,
+- No logging of your message content in server logs: logs record timings,
   status codes and error types only.
 
 ## Your control
 
 | You want to | How |
 |---|---|
-| See what it remembers | Memory, in the app — every stored fact, editable |
+| See what it remembers | Memory, in the app: every stored fact, editable |
 | Stop it learning from your messages | Account → What Leo learns → switch off "Learn from my messages automatically". Nothing already saved is removed, and you can still save facts yourself |
-| Correct or delete a single fact | Memory — edit or delete it. An edit is yours: Fareeq will not overwrite it automatically later |
+| Correct or delete a single fact | Memory: edit or delete it. An edit is yours: Fareeq will not overwrite it automatically later |
 | Delete one conversation | Open conversation history, then choose its delete button |
 | Keep a chat out of your memory | Start it in incognito (the mask button in a chat) |
-| Take everything with you | Account → Download my data — a JSON file, messages included |
+| Take everything with you | Account → Download my data (a JSON file, messages included) |
 | Delete everything | Account → Delete my account → type DELETE |
 | Sign out every device | Account → Sign out every device |
 | Sign out one device | Account → Your devices → Sign out beside it |
@@ -171,7 +171,7 @@ that backup was taken.
 
 **Deletion is immediate and irreversible.** It removes your account,
 conversations, messages, memories, goals, briefings and usage counters from the
-live database. It cannot reach backups already taken — those age out on the
+live database. It cannot reach backups already taken. Those age out on the
 backup retention schedule, 30 days by default.
 
 ## Sessions and access
@@ -186,7 +186,7 @@ of your recovery codes; that also signs out every other device. Changing your
 password does the same. No email is ever sent, so there is no reset link: if you
 lose your password and every recovery code, only the operator can let you back
 in, after checking it is really you. If you think an invitation key has leaked,
-tell the operator — it needs rotating, which signing out cannot do.
+tell the operator. It needs rotating, which signing out cannot do.
 
 ## Advice, and its limits
 

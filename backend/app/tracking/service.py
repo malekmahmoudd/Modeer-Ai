@@ -394,7 +394,7 @@ def briefing_items(db: Session, user_id: str, *, today: date) -> list[dict]:
                 {
                     "icon": "✅",
                     "text": step.text[:160],
-                    "detail": f"{plan.title} — "
+                    "detail": f"{plan.title}: "
                     + ("due today" if step.due_on == today else "overdue"),
                     "source": "plan",
                     "agent": plan.agent_id,

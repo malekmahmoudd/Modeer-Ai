@@ -16,7 +16,7 @@ CONFIG = AgentConfig(
     empty_prompt="What are you trying to figure out?",
     starters=[
         "How should I size an emergency fund?",
-        "Debt vs saving — how to think about it",
+        "Debt vs saving: how to think about it",
         "Help me set a savings target",
         "Explain how this financial product works",
     ],

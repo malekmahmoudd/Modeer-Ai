@@ -112,7 +112,7 @@ def save_design(
         raise HTTPException(409, "Incognito excerpts cannot be saved")
     changes = data.model_dump(exclude_none=True)
     if any(not s.strip() or len(s) > 8000 for s in changes.get("excerpts", [])):
-        raise HTTPException(422, "Excerpts must contain 1–8000 characters")
+        raise HTTPException(422, "Excerpts must contain 1 to 8,000 characters")
     if ("tradeoffs" in changes or "choice" in changes) and not msg.meta.get("team"):
         raise HTTPException(422, "This is not a team consultation")
     msg.meta = {**msg.meta, "design": {**msg.meta.get("design", {}), **changes}}

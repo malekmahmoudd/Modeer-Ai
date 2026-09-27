@@ -57,9 +57,9 @@ def test_steps_are_read_from_tables_lists_and_day_lines():
     title, steps = plan_service.parse_steps(PLAN)
     assert title == "3-day revision plan"
     assert steps == [
-        "Day 1 — Thermodynamics past paper",
-        "Day 2 — Fluids: weak topics",
-        "Day 3 — Full mock exam",
+        "Day 1 · Thermodynamics past paper",
+        "Day 2 · Fluids: weak topics",
+        "Day 3 · Full mock exam",
     ]
     _, listed = plan_service.parse_steps("Try this:\n- **Warm up** 10 min\n2. Squats\nDay 3: rest")
     assert listed == ["Warm up 10 min", "Squats", "Day 3: rest"]
@@ -88,8 +88,8 @@ def test_progress_is_marked_from_chat_and_the_plan_closes_when_done(client, db):
         json={"message": "Done with day 1 and finished day 2", "conversation_id": convo.id},
     ).json()
     assert [p["text"] for p in body["plan_progress"]] == [
-        "Day 1 — Thermodynamics past paper",
-        "Day 2 — Fluids: weak topics",
+        "Day 1 · Thermodynamics past paper",
+        "Day 2 · Fluids: weak topics",
     ]
     client.post(
         "/api/agents/study/chat", json={"message": "did day 3", "conversation_id": convo.id}

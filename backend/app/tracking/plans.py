@@ -157,7 +157,7 @@ def parse_steps(reply: str) -> tuple[str | None, list[str]]:
                 # The first row of a table is its header.
                 table_header_seen = True
                 continue
-            text = " — ".join(c for c in cells if c)
+            text = " · ".join(c for c in cells if c)
             if text:
                 steps.append(_clean(text))
             continue

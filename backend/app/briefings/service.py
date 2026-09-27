@@ -62,7 +62,7 @@ def _countdown(target, today: date) -> str:
         return f"Was due {label}"
     if days == 0:
         return f"Due today ({label})"
-    return f"Due {label} — in {days} day{'s' if days != 1 else ''}"
+    return f"Due {label}, in {days} day{'s' if days != 1 else ''}"
 
 
 def build_items(db: Session, user: User) -> tuple[str, list[dict]]:

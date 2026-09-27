@@ -55,7 +55,7 @@ class MockLLMProvider(LLMProvider):
         agent_mem = _bullets(blocks.get("AGENT_MEMORY", ""))
 
         lines: list[str] = []
-        lines.append(f"[{agent_name} — offline preview response]")
+        lines.append(f"[{agent_name}: offline preview response]")
         lines.append("")
         if last_user:
             snippet = last_user.strip().replace("\n", " ")

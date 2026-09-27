@@ -208,7 +208,7 @@ def save_plan(data: PlanFromMessage, user: CurrentUser, db: DbSession):
         conversation.agent_id,
         message,
         today=today,
-        fallback_title=f"Plan with {agent.name if agent else 'your team'} — {today:%d %b}",
+        fallback_title=f"Plan with {agent.name if agent else 'your team'}, {today:%d %b}",
     )
     if plan is None:
         raise HTTPException(status_code=422, detail="That reply has no steps to keep as a plan.")

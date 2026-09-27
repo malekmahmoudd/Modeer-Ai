@@ -102,7 +102,7 @@ export function TrackingManager() {
                   <span className="block text-[15px] font-semibold leading-snug text-ink" dir="auto">{f.title}</span>
                   <span className="mt-0.5 block text-[11.5px] font-bold uppercase tracking-wide text-ink-faint">
                     {day(f.due_on)}
-                    {f.ends_on && ` – ${day(f.ends_on)}`} · {passed ? t("plans.howDidItGo") : badge} · {name(f.agent_id)}
+                    {f.ends_on && ` - ${day(f.ends_on)}`} · {passed ? t("plans.howDidItGo") : badge} · {name(f.agent_id)}
                   </span>
                 </span>
                 <span

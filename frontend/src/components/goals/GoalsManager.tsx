@@ -152,7 +152,7 @@ function GoalItem({
 }) {
   const { t } = usePrefs();
   const key = PRIORITIES.find((p) => p.value === goal.priority)?.label;
-  const label = key ? t(key) : "—";
+  const label = key ? t(key) : "-";
   const done = goal.status === "done";
   const isTop = goal.priority <= 1 && !done;
 
