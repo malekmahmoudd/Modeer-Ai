@@ -1,7 +1,41 @@
 # Project status — Modeer Personal AI Team MVP
 
-_Last updated: 2026-09-25 · phase: production readiness, invite-only or open signup_
+_Last updated: 2026-09-27 · phase: production readiness, invite-only or open signup_
 
+
+## Twelve features — 2026-09-27
+
+Migration **0012**. 545 backend tests; browser regression 65/65 (English and
+Arabic, desktop and phone widths).
+
+- **Reminders (#1).** Web Push opt-in per device on Account: one daily digest
+  at the person's hour and timezone, details or only a count, a test button.
+  Encryption checked against the RFC 8291 example. See OPERATIONS.
+- **Voice capture (#7).** Plans › Quick note: say or type, the team proposes
+  check-ins and follow-ups, only ticked ones are saved.
+- **Natural voices (#9).** Read aloud uses Groq Orpheus when on and available,
+  else the device. Needs the model terms accepted in the Groq console first.
+- **Hands-free talk (#10).** Headphones button in any chat: listens, sends when
+  you pause, reads the reply (kept short and plain), listens again.
+- **Dialect (#15).** Egyptian, Gulf, Levantine or MSA for dictation hints and
+  Arabic replies.
+- **CV builder (#20).** /cv: sections, bullet checks, a version per role, Word
+  download (right to left for Arabic), print to PDF.
+- **Regional money (#34).** /money: zakat and savings-circle calculators in
+  EGP/SAR/AED/KWD/QAR/BHD/OMR/USD; Emma knows zakat, jameya and paydays
+  (finance prompt v14). No live prices.
+- **Accessibility (#62).** Text size 100–150%, high contrast, reduce motion,
+  app-wide, on the first paint.
+- **Templates (#81).** Template button in the message box: starter library in
+  both languages plus your own, with {blanks}.
+- **Hide teammates (#84).** Account › Teammates; hidden ones leave Home, Team
+  and the pickers.
+- **Organising chats (#89).** /chats: pins, folders (collections) and tags.
+- **Import (#91).** Memory › Import from ChatGPT or Claude: paste or pick the
+  export; the browser keeps only your own messages; you tick the facts to save.
+
+Fixed on the way: deleting an account now also removes its reminder history
+(`push_sent` had no cascade on SQLite).
 
 ## Design add-ons — 2026-09-27
 

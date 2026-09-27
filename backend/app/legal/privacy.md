@@ -84,12 +84,44 @@ text read from it is kept. That text can contain misread words.
 **Voice messages.** When you use the microphone, the recording (at most a
 minute) is sent to the model provider below to be written out as text, and the
 text comes back to your message box. Fareeq AI does not keep the recording or the
-text it returns; nothing is saved unless you then send the message. **Read
-aloud** uses your own device's voices, and nothing leaves your device for it.
+text it returns; nothing is saved unless you then send the message. If you chose
+an Arabic dialect, its name goes with the recording as a hint.
 
-**Saved replies and your settings.** Replies you save, your interface language
-and whether Data saver is on are stored with your account and included in your
-export. Data saver itself is remembered by your browser.
+**Read aloud.** With natural voices on (Account › Voice and dialect), the reply's
+text is sent to the model provider to be turned into speech; the audio comes
+straight back to your browser and is not kept. With them off, when the day's
+allowance is used, or offline, your device's own voices read it and nothing
+leaves your device. **Talking hands-free** records only while it is listening,
+sends each thing you say as above, and turns the microphone off while a reply is
+read.
+
+**Quick notes.** A note you say or type on the Plans page is sent to the model
+provider to find the things to log and follow up on. Nothing is saved until you
+tick items and press Save; health details are never offered.
+
+**Importing from another assistant.** The file you pick stays on your device:
+your browser reads your own messages from it (never the assistant's replies) and
+sends at most about 18,000 characters, once, to the model provider to find facts
+about you. Only the facts you tick are saved, as if you had added them yourself.
+
+**Reminders.** If you switch on reminders for a device, Fareeq AI stores the
+address your browser gave it for notifications, the keys to encrypt them, and
+the browser's description of itself. Once a day, at the hour you chose and never
+after 9 pm, it sends what is due today and tomorrow (or, if you chose, only how
+many things). The message travels through your browser maker's push service
+(Google, Mozilla, Apple or Microsoft) encrypted, so they cannot read it, though
+they see that a message was sent. Switching reminders off, or the browser
+dropping them, deletes the address.
+
+**CVs and templates.** CVs you build and prompt templates you save are stored
+with your account, included in your export and deleted with it. A Word file is
+made when you download it and not kept.
+
+**Saved replies and your settings.** Replies you save, your interface language,
+your Arabic dialect, text size, contrast and motion settings, teammates you hid,
+and your chats' pins, folders and tags are stored with your account and
+included in your export. Data saver and a copy of the text size, contrast and
+motion settings are remembered by your browser, so pages open with them.
 
 **Incognito chats.** A chat you start in incognito is not remembered by
 Fareeq AI: nothing is learned from it (no facts, dates, plans or notes), it is not
@@ -110,7 +142,7 @@ files are never kept this way.
 
 In one PostgreSQL database on the server running your deployment. Nothing is
 sent to an analytics service, an advertiser, or a third party beyond the model
-provider below.
+provider below (and, if you switch on reminders, your browser's push service).
 
 **Backups** are encrypted with AES-256 and may be copied off the server. They
 contain everything above. Restoring a backup restores your data as it was when
@@ -143,6 +175,8 @@ that backup was taken.
   What the provider does with it is governed by their terms, not this document;
   read them before using the service, including where they process data, how
   long they keep it, and whether they use it for training.
+- **Your browser's push service**, only if you switch on reminders: it carries
+  the encrypted daily reminder to your device and cannot read it.
 - **Nobody else.** Other accounts on the same deployment cannot read your
   conversations, memories or goals; that isolation is enforced and tested.
 
@@ -168,6 +202,8 @@ that backup was taken.
 | Sign out every device | Account → Sign out every device |
 | Sign out one device | Account → Your devices → Sign out beside it |
 | Add a second step to signing in | Account → Two-step sign-in |
+| Stop reminders on a device | Account → Reminders → untick "Send me a daily reminder on this device" |
+| Stop sending replies to be read aloud | Account → Voice and dialect → untick "Read replies in a natural voice" |
 
 **Deletion is immediate and irreversible.** It removes your account,
 conversations, messages, memories, goals, briefings and usage counters from the

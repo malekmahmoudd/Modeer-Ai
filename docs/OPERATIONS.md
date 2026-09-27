@@ -259,6 +259,25 @@ downgrade a production database; rehearse a schema rollback on a copy.
 head` runs the migrations inside the image, not the ones in your working tree; a
 stale image migrates to its own head and reports success.
 
+## Reminders (Web Push)
+
+- One daily digest per person who switched it on, at their chosen hour in their
+  timezone (08:00 by default, never after 21:00), with today's and tomorrow's
+  follow-ups and plan steps. The API checks every 10 minutes; `push_sent` makes
+  it once per day. Nothing is sent on a day with nothing due.
+- **Keys.** The VAPID signing key is made on first use and kept in the
+  `server_keys` table, so it survives restarts and is in the backups. To manage
+  it yourself, set `VAPID_PRIVATE_KEY` (base64url of the raw P-256 private
+  key); changing it invalidates every subscription, and people must switch
+  reminders on again. `PUSH_ENABLED=false` hides the feature. `FRONTEND_URL` (an
+  https URL) is sent to push services as the contact; without it a placeholder
+  address is used.
+- Only the push services of Google, Mozilla, Apple and Microsoft are accepted
+  as destinations, so a subscription cannot make the server call an arbitrary
+  address. A browser that has gone away (404/410) is removed automatically.
+- iPhone and iPad show reminders only for the app added to the home screen
+  (iOS 16.4+).
+
 ## Voice and photos
 
 - **Voice input** needs `LLM_PROVIDER=groq`. It uses Groq's free Whisper
@@ -267,6 +286,18 @@ stale image migrates to its own head and reports success.
   4 MB (`VOICE_MAX_BYTES`, about a minute). Groq limits audio separately from
   text: when it says no, people see "Voice input is at its limit for now".
   `VOICE_ENABLED=false` hides the mic.
+- **Natural voices** (Read aloud, hands-free talk) use Groq's Orpheus models
+  (`TTS_MODEL_EN` `canopylabs/orpheus-v1-english`, `TTS_MODEL_AR`
+  `canopylabs/orpheus-arabic-saudi`) with the same key. **The account owner
+  must accept each model's terms once** in the Groq console (open the model in
+  the Playground); until then Groq answers `model_terms_required` and people see
+  "Natural voices need to be switched on in the Groq console first", and the
+  app falls back to the device's voices. Voice names are `TTS_VOICE_EN`
+  (default `hannah`) and `TTS_VOICE_AR` (default `noura`): check them against
+  the model's list once the terms are accepted. Each account gets 150 a day
+  (`TTS_PER_DAY`). `TTS_ENABLED=false` switches them off.
+- **Dictation dialect.** The Arabic dialect a person picks (Account) is sent to
+  Whisper as a hint and to the model as a writing instruction. Nothing to set up.
 - **OCR** needs the `tesseract` program and `models/tessdata/{ara,eng}.traineddata`.
   The image has both. On a development machine, install Tesseract (`brew install
   tesseract`) and run `python -m app.documents.fetch_ocr`. Without them, photo

@@ -9,6 +9,7 @@ summary of someone's data rather than their data.
 from __future__ import annotations
 
 import hashlib
+from datetime import date
 
 from sqlalchemy import func, select
 
@@ -16,8 +17,12 @@ from app.core.config import settings
 from app.db.models import (
     AgentMemory,
     Conversation,
+    CvDocument,
     Goal,
     Message,
+    PromptTemplate,
+    PushSent,
+    PushSubscription,
     SharedMemory,
     UsageBucket,
     User,
@@ -102,6 +107,19 @@ def test_deleting_the_account_erases_every_row_it_owns(client, make_user, monkey
     # to survive a deletion and keep a record of when this person used Modeer.
     db.add(UsageBucket(account=alice_id, kind="requests", window=1, amount=3))
     db.add(UsageBucket(account=bob_id, kind="requests", window=1, amount=5))
+    # The newer per-person rows: a reminder browser, what was pushed, a
+    # template, a CV.
+    db.add(
+        PushSubscription(
+            user_id=alice_id,
+            endpoint="https://fcm.googleapis.com/x",
+            p256dh="p" * 40,
+            auth="a" * 16,
+        )
+    )
+    db.add(PushSent(user_id=alice_id, kind="daily", day=date(2026, 9, 27)))
+    db.add(PromptTemplate(user_id=alice_id, title="t", body="b"))
+    db.add(CvDocument(user_id=alice_id, title="CV", data={}))
     db.commit()
 
     response = client.post("/api/users/me/delete", json={"confirm": "DELETE"}, headers=origin)
@@ -110,7 +128,16 @@ def test_deleting_the_account_erases_every_row_it_owns(client, make_user, monkey
     # assertions below read the database rather than the identity map.
     db.expunge_all()
 
-    for model in (Conversation, SharedMemory, AgentMemory, Goal):
+    for model in (
+        Conversation,
+        SharedMemory,
+        AgentMemory,
+        Goal,
+        PushSubscription,
+        PushSent,
+        PromptTemplate,
+        CvDocument,
+    ):
         remaining = db.scalar(
             select(func.count()).select_from(model).where(model.user_id == alice_id)
         )

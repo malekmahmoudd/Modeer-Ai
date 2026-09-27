@@ -204,6 +204,25 @@ _ARABIC: dict[str, str] = {
     "Only the first part of this file was kept: it is very long.": "حُفظ الجزء الأول فقط من هذا الملف: إنه طويل جدًا.",
     # voice
     "Voice input isn't available on this server.": "الإدخال الصوتي غير متاح على هذا الخادم.",
+    "Natural voices aren't available on this server.": "الأصوات الطبيعية غير متاحة على هذا الخادم.",
+    "That's today's limit for natural voices. The device voice still works.": (
+        "هذا حد اليوم للأصوات الطبيعية. صوت الجهاز ما زال يعمل."
+    ),
+    "Natural voices need to be switched on in the Groq console first.": (
+        "يجب تفعيل الأصوات الطبيعية في لوحة Groq أولًا."
+    ),
+    # reminders, templates, CVs, check-ins
+    "Reminders are not available": "التذكيرات غير متاحة",
+    "No browser accepted the reminder": "لم يستقبل أي متصفح التذكير",
+    "Template not found": "لم يُعثر على القالب",
+    "You have the most templates allowed. Delete one first.": (
+        "لديك الحد الأقصى من القوالب. احذف واحدًا أولًا."
+    ),
+    "CV not found": "لم يُعثر على السيرة الذاتية",
+    "You have the most CVs allowed. Delete one first.": (
+        "لديك الحد الأقصى من السير الذاتية. احذف واحدة أولًا."
+    ),
+    "That isn't something the team keeps track of.": "هذا ليس مما يتابعه الفريق.",
     "That's today's voice limit. You can still type.": "هذا حد الصوت لليوم. ما زال بإمكانك الكتابة.",
     "That recording is too long. Keep it under a minute.": "التسجيل طويل جدًا. اجعله أقل من دقيقة.",
     "That recording is empty.": "التسجيل فارغ.",

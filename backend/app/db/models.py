@@ -75,6 +75,7 @@ class User(UUIDMixin, TimestampMixin, Base):
     push_subscriptions: Mapped[list[PushSubscription]] = relationship(
         cascade="all, delete-orphan"
     )
+    push_sent: Mapped[list[PushSent]] = relationship(cascade="all, delete-orphan")
     prompt_templates: Mapped[list[PromptTemplate]] = relationship(cascade="all, delete-orphan")
     cvs: Mapped[list[CvDocument]] = relationship(cascade="all, delete-orphan")
     conversations: Mapped[list[Conversation]] = relationship(
