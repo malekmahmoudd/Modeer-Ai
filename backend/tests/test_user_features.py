@@ -212,7 +212,7 @@ def test_voice_turns_a_clip_into_text_and_keeps_nothing(client, monkeypatch):
     monkeypatch.setattr(voice_route.voice, "available", lambda: True)
     heard = {}
 
-    async def fake(audio, content_type, *, language=None):
+    async def fake(audio, content_type, *, language=None, dialect=None):
         heard.update(size=len(audio), type=content_type, language=language)
         return "بكرة عندي مقابلة"
 
@@ -229,7 +229,7 @@ def test_voice_turns_a_clip_into_text_and_keeps_nothing(client, monkeypatch):
 def test_voice_has_a_daily_limit(client, monkeypatch):
     monkeypatch.setattr(voice_route.voice, "available", lambda: True)
 
-    async def fake(audio, content_type, *, language=None):
+    async def fake(audio, content_type, *, language=None, dialect=None):
         return "hello"
 
     monkeypatch.setattr(voice_route.voice, "transcribe", fake)

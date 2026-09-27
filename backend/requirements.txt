@@ -25,3 +25,6 @@ numpy>=2.0,<3
 # Its Arabic and English data are fetched and verified by app/documents/fetch_ocr.py.
 pillow>=11,<13
 pypdfium2>=4.30,<6
+# Web Push (reminders on the lock screen): VAPID signatures and RFC 8291
+# payload encryption, implemented in app/push/webpush.py on top of this.
+cryptography>=44,<51

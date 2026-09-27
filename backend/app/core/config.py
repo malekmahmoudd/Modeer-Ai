@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     #: Extra seconds for a photo or scanned PDF read with OCR (up to 15 pages).
     ocr_parse_seconds: float = Field(default=150, ge=0, le=600)
 
+    # --- Push reminders ---
+    #: Web Push signing key (base64url, 32 bytes). Empty: the server makes one
+    #: once and keeps it in the database (server_keys).
+    vapid_private_key: str = Field(default="", repr=False)
+    push_enabled: bool = True
+
     # --- Voice ---
     #: Speech to text for the mic button (Groq's free Whisper endpoint). Needs
     #: LLM_PROVIDER=groq; audio is sent for transcription and never stored.
@@ -57,6 +63,14 @@ class Settings(BaseSettings):
     voice_max_bytes: int = Field(default=4 * 1024 * 1024, ge=1024)
     #: Transcriptions per account per UTC day. Groq limits audio separately.
     voice_per_day: int = Field(default=60, ge=0)
+    #: Natural voices (Groq Orpheus). Needs the terms accepted in the Groq
+    #: console; the voice names are Groq's and can be changed here.
+    tts_enabled: bool = True
+    tts_model_en: str = "canopylabs/orpheus-v1-english"
+    tts_model_ar: str = "canopylabs/orpheus-arabic-saudi"
+    tts_voice_en: str = "hannah"
+    tts_voice_ar: str = "noura"
+    tts_per_day: int = Field(default=150, ge=0)
 
     # --- Features ---
     #: Ask My Team (POST /api/team/ask, the Team page). On since 2026-09-26, with

@@ -9,6 +9,7 @@ written anywhere.
 from __future__ import annotations
 
 import logging
+from contextlib import suppress
 
 import httpx
 
@@ -45,8 +46,21 @@ def extension_for(content_type: str | None) -> str | None:
     return AUDIO_TYPES.get((content_type or "").split(";")[0].strip().lower())
 
 
-async def transcribe(audio: bytes, content_type: str, *, language: str | None = None) -> str:
-    """The words in a short clip. ``language`` ("ar", "en") is a hint only."""
+#: A few everyday words in the chosen dialect steer Whisper toward writing it
+#: as spoken rather than as Standard Arabic.
+DIALECT_HINTS = {
+    "egyptian": "كلام بالعامية المصرية: إزيك، عامل إيه، النهارده، بكرة، عايز، كده.",
+    "gulf": "كلام باللهجة الخليجية: شلونك، وايد، باچر، أبغى، زين، الحين.",
+    "levantine": "حكي باللهجة الشامية: كيفك، هلق، بكرا، بدي، منيح، شو.",
+    "msa": "كلام بالعربية الفصحى.",
+}
+
+
+async def transcribe(
+    audio: bytes, content_type: str, *, language: str | None = None, dialect: str | None = None
+) -> str:
+    """The words in a short clip. ``language`` ("ar", "en") and ``dialect`` are
+    hints only."""
     ext = extension_for(content_type)
     if ext is None:
         raise VoiceError("That recording format isn't supported.", 415)
@@ -54,6 +68,8 @@ async def transcribe(audio: bytes, content_type: str, *, language: str | None = 
     data = {"model": settings.transcribe_model, "response_format": "json", "temperature": "0"}
     if language in ("ar", "en"):
         data["language"] = language
+    if dialect in DIALECT_HINTS and language != "en":
+        data["prompt"] = DIALECT_HINTS[dialect]
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(10, read=30)) as client:
             response = await client.post(
@@ -75,3 +91,47 @@ async def transcribe(audio: bytes, content_type: str, *, language: str | None = 
         logger.warning("Transcription failed: status=%s", response.status_code)
         raise VoiceError("Couldn't turn that recording into text. Please try again.")
     return str(response.json().get("text", "")).strip()
+
+
+# --- natural voices ---------------------------------------------------------------------
+# Groq's Orpheus text-to-speech. The account owner has to accept its terms once
+# in the Groq console; until then this answers "not available" and the browser
+# reads replies with the device's own voices.
+
+TERMS_NEEDED = "Natural voices need to be switched on in the Groq console first."
+
+
+def speech_available() -> bool:
+    return available() and settings.tts_enabled
+
+
+async def speak(text: str, language: str) -> bytes:
+    """WAV audio of ``text``, in Arabic or English."""
+    arabic = language == "ar"
+    model = settings.tts_model_ar if arabic else settings.tts_model_en
+    voice = settings.tts_voice_ar if arabic else settings.tts_voice_en
+    base = (settings.llm_base_url or _DEFAULT_BASE["groq"]).rstrip("/")
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(10, read=40)) as client:
+            response = await client.post(
+                f"{base}/audio/speech",
+                headers={"Authorization": f"Bearer {settings.llm_api_key}"},
+                json={"model": model, "voice": voice, "input": text, "response_format": "wav"},
+            )
+    except httpx.HTTPError as exc:
+        raise VoiceError("Couldn't reach the speech service. Please try again.") from exc
+    if response.status_code == 429:
+        raise VoiceError(
+            "Voice input is at its limit for now. Please type, or try again shortly.",
+            429,
+            _retry_after(response),
+        )
+    if response.status_code >= 400:
+        code = ""
+        with suppress(ValueError):
+            code = response.json().get("error", {}).get("code", "")
+        logger.warning("Speech failed: status=%s code=%s", response.status_code, code)
+        if code == "model_terms_required":
+            raise VoiceError(TERMS_NEEDED, 503)
+        raise VoiceError("Couldn't read that aloud. Please try again.")
+    return response.content

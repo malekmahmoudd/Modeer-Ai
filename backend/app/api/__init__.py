@@ -9,12 +9,15 @@ from app.api.routes import (
     briefings,
     chat,
     conversations,
+    cv,
     documents,
     goals,
     health,
     legal,
     memory,
+    push,
     team,
+    templates,
     tracking,
     users,
     voice,
@@ -35,5 +38,8 @@ api_router.include_router(tracking.router)
 api_router.include_router(documents.router)
 api_router.include_router(team.router)
 api_router.include_router(voice.router)
+api_router.include_router(push.router)
+api_router.include_router(templates.router)
+api_router.include_router(cv.router)
 
 api_router.include_router(auth.router)

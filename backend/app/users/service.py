@@ -19,11 +19,14 @@ from app.db.models import (
     Briefing,
     CheckIn,
     Conversation,
+    CvDocument,
     Document,
     FollowUp,
     Goal,
     Message,
     Plan,
+    PromptTemplate,
+    PushSubscription,
     SharedMemory,
     UsageBucket,
     User,
@@ -104,6 +107,7 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
             "onboarded": user.onboarded,
             "profile": user.profile or {},
             "ui_preferences": user.ui_preferences or {},
+            "reply_dialect": user.reply_dialect,
             "memory_auto": user.memory_auto,
             "timezone": user.timezone,
             "locale": user.locale,
@@ -133,6 +137,9 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "summary": c.summary,
                 "created_at": when(c.created_at),
                 "incognito": c.incognito,
+                "pinned_at": when(c.pinned_at),
+                "folder": c.folder,
+                "tags": c.tags or [],
                 "expires_at": when(c.expires_at),
                 "messages": [
                     {
@@ -257,6 +264,29 @@ def export_user_data(db: Session, user: User) -> dict[str, Any]:
                 "logged_on": c.logged_on.isoformat(),
             }
             for c in db.scalars(select(CheckIn).where(CheckIn.user_id == user.id))
+        ],
+        "prompt_templates": [
+            {"id": t.id, "title": t.title, "body": t.body, "agent_id": t.agent_id}
+            for t in db.scalars(select(PromptTemplate).where(PromptTemplate.user_id == user.id))
+        ],
+        "cvs": [
+            {
+                "id": cv.id,
+                "title": cv.title,
+                "target_role": cv.target_role,
+                "data": cv.data or {},
+                "updated_at": when(cv.updated_at),
+            }
+            for cv in db.scalars(select(CvDocument).where(CvDocument.user_id == user.id))
+        ],
+        # Which browsers get reminders; the delivery address and keys stay out.
+        "reminder_browsers": [
+            {
+                "browser": p.user_agent,
+                "added_at": when(p.created_at),
+                "last_sent_at": when(p.last_sent_at),
+            }
+            for p in db.scalars(select(PushSubscription).where(PushSubscription.user_id == user.id))
         ],
     }
 

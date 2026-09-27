@@ -27,6 +27,9 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 logger = logging.getLogger("modeer")
 
+#: How often due reminders are looked for (each person gets one a day).
+PUSH_EVERY_SECONDS = 600
+
 #: How often expired incognito chats are swept away, for everyone.
 INCOGNITO_SWEEP_SECONDS = 3600
 
@@ -40,6 +43,23 @@ def sweep_incognito() -> int:
         devices.sweep(db)
         db.commit()
     return removed
+
+
+async def _push_forever() -> None:
+    """Send each person's daily reminder when their hour comes."""
+    from app.push.service import send_due
+
+    while True:
+        await asyncio.sleep(PUSH_EVERY_SECONDS)
+        if not settings.push_enabled:
+            continue
+        try:
+            with SessionLocal() as db:
+                sent = await send_due(db)
+            if sent:
+                logger.info("Sent %d reminders", sent)
+        except Exception as exc:  # noqa: BLE001 - try again next round
+            logger.warning("Reminders failed: %s", type(exc).__name__)
 
 
 async def _sweep_forever() -> None:
@@ -69,12 +89,14 @@ async def lifespan(app: FastAPI):
             "Agent sync skipped (has the database been migrated?): %s", type(exc).__name__
         )
     sweeper = asyncio.create_task(_sweep_forever())
+    pusher = asyncio.create_task(_push_forever())
     try:
         yield
     finally:
-        sweeper.cancel()
-        with suppress(asyncio.CancelledError):
-            await sweeper
+        for task in (sweeper, pusher):
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
 
 
 def api_docs(environment: str) -> dict:

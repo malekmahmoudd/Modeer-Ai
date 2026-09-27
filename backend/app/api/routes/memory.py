@@ -1,13 +1,20 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.agents.registry import get_agent
+from app.agents.registry import get_agent, require_agent
 from app.api.deps import CurrentUser, DbSession
+from app.core.config import settings
+from app.core.usage import limited_caller
 from app.db.models import AgentMemory, Conversation, Message, SharedMemory
+from app.llm.provider import get_llm_provider, resolve_model
 from app.memory import service
+from app.memory.llm_extraction import analyze_turn
 from app.memory.schemas import (
     AgentMemoryCreate,
     AgentMemoryRead,
@@ -16,6 +23,7 @@ from app.memory.schemas import (
     SharedMemoryRead,
     SharedMemoryUpdate,
 )
+from app.memory.sensitivity import looks_sensitive
 
 router = APIRouter(prefix="/memory", tags=["memory"])
 
@@ -146,3 +154,81 @@ def undo_memory_update(scope: str, memory_id: str, user: CurrentUser, db: DbSess
         raise HTTPException(status_code=409, detail="There is no earlier value to go back to.")
     db.flush()
     return {"id": row.id, "value": row.value, "history": row.history or []}
+
+
+# --- importing from another assistant ------------------------------------------------------
+
+#: One import reads at most this much text, in a few model calls.
+IMPORT_CHARS = 18000
+IMPORT_CHUNK = 6000
+
+
+class ImportText(BaseModel):
+    text: str = Field(min_length=20, max_length=200_000)
+
+
+class ImportFact(BaseModel):
+    category: str = Field(default="general", max_length=48)
+    key: str = Field(min_length=1, max_length=120)
+    value: str = Field(min_length=1, max_length=500)
+
+
+class ImportChoice(BaseModel):
+    facts: list[ImportFact] = Field(min_length=1, max_length=60)
+
+
+@router.post("/import/preview")
+async def import_preview(
+    data: ImportText,
+    _caller: Annotated[str | None, Depends(limited_caller)],
+    user: CurrentUser,
+    db: DbSession,
+) -> dict:
+    """The facts about the person in text from another assistant (a ChatGPT or
+    Claude memory export, notes, a bio). Nothing is saved: they tick what to keep."""
+    text = data.text.strip()
+    chunks = [
+        text[i : i + IMPORT_CHUNK] for i in range(0, min(len(text), IMPORT_CHARS), IMPORT_CHUNK)
+    ]
+    known = {row.key for row in service.list_shared(db, user.id)}
+    seen: dict[str, dict] = {}
+    for chunk in chunks:
+        analysis = await analyze_turn(
+            chunk,
+            agent_id="modeer",
+            provider=get_llm_provider(),
+            model=resolve_model(settings.memory_model or require_agent("modeer").model.model),
+            known_keys=sorted(known | set(seen)),
+            about_me=True,
+        )
+        for fact in analysis.facts:
+            weak = fact.confidence < settings.memory_min_confidence
+            if fact.scope != "shared" or weak or fact.key in seen:
+                continue
+            seen[fact.key] = {
+                "category": fact.category,
+                "key": fact.key,
+                "value": fact.value,
+                "sensitive": bool(fact.sensitive)
+                or looks_sensitive(fact.value, category=fact.category),
+                "replaces": fact.key in known,
+            }
+    return {"facts": list(seen.values()), "truncated": len(text) > IMPORT_CHARS}
+
+
+@router.post("/import/apply")
+def import_apply(data: ImportChoice, user: CurrentUser, db: DbSession) -> dict:
+    """Save the facts the person ticked, as their own saves."""
+    for fact in data.facts:
+        service.upsert_shared(
+            db,
+            user.id,
+            SharedMemoryCreate(
+                category=fact.category,
+                key=fact.key,
+                value=fact.value,
+                source=service.USER_SOURCE,
+                sensitive=looks_sensitive(fact.value, category=fact.category),
+            ),
+        )
+    return {"saved": len(data.facts)}

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
+from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser
 from app.core.config import settings
@@ -16,8 +17,43 @@ router = APIRouter(prefix="/voice", tags=["voice"])
 
 @router.get("")
 def voice_status(user: CurrentUser) -> dict:
-    """Whether the mic button can work here."""
-    return {"transcribe": voice.available(), "max_seconds": 60}
+    """Whether the mic button and natural voices can work here."""
+    return {
+        "transcribe": voice.available(),
+        "speak": voice.speech_available(),
+        "max_seconds": 60,
+    }
+
+
+class Speech(BaseModel):
+    text: str = Field(min_length=1, max_length=1500)
+    language: str = Field(default="en", pattern="^(en|ar)$")
+
+
+def _daily_speech(caller: Annotated[str | None, Depends(limited_caller)]) -> None:
+    if not voice.speech_available():
+        raise HTTPException(503, "Natural voices aren't available on this server.")
+    try:
+        charge(caller or "local-demo", "tts", 1, settings.tts_per_day, 86400)
+    except BudgetExceeded as exc:
+        raise HTTPException(
+            429,
+            "That's today's limit for natural voices. The device voice still works.",
+            headers={"Retry-After": str(int(exc.retry_after))},
+        ) from exc
+
+
+@router.post("/speak")
+async def speak(
+    body: Speech, _quota: Annotated[None, Depends(_daily_speech)], user: CurrentUser
+) -> Response:
+    """A reply read aloud in a natural voice (WAV). Nothing is stored."""
+    try:
+        audio = await voice.speak(body.text, body.language)
+    except voice.VoiceError as exc:
+        headers = {"Retry-After": str(int(exc.retry_after))} if exc.retry_after else None
+        raise HTTPException(exc.status, str(exc), headers=headers) from exc
+    return Response(audio, media_type="audio/wav", headers={"Cache-Control": "no-store"})
 
 
 def _daily_voice(caller: Annotated[str | None, Depends(limited_caller)]) -> None:
@@ -55,7 +91,9 @@ async def transcribe(
     if voice.extension_for(audio.content_type) is None:
         raise HTTPException(415, "That recording format isn't supported.")
     try:
-        text = await voice.transcribe(data, audio.content_type or "", language=language)
+        text = await voice.transcribe(
+            data, audio.content_type or "", language=language, dialect=user.reply_dialect
+        )
     except voice.VoiceError as exc:
         headers = {"Retry-After": str(int(exc.retry_after))} if exc.retry_after else None
         raise HTTPException(exc.status, str(exc), headers=headers) from exc

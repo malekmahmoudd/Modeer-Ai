@@ -14,6 +14,7 @@ from app.conversations.schemas import (
     ConversationDetail,
     ConversationRead,
     ConversationRename,
+    Organise,
     PinnedReply,
     PinUpdate,
     RewindRequest,
@@ -28,9 +29,20 @@ router = APIRouter(prefix="/conversations", tags=["conversations"])
 
 @router.get("", response_model=list[ConversationRead])
 def list_conversations(
-    user: CurrentUser, db: DbSession, agent_id: str | None = None
+    user: CurrentUser,
+    db: DbSession,
+    agent_id: str | None = None,
+    folder: str | None = None,
+    tag: str | None = None,
 ) -> list[ConversationRead]:
-    return convo_service.list_conversations(db, user.id, agent_id)
+    """Pinned first, then most recent. ``folder=""`` is the chats in no folder."""
+    return convo_service.list_conversations(db, user.id, agent_id, folder=folder, tag=tag)
+
+
+@router.get("/shelves")
+def shelves(user: CurrentUser, db: DbSession) -> dict:
+    """Folders and tags in use, with counts."""
+    return convo_service.shelves(db, user.id)
 
 
 @router.get("/search", response_model=list[SearchHit])
@@ -163,6 +175,18 @@ def rename_conversation(
     conversation_id: str, data: ConversationRename, user: CurrentUser, db: DbSession
 ) -> ConversationRead:
     convo = convo_service.rename(db, user.id, conversation_id, data.title)
+    if convo is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return convo
+
+
+@router.patch("/{conversation_id}/organise", response_model=ConversationRead)
+def organise_conversation(
+    conversation_id: str, data: Organise, user: CurrentUser, db: DbSession
+) -> ConversationRead:
+    convo = convo_service.organise(
+        db, user.id, conversation_id, data.model_dump(exclude_unset=True)
+    )
     if convo is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return convo

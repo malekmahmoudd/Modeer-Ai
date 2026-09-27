@@ -38,6 +38,9 @@ class ConversationRead(BaseModel):
     last_message_at: datetime | None
     incognito: bool = False
     expires_at: datetime | None = None
+    pinned_at: datetime | None = None
+    folder: str | None = None
+    tags: list[str] | None = None
 
 
 class ConversationDetail(ConversationRead):
@@ -66,6 +69,8 @@ class ChatRequest(BaseModel):
     #: ``incognito_context``.
     incognito: bool = False
     incognito_context: bool = False
+    #: Hands-free talk: the reply will be read aloud (short, no lists or tables).
+    spoken: bool = False
 
     @field_validator("message")
     @classmethod
@@ -128,3 +133,24 @@ class PinnedReply(BaseModel):
     title: str
     content: str
     pinned_at: datetime
+
+
+class Organise(BaseModel):
+    """Pin a chat, file it in a folder, tag it. Fields left out stay as they are;
+    an empty folder or tag list clears it."""
+
+    pinned: bool | None = None
+    folder: str | None = Field(default=None, max_length=60)
+    tags: list[str] | None = Field(default=None, max_length=8)
+
+    @field_validator("tags")
+    @classmethod
+    def _tags(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return value
+        clean = []
+        for tag in value:
+            tag = " ".join(tag.split())[:30]
+            if tag and tag.casefold() not in {t.casefold() for t in clean}:
+                clean.append(tag)
+        return clean

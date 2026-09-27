@@ -31,7 +31,12 @@ def purge_incognito(db: Session, user_id: str | None = None, *, now: datetime | 
 
 
 def list_conversations(
-    db: Session, user_id: str, agent_id: str | None = None
+    db: Session,
+    user_id: str,
+    agent_id: str | None = None,
+    *,
+    folder: str | None = None,
+    tag: str | None = None,
 ) -> list[Conversation]:
     """The person's conversations, newest first. Incognito ones never list."""
     purge_incognito(db, user_id)
@@ -40,11 +45,18 @@ def list_conversations(
     )
     if agent_id:
         stmt = stmt.where(Conversation.agent_id == agent_id)
+    if folder is not None:
+        stmt = stmt.where(Conversation.folder == (folder or None))
     stmt = stmt.order_by(
+        Conversation.pinned_at.desc().nullslast(),
         Conversation.last_message_at.desc().nullslast(),
         Conversation.created_at.desc(),
     )
-    return list(db.scalars(stmt))
+    rows = list(db.scalars(stmt))
+    if tag:
+        wanted = tag.casefold()
+        rows = [c for c in rows if any(t.casefold() == wanted for t in (c.tags or []))]
+    return rows
 
 
 def get_conversation(db: Session, user_id: str, conversation_id: str) -> Conversation | None:
@@ -354,3 +366,39 @@ def pinned(db: Session, user_id: str) -> list[tuple[Message, Conversation]]:
 def recent(db: Session, user_id: str, limit: int = 6) -> list[Conversation]:
     """The latest conversations across every agent, for the home page."""
     return list_conversations(db, user_id)[:limit]
+
+
+def organise(db: Session, user_id: str, conversation_id: str, changes: dict) -> Conversation | None:
+    convo = db.scalar(
+        select(Conversation).where(
+            Conversation.id == conversation_id, Conversation.user_id == user_id
+        )
+    )
+    if convo is None or convo.incognito:
+        return None
+    if "pinned" in changes and changes["pinned"] is not None:
+        convo.pinned_at = utcnow().replace(tzinfo=None) if changes["pinned"] else None
+    if "folder" in changes:
+        convo.folder = (" ".join((changes["folder"] or "").split())[:60]) or None
+    if "tags" in changes and changes["tags"] is not None:
+        convo.tags = changes["tags"] or None
+    db.flush()
+    return convo
+
+
+def shelves(db: Session, user_id: str) -> dict:
+    """The person's folders and tags, with how many chats each holds."""
+    folders: dict[str, int] = {}
+    tags: dict[str, int] = {}
+    for convo in list_conversations(db, user_id):
+        if convo.folder:
+            folders[convo.folder] = folders.get(convo.folder, 0) + 1
+        for tag in convo.tags or []:
+            tags[tag] = tags.get(tag, 0) + 1
+    return {
+        "folders": [{"name": k, "count": v} for k, v in sorted(folders.items())],
+        "tags": [
+            {"name": k, "count": v}
+            for k, v in sorted(tags.items(), key=lambda kv: kv[0].casefold())
+        ],
+    }

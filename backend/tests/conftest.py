@@ -28,6 +28,12 @@ from app.main import app  # noqa: E402
 from app.users.service import get_or_create_demo_user  # noqa: E402
 
 _WIPE_TABLES = [
+    "push_sent",
+    "push_subscriptions",
+    "server_keys",
+    "prompt_templates",
+    "cv_documents",
+    "user_sessions",
     "recovery_codes",
     "usage_buckets",
     "document_chunks",

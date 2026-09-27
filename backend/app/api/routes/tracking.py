@@ -15,14 +15,18 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from app.agents.registry import get_agent
+from app.agents.registry import get_agent, require_agent
 from app.api.deps import CurrentUser, DbSession
 from app.core import lang
 from app.core.auth import caller_id
 from app.core.clock import today_for
+from app.core.config import settings
 from app.core.lang import request_locale
-from app.core.usage import allowance
+from app.core.usage import allowance, limited_caller
 from app.db.models import CheckIn, Conversation, Goal, Message, Plan
+from app.llm.provider import get_llm_provider, resolve_model
+from app.memory.llm_extraction import _details, analyze_turn
+from app.memory.sensitivity import looks_sensitive
 from app.tracking import plans as plan_service
 from app.tracking import service
 
@@ -270,6 +274,83 @@ def plan_calendar(plan_id: str, user: CurrentUser, db: DbSession):
 
 
 # --- check-ins ---------------------------------------------------------------------------
+
+
+class CheckInCreate(BaseModel):
+    agent_id: str = Field(min_length=2, max_length=48)
+    text: str = Field(min_length=2, max_length=200)
+    amount: float | None = None
+    unit: str | None = Field(default=None, max_length=20)
+    details: dict | None = None
+    logged_on: date | None = None
+
+
+class Capture(BaseModel):
+    text: str = Field(min_length=3, max_length=2000)
+
+
+@router.post("/checkins", status_code=201)
+def create_checkin(data: CheckInCreate, user: CurrentUser, db: DbSession):
+    """Log something done, by hand or after confirming a voice capture. Food,
+    weight and health stay untracked here too (memory/sensitivity.py)."""
+    _known_agent(data.agent_id)
+    if looks_sensitive(data.text):
+        raise HTTPException(422, "That isn't something the team keeps track of.")
+    row = service.add_checkin(
+        db,
+        user.id,
+        agent_id=data.agent_id,
+        text=data.text.strip(),
+        amount=data.amount,
+        unit=data.unit,
+        details=_details(data.details) if data.details else None,
+        logged_on=data.logged_on or today_for(user),
+    )
+    return _checkin(row)
+
+
+@router.post("/capture")
+async def capture(
+    data: Capture,
+    _caller: Annotated[str | None, Depends(limited_caller)],
+    user: CurrentUser,
+    db: DbSession,
+):
+    """What a spoken or typed note would keep, for the person to confirm: the
+    check-ins and dated follow-ups in it. Nothing is saved here."""
+    today = today_for(user)
+    analysis = await analyze_turn(
+        data.text,
+        agent_id="modeer",
+        provider=get_llm_provider(),
+        model=resolve_model(settings.memory_model or require_agent("modeer").model.model),
+        today=today,
+    )
+    return {
+        "checkins": [
+            {
+                "agent_id": c.agent_id,
+                "text": c.text,
+                "amount": c.amount,
+                "unit": c.unit,
+                "details": c.details,
+            }
+            for c in analysis.checkins
+            if c.stored
+        ],
+        "followups": [
+            {
+                "agent_id": e.agent_id,
+                "title": e.title,
+                "due_on": e.due_on.isoformat(),
+                "ends_on": e.ends_on.isoformat() if e.ends_on else None,
+            }
+            for e in analysis.events
+            if e.stored
+        ],
+        "held_back": sum(1 for c in analysis.checkins if not c.stored)
+        + sum(1 for e in analysis.events if not e.stored),
+    }
 
 
 @router.get("/checkins")

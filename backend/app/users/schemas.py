@@ -22,8 +22,20 @@ class UIPreferences(BaseModel):
     reading_size: int = Field(default=16, ge=14, le=24)
     reading_spacing: float = Field(default=1.85, ge=1.4, le=2.4)
     reading_width: int = Field(default=720, ge=480, le=960)
+    #: Teammates hidden from Home, the team page and pickers; still reachable.
+    hidden_agents: list[str] = Field(default_factory=list, max_length=9)
+    #: Accessibility, app-wide (see frontend globals.css).
+    text_scale: float = Field(default=1.0, ge=1.0, le=1.5)
+    high_contrast: bool = False
+    reduce_motion: bool = False
+    #: Read replies aloud with Groq's natural voices when available.
+    natural_voice: bool = True
+    #: Reminders: the local hour of the daily digest, and whether the lock
+    #: screen shows the details or only how many things there are.
+    push_hour: int = Field(default=8, ge=5, le=20)
+    push_details: bool = True
 
-    @field_validator("front_desk")
+    @field_validator("front_desk", "hidden_agents")
     @classmethod
     def _specialists(cls, ids: list[str]) -> list[str]:
         from app.agents.registry import get_agent
@@ -45,6 +57,8 @@ class ProfileUpdate(BaseModel):
     timezone: str | None = Field(default=None, max_length=64)
     #: Interface language. Null follows the browser.
     locale: str | None = Field(default=None, pattern="^(en|ar)$")
+    #: How Arabic replies are written. Null: teammates match the person's writing.
+    reply_dialect: str | None = Field(default=None, pattern="^(msa|egyptian|gulf|levantine)$")
 
     _required_values = field_validator(
         "display_name", "onboarded", "profile", "memory_auto", "ui_preferences", mode="before"
@@ -85,4 +99,5 @@ class UserRead(BaseModel):
     memory_auto: bool
     timezone: str | None = None
     locale: str | None = None
+    reply_dialect: str | None = None
     created_at: datetime

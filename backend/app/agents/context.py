@@ -33,6 +33,29 @@ HISTORY_CHARS = 12000
 #: reliably ignored — replies ran to 700 words and postponed the deliverable to
 #: a turn that never came — and at twice this length they were most of every
 #: prompt's cost. Rule 7 is filled in with whether the agent knows today's date.
+#: How Arabic replies are written, when the person chose a dialect.
+_DIALECTS = {
+    "msa": "## Arabic\nWhen you reply in Arabic, write Modern Standard Arabic (الفصحى).",
+    "egyptian": (
+        "## Arabic\nWhen you reply in Arabic, write Egyptian colloquial Arabic (العامية "
+        "المصرية), the way an Egyptian friend would write; keep technical terms clear."
+    ),
+    "gulf": (
+        "## Arabic\nWhen you reply in Arabic, write Gulf Arabic (اللهجة الخليجية), the way "
+        "a friend from the Gulf would write; keep technical terms clear."
+    ),
+    "levantine": (
+        "## Arabic\nWhen you reply in Arabic, write Levantine Arabic (اللهجة الشامية), the "
+        "way a friend from the Levant would write; keep technical terms clear."
+    ),
+}
+#: Hands-free talk: the reply is read aloud, so it has to work as speech.
+_SPOKEN = (
+    "## Spoken reply\nThe person is listening, not reading. Answer in at most 100 words "
+    "of plain spoken sentences: no headings, lists, tables, links or symbols. If more is "
+    "needed, give the first step and offer the rest."
+)
+
 _FINAL_CHECK = (
     "## Before you send\n"
     "Count your reply. Over 320 words (420 for a multi-week schedule, or a full "
@@ -322,6 +345,8 @@ def build_context(
     app_actions: list[str] | None = None,
     documents: list | None = None,
     files: list[str] | None = None,
+    dialect: str | None = None,
+    spoken: bool = False,
 ) -> ContextPacket:
     """``now`` is the current time in the user's zone (``timezone``; None means
     it is unknown and ``now`` is UTC). Without ``now`` the agent is told it does
@@ -377,6 +402,8 @@ def build_context(
             else ""
         ),
         _RULES.format(dates=_DATES_KNOWN if now is not None else _DATES_UNKNOWN),
+        _DIALECTS.get(dialect or "", ""),
+        _SPOKEN if spoken else "",
         # Last, where it is weighed most: replies ran 450 to 500 words against a
         # 350-word rule placed further up.
         _FINAL_CHECK,

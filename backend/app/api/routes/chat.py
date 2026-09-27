@@ -97,7 +97,14 @@ async def chat_stream(
             # saves what arrived before this session closes — not whenever the
             # garbage collector gets round to it.
             turn = runtime.run_stream(
-                db, user, agent, convo, body.message, retry=body.retry, attachments=body.attachments
+                db,
+                user,
+                agent,
+                convo,
+                body.message,
+                retry=body.retry,
+                attachments=body.attachments,
+                spoken=body.spoken,
             )
             async with aclosing(turn):
                 async for event in turn:
@@ -179,7 +186,14 @@ async def chat_sync(
             "newly_onboarded": False,
         }
         turn = runtime.run_stream(
-            db, user, agent, convo, body.message, retry=body.retry, attachments=body.attachments
+            db,
+            user,
+            agent,
+            convo,
+            body.message,
+            retry=body.retry,
+            attachments=body.attachments,
+            spoken=body.spoken,
         )
         async for event in turn:
             if event.type == "start":

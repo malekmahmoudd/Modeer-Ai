@@ -123,6 +123,7 @@ class AgentRuntime:
         private_notes: bool = True,
         learn: bool = True,
         attachments: list[str] | None = None,
+        spoken: bool = False,
     ) -> AsyncIterator[RuntimeEvent]:
         """Run one turn, or with ``retry`` regenerate the latest unfinished one.
 
@@ -147,6 +148,7 @@ class AgentRuntime:
                 private_notes=private_notes,
                 learn=learn,
                 attachments=attachments,
+                spoken=spoken,
             ):
                 if event.type in ("end", "error"):
                     # The reply (or its failure) is committed before this event
@@ -167,6 +169,7 @@ class AgentRuntime:
         private_notes: bool = True,
         learn: bool = True,
         attachments: list[str] | None = None,
+        spoken: bool = False,
     ) -> AsyncIterator[RuntimeEvent]:
         # Incognito: nothing is learned or saved from this chat (facts, plans,
         # follow-ups, notes, the running summary), and saved context is sent
@@ -274,6 +277,8 @@ class AgentRuntime:
             app_actions=plan_actions.notes,
             documents=documents,
             files=files,
+            dialect=getattr(user, "reply_dialect", None),
+            spoken=spoken,
         )
         db.commit()
 

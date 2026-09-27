@@ -64,11 +64,19 @@ class User(UUIDMixin, TimestampMixin, Base):
     totp_pending: Mapped[str | None] = mapped_column(String(64), nullable=True)
     totp_enabled_at: Mapped[datetime | None] = mapped_column(nullable=True)
     totp_last_step: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: How Arabic replies are written: "msa", "egyptian", "gulf" or "levantine".
+    #: None lets the teammates match the person's own writing.
+    reply_dialect: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
     recovery_codes: Mapped[list[RecoveryCode]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
     sessions: Mapped[list[UserSession]] = relationship(cascade="all, delete-orphan")
+    push_subscriptions: Mapped[list[PushSubscription]] = relationship(
+        cascade="all, delete-orphan"
+    )
+    prompt_templates: Mapped[list[PromptTemplate]] = relationship(cascade="all, delete-orphan")
+    cvs: Mapped[list[CvDocument]] = relationship(cascade="all, delete-orphan")
     conversations: Mapped[list[Conversation]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
@@ -110,6 +118,62 @@ class UserSession(UUIDMixin, TimestampMixin, Base):
     last_seen_at: Mapped[datetime | None] = mapped_column(nullable=True)
     expires_at: Mapped[datetime] = mapped_column()
     revoked_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class PushSubscription(UUIDMixin, TimestampMixin, Base):
+    """A browser that may show this person's reminders (Web Push)."""
+
+    __tablename__ = "push_subscriptions"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    endpoint: Mapped[str] = mapped_column(Text, unique=True)
+    p256dh: Mapped[str] = mapped_column(String(200))
+    auth: Mapped[str] = mapped_column(String(64))
+    user_agent: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    last_sent_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+
+class PushSent(UUIDMixin, TimestampMixin, Base):
+    """What was already pushed, so a reminder goes out once per day."""
+
+    __tablename__ = "push_sent"
+    __table_args__ = (UniqueConstraint("user_id", "kind", "day", name="uq_push_sent_day"),)
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(24))
+    day: Mapped[date] = mapped_column(Date)
+
+
+class ServerKey(Base):
+    """Keys the server makes for itself once (the Web Push signing key)."""
+
+    __tablename__ = "server_keys"
+
+    name: Mapped[str] = mapped_column(String(40), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)
+
+
+class PromptTemplate(UUIDMixin, TimestampMixin, Base):
+    """A saved prompt with {blanks}, for one teammate or any."""
+
+    __tablename__ = "prompt_templates"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(80))
+    body: Mapped[str] = mapped_column(Text)
+    agent_id: Mapped[str | None] = mapped_column(String(48), nullable=True)
+
+
+class CvDocument(UUIDMixin, TimestampMixin, Base):
+    """One version of the person's CV, for one target role. The content is the
+    structured sections (JSON); exports are made from it on request."""
+
+    __tablename__ = "cv_documents"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(120))
+    target_role: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
 class RecoveryCode(UUIDMixin, TimestampMixin, Base):
@@ -171,6 +235,10 @@ class Conversation(UUIDMixin, TimestampMixin, Base):
         Boolean, default=False, nullable=False, server_default="0"
     )
     expires_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    #: Organising: pinned to the top, filed in a folder, tagged. All the person's.
+    pinned_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    folder: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    tags: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="conversations")
     agent: Mapped[Agent] = relationship(back_populates="conversations")
