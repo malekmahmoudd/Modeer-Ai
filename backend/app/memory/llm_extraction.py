@@ -19,6 +19,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import date
 
+from app.core.clock import resolve_dates
 from app.core.config import settings
 from app.llm.base import LLMMessage, LLMProvider
 from app.memory.extraction import Candidate, extract_candidates
@@ -359,7 +360,7 @@ def worth_analyzing(
 
 
 def _system_prompt(
-    *, agent_id, today, known_keys, goals, handoffs, tracking=False, asked=None
+    *, agent_id, today, known_keys, goals, handoffs, tracking=False, asked=None, message=""
 ) -> str:
     # The person's own keys first: cut alphabetically, the ones late in the
     # alphabet were dropped and then stored a second time under a new name.
@@ -372,6 +373,13 @@ def _system_prompt(
         if today
         else ""
     )
+    # Weekday arithmetic is worked out in code (English and Arabic date words),
+    # not left to the model, which carries the calendar of its training year.
+    resolved = resolve_dates(message, today) if today and message else []
+    if resolved:
+        dates += "\n- Dates in this message, already worked out; use them: " + "; ".join(
+            f'"{words}" = {day:%a %d %b %Y}' for words, day in resolved
+        )
     sections, extra_keys, tail = "", "", ""
     if tracking and today:
         sections += _TRACKING_SECTION
@@ -453,6 +461,7 @@ async def analyze_turn(
                 handoffs=handoffs,
                 tracking=learn_facts and not about_me,
                 asked=asked,
+                message=text,
             ),
             messages=[
                 LLMMessage(role="user", content=text[: _ABOUT_ME_CHARS if about_me else None])

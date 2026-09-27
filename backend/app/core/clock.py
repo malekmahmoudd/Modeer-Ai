@@ -96,4 +96,120 @@ def resolve_dates(message: str, today: date) -> list[tuple[str, date]]:
             except ValueError:
                 continue  # "the 31st" in a 30-day month: leave it to them
         found.append((words, day))
+    found += _resolve_arabic(message or "", today)
     return found[:6]
+
+
+# --- the same, in Arabic (Egyptian, Gulf and Modern Standard) ------------------------------
+# Matched on a folded copy of the text: one spelling for the alef forms, taa
+# marbuta, alef maqsura and the Gulf چ, no diacritics or tatweel, and Western
+# digits. Words that are ambiguous on their own stay out: "الحد" is also "the
+# limit", so Egyptian Sunday counts only as "يوم الحد".
+
+_AR_FOLD = str.maketrans(
+    {
+        "أ": "ا",
+        "إ": "ا",
+        "آ": "ا",
+        "ٱ": "ا",
+        "ة": "ه",
+        "ى": "ي",
+        "چ": "ك",
+        "ـ": None,
+        **{chr(0x0660 + d): str(d) for d in range(10)},
+        **{chr(0x06F0 + d): str(d) for d in range(10)},
+        **{chr(c): None for c in range(0x064B, 0x0653)},
+        "\u0670": None,
+    }
+)
+_AR_DAYS = {
+    0: r"الاثنين|الاتنين",
+    1: r"الثلاثاء|الثلاثا|التلات|التلاتاء",
+    2: r"الاربعاء|الاربعا|الاربع",
+    3: r"الخميس",
+    4: r"الجمعه",
+    5: r"السبت",
+    6: r"الاحد|(?<=يوم )الحد",
+}
+_AR_NEXT = r"(?:\s+(?:الجاي|الجايه|القادم|القادمه|الياي|اليايه|اللي\s+جاي|اللي\s+جايه))?"
+_AR_NUMBERS = {
+    "واحد": 1, "اثنين": 2, "اتنين": 2, "ثلاث": 3, "ثلاثه": 3, "تلات": 3, "تلاته": 3,
+    "اربع": 4, "اربعه": 4, "خمس": 5, "خمسه": 5, "ست": 6, "سته": 6, "سبع": 7,
+    "سبعه": 7, "ثمان": 8, "ثماني": 8, "ثمانيه": 8, "تمن": 8, "تمانيه": 8,
+    "تسع": 9, "تسعه": 9, "عشر": 10, "عشره": 10,
+}  # fmt: skip
+_AR_NUMBER = r"\d{1,3}|" + "|".join(sorted(_AR_NUMBERS, key=len, reverse=True))
+_AR_PATTERNS = [
+    # the day after tomorrow, before tomorrow so it is not read as "tomorrow"
+    (re.compile(r"(?<!\w)بعد\s+(?:بكره|بكرا|باكر|غدا|غد)(?!\w)"), "after"),
+    (re.compile(r"(?<!\w)(?:[وف])?(?:بكره|بكرا|باكر|غدا)(?!\w)"), "tomorrow"),
+    (
+        re.compile(
+            r"(?<!\w)(?:بعد|كمان)\s+(" + _AR_NUMBER + r")\s+"
+            r"(يوم|ايام|يوما|اسبوع|اسابيع|اسبوعا)(?!\w)"
+        ),
+        "count",
+    ),
+    (re.compile(r"(?<!\w)(?:بعد|كمان)\s+(يومين|اسبوعين|يوم|اسبوع)(?!\w)"), "unit"),
+    (
+        re.compile(
+            r"(?<!\w)(?:[وف]?يوم\s+)?[وف]?(?:"
+            + "|".join(f"(?P<d{k}>{v})" for k, v in _AR_DAYS.items())
+            + r")"
+            + _AR_NEXT
+            + r"(?!\w)"
+        ),
+        "weekday",
+    ),
+    (re.compile(r"(?<!\w)يوم\s+(\d{1,2})(?!\w)|(?<!\w)(\d{1,2})\s+(?:من\s+)?الشهر(?!\w)"), "nth"),
+]
+
+
+def _nth(n: int, today: date) -> date | None:
+    if not 1 <= n <= 31:
+        return None
+    year, month = today.year, today.month
+    if n <= today.day:
+        month += 1
+        if month > 12:
+            year, month = year + 1, 1
+    try:
+        return date(year, month, n)
+    except ValueError:
+        return None
+
+
+def _resolve_arabic(message: str, today: date) -> list[tuple[str, date]]:
+    """Arabic date words, resolved the same way as the English ones above."""
+    text = message.translate(_AR_FOLD)
+    if not re.search(r"[\u0600-\u06FF]", text):
+        return []
+    hits: list[tuple[int, int, str, date]] = []
+    for pattern, kind in _AR_PATTERNS:
+        for m in pattern.finditer(text):
+            day: date | None = None
+            if kind == "after":
+                day = today + timedelta(days=2)
+            elif kind == "tomorrow":
+                day = today + timedelta(days=1)
+            elif kind == "count":
+                raw = m.group(1)
+                n = int(raw) if raw.isdigit() else _AR_NUMBERS[raw]
+                weeks = m.group(2) in ("اسبوع", "اسابيع", "اسبوعا")
+                day = today + timedelta(days=n * (7 if weeks else 1))
+            elif kind == "unit":
+                unit = m.group(1)
+                days = {"يوم": 1, "يومين": 2, "اسبوع": 7, "اسبوعين": 14}[unit]
+                day = today + timedelta(days=days)
+            elif kind == "weekday":
+                target = next(k for k in _AR_DAYS if m.group(f"d{k}"))
+                day = today + timedelta(days=(target - today.weekday()) % 7 or 7)
+            else:
+                day = _nth(int(m.group(1) or m.group(2)), today)
+            if day is None:
+                continue
+            # A longer phrase already covering this spot wins ("بعد بكره" over "بكره").
+            if any(a <= m.start() < b or a < m.end() <= b for a, b, _, _ in hits):
+                continue
+            hits.append((m.start(), m.end(), m.group(0), day))
+    return [(words, day) for _, _, words, day in sorted(hits)]
