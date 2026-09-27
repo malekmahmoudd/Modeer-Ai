@@ -12,6 +12,7 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core import lang
 from app.core.clock import today_for
 from app.db.models import Briefing, User
 from app.goals import service as goal_service
@@ -19,6 +20,7 @@ from app.memory import service as memory_service
 from app.tracking import service as tracking
 
 # Route a goal/priority to the specialist most likely to help with it.
+# fmt: off
 _AGENT_HINTS: list[tuple[str, str, str]] = [
     ("study", "📚",
      r"exam|study|studying|learn|revision|revise|course|gpa|semester|thesis|dissertation"),
@@ -34,6 +36,7 @@ _AGENT_HINTS: list[tuple[str, str, str]] = [
     ("email", "✉️", r"email|reply|inbox|message to|reach out"),
     ("shopping", "🛍️", r"buy|purchase|laptop|phone|headphones|choose between"),
 ]
+# fmt: on
 _AGENT_HINT_RES = [
     (slug, icon, re.compile(rf"\b(?:{pat})\b", re.I)) for slug, icon, pat in _AGENT_HINTS
 ]
@@ -51,12 +54,19 @@ def _today(user: User) -> str:
     return today_for(user).isoformat()
 
 
-def _countdown(target, today: date) -> str:
-    """Text like "Due Thu 1 Oct — in 6 days", for a goal with a target date."""
+def _countdown(target, today: date, locale: str = "en") -> str:
+    """Text like "Due Thu 1 Oct, in 6 days", for a goal with a target date."""
     if target is None:
         return ""
     day = target.date() if hasattr(target, "date") else target
     days = (day - today).days
+    if locale == "ar":
+        label = lang.day(day)
+        if days < 0:
+            return f"كان مستحقًا {label}"
+        if days == 0:
+            return f"مستحق اليوم ({label})"
+        return f"مستحق {label}، بعد {lang.days_phrase(days)}"
     label = f"{day:%a} {day.day} {day:%b}"
     if days < 0:
         return f"Was due {label}"
@@ -65,7 +75,10 @@ def _countdown(target, today: date) -> str:
     return f"Due {label}, in {days} day{'s' if days != 1 else ''}"
 
 
-def build_items(db: Session, user: User) -> tuple[str, list[dict]]:
+def build_items(db: Session, user: User, locale: str = "en") -> tuple[str, list[dict]]:
+    """The summary and items, in the person's language (text is written here, so
+    it is written in Arabic here too; nothing is machine-translated)."""
+    ar = locale == "ar"
     today = today_for(user)
     goals = goal_service.list_goals(db, user.id, status="active")
     shared = memory_service.list_shared(db, user.id)
@@ -81,7 +94,9 @@ def build_items(db: Session, user: User) -> tuple[str, list[dict]]:
                 "icon": icon,
                 "text": g.title,
                 "detail": " · ".join(
-                    part for part in (_countdown(g.target_date, today), g.detail or "") if part
+                    part
+                    for part in (_countdown(g.target_date, today, locale), g.detail or "")
+                    if part
                 ),
                 "source": "goal",
                 "agent": slug,
@@ -94,7 +109,7 @@ def build_items(db: Session, user: User) -> tuple[str, list[dict]]:
             items.append(
                 {
                     "icon": icon,
-                    "text": f"{m.key.replace('_', ' ').capitalize()}: {m.value}",
+                    "text": m.value if ar else f"{m.key.replace('_', ' ').capitalize()}: {m.value}",
                     "detail": "",
                     "source": "memory",
                     "agent": slug,
@@ -102,14 +117,14 @@ def build_items(db: Session, user: User) -> tuple[str, list[dict]]:
             )
 
     # Dated things first: they are why today is different from yesterday.
-    items[:0] = tracking.briefing_items(db, user.id, today=today)
+    items[:0] = tracking.briefing_items(db, user.id, today=today, locale=locale)
     if today.weekday() == 0:  # Monday, in the user's own week
         review = tracking.weekly_review(db, user.id, today=today)
         items.append(
             {
                 "icon": "🗓️",
-                "text": "Your week",
-                "detail": review["summary"],
+                "text": "أسبوعك" if ar else "Your week",
+                "detail": lang.week_summary(review, today) if ar else review["summary"],
                 "source": "review",
                 "agent": "modeer",
             }
@@ -118,7 +133,7 @@ def build_items(db: Session, user: User) -> tuple[str, list[dict]]:
     items.append(
         {
             "icon": "🧭",
-            "text": "Plan today's priorities with me",
+            "text": "لنرتّب أولويات اليوم معًا" if ar else "Plan today's priorities with me",
             "detail": "",
             "source": "prompt",
             "agent": "modeer",
@@ -126,6 +141,16 @@ def build_items(db: Session, user: User) -> tuple[str, list[dict]]:
     )
 
     name = user.display_name if user.display_name and user.display_name != "You" else None
+    for item in items:
+        item["lang"] = locale  # a briefing made in the other language is made again
+    if ar:
+        if len(items) == 1:
+            summary = "لا أعرف أهدافك أو سياقك بعد. أخبرني على ماذا تعمل، وسيصبح هذا مفيدًا فعلًا."
+        elif top_goal:
+            summary = f"أولوياتك تشير إلى «{top_goal}» أولًا."
+        else:
+            summary = "هذا ما يبدو جديرًا باهتمامك، بناءً على ما يعرفه الفريق."
+        return (f"{name}، {summary}" if name and len(items) > 1 else summary), items
     if len(items) == 1:
         summary = (
             "I don't have your goals or context yet. Tell me what you're working on "
@@ -151,11 +176,14 @@ def get_today(db: Session, user: User) -> Briefing | None:
     )
 
 
-def get_or_generate_today(db: Session, user: User, *, force: bool = False) -> Briefing:
+def get_or_generate_today(
+    db: Session, user: User, *, force: bool = False, locale: str = "en"
+) -> Briefing:
     existing = get_today(db, user)
-    if existing and not force:
+    made_in = (existing.items or [{}])[0].get("lang", "en") if existing else None
+    if existing and not force and made_in == locale:
         return existing
-    summary, items = build_items(db, user)
+    summary, items = build_items(db, user, locale)
     briefing = Briefing(
         user_id=user.id,
         summary=summary,

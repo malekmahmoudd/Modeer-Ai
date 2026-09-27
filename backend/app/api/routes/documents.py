@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 from app.agents.registry import get_agent
 from app.api.deps import CurrentUser, DbSession
 from app.core.config import settings
+from app.core.lang import request_locale, translate
 from app.core.usage import limited_caller
 from app.db.models import Document
 from app.documents import service
@@ -35,7 +36,7 @@ class DocumentUpdate(BaseModel):
     filename: str | None = Field(default=None, min_length=1, max_length=200)
 
 
-def _read(doc: Document, *, preview: bool = False) -> dict:
+def _read(doc: Document, *, preview: bool = False, locale: str = "en") -> dict:
     body = {
         "id": doc.id,
         "agent_id": doc.agent_id,
@@ -44,7 +45,7 @@ def _read(doc: Document, *, preview: bool = False) -> dict:
         "kind": doc.kind,
         "size_bytes": doc.size_bytes,
         "status": doc.status,
-        "error": doc.error,
+        "error": translate(doc.error, locale) if doc.error else doc.error,
         "pages": doc.pages,
         "chars": doc.chars,
         "searchable_by_meaning": doc.embed_model is not None,
@@ -88,20 +89,21 @@ async def upload(
         raise HTTPException(exc.status, str(exc)) from exc
     db.commit()  # the background read opens its own session and must see the row
     background.add_task(service.ingest, doc.id, data)
-    return _read(doc)
+    return _read(doc, locale=request_locale(request, user))
 
 
 @router.get("")
-def list_documents(user: CurrentUser, db: DbSession):
-    return [_read(d) for d in service.list_documents(db, user.id)]
+def list_documents(user: CurrentUser, db: DbSession, request: Request):
+    locale = request_locale(request, user)
+    return [_read(d, locale=locale) for d in service.list_documents(db, user.id)]
 
 
 @router.get("/{document_id}")
-def get_document(document_id: str, user: CurrentUser, db: DbSession):
+def get_document(document_id: str, user: CurrentUser, db: DbSession, request: Request):
     doc = service.get_document(db, user.id, document_id)
     if doc is None:
         raise HTTPException(404, "Document not found")
-    return _read(doc, preview=True)
+    return _read(doc, preview=True, locale=request_locale(request, user))
 
 
 @router.patch("/{document_id}")

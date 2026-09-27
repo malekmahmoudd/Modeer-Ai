@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
@@ -20,6 +20,7 @@ from app.conversations.schemas import (
     RewindResult,
     SearchHit,
 )
+from app.core.lang import request_locale, translate
 from app.db.models import Conversation, Document, DocumentChunk, Message
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
@@ -197,11 +198,20 @@ def pin_message(
 
 
 @router.get("/{conversation_id}", response_model=ConversationDetail)
-def get_conversation(conversation_id: str, user: CurrentUser, db: DbSession) -> ConversationDetail:
+def get_conversation(
+    conversation_id: str, user: CurrentUser, db: DbSession, request: Request
+) -> ConversationDetail:
     convo = convo_service.get_conversation(db, user.id, conversation_id)
     if convo is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
-    return convo
+    detail = ConversationDetail.model_validate(convo)
+    locale = request_locale(request, user)
+    if locale == "ar":
+        for message in detail.messages:
+            notice = message.meta.get("notice")
+            if isinstance(notice, str) and notice:
+                message.meta = {**message.meta, "notice": translate(notice, locale)}
+    return detail
 
 
 @router.delete("/{conversation_id}", status_code=204)

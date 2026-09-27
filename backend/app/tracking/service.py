@@ -360,8 +360,15 @@ def context_sections(
 # --- briefing and weekly review ---------------------------------------------------------
 
 
-def briefing_items(db: Session, user_id: str, *, today: date) -> list[dict]:
+def briefing_items(db: Session, user_id: str, *, today: date, locale: str = "en") -> list[dict]:
     """Follow-ups and plan steps worth a line in today's briefing."""
+    from app.core import lang
+
+    ar = locale == "ar"
+
+    def when(row) -> str:
+        return lang.when_line(row, today) if ar else when_line(row, today)
+
     items: list[dict] = []
     expire_followups(db, user_id, today=today)
     pending = list_followups(db, user_id, status="pending")
@@ -370,8 +377,8 @@ def briefing_items(db: Session, user_id: str, *, today: date) -> list[dict]:
             items.append(
                 {
                     "icon": "💬",
-                    "text": f"How did it go? {f.title}",
-                    "detail": when_line(f, today),
+                    "text": f"كيف سار الأمر؟ {f.title}" if ar else f"How did it go? {f.title}",
+                    "detail": when(f),
                     "source": "followup",
                     "agent": f.agent_id,
                 }
@@ -382,7 +389,7 @@ def briefing_items(db: Session, user_id: str, *, today: date) -> list[dict]:
                 {
                     "icon": "📅",
                     "text": f.title,
-                    "detail": when_line(f, today)[:1].upper() + when_line(f, today)[1:],
+                    "detail": when(f)[:1].upper() + when(f)[1:],
                     "source": "followup",
                     "agent": f.agent_id,
                 }
@@ -395,7 +402,11 @@ def briefing_items(db: Session, user_id: str, *, today: date) -> list[dict]:
                     "icon": "✅",
                     "text": step.text[:160],
                     "detail": f"{plan.title}: "
-                    + ("due today" if step.due_on == today else "overdue"),
+                    + (
+                        ("مستحقة اليوم" if step.due_on == today else "لم تُنجز بعد")
+                        if ar
+                        else ("due today" if step.due_on == today else "overdue")
+                    ),
                     "source": "plan",
                     "agent": plan.agent_id,
                 }

@@ -4,14 +4,19 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager, suppress
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.agents.sync import sync_agents
 from app.api import api_router
 from app.conversations.service import purge_incognito
 from app.core import sessions as devices
 from app.core.config import settings
+from app.core.lang import request_locale, translate_detail
 from app.core.observability import install as install_observability
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
@@ -81,6 +86,17 @@ def api_docs(environment: str) -> dict:
     return {}
 
 
+async def _translated_http_error(request: Request, exc: StarletteHTTPException):
+    """The app's own error messages, in the person's language (app.core.lang)."""
+    detail = translate_detail(exc.detail, request_locale(request))
+    return JSONResponse({"detail": detail}, status_code=exc.status_code, headers=exc.headers)
+
+
+async def _translated_validation_error(request: Request, exc: RequestValidationError):
+    detail = translate_detail(jsonable_encoder(exc.errors()), request_locale(request))
+    return JSONResponse({"detail": detail}, status_code=422)
+
+
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
@@ -90,6 +106,8 @@ app = FastAPI(
 )
 
 install_observability(app)
+app.add_exception_handler(StarletteHTTPException, _translated_http_error)
+app.add_exception_handler(RequestValidationError, _translated_validation_error)
 
 app.add_middleware(
     CORSMiddleware,

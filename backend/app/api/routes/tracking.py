@@ -10,15 +10,17 @@ from __future__ import annotations
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from app.agents.registry import get_agent
 from app.api.deps import CurrentUser, DbSession
+from app.core import lang
 from app.core.auth import caller_id
 from app.core.clock import today_for
+from app.core.lang import request_locale
 from app.core.usage import allowance
 from app.db.models import CheckIn, Conversation, Goal, Message, Plan
 from app.tracking import plans as plan_service
@@ -289,9 +291,13 @@ def delete_checkin(checkin_id: str, user: CurrentUser, db: DbSession):
 
 
 @router.get("/briefings/week")
-def week(user: CurrentUser, db: DbSession):
+def week(user: CurrentUser, db: DbSession, request: Request):
     """The last seven days and the next seven, from what is tracked. No model call."""
-    return service.weekly_review(db, user.id, today=today_for(user))
+    today = today_for(user)
+    review = service.weekly_review(db, user.id, today=today)
+    if request_locale(request, user) == "ar":
+        review["summary"] = lang.week_summary(review, today)
+    return review
 
 
 @router.get("/usage/me")

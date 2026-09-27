@@ -15,6 +15,7 @@ from app.conversations import service as convo_service
 from app.conversations.schemas import ChatRequest
 from app.core.clock import valid_zone
 from app.core.config import settings
+from app.core.lang import request_locale, translate
 from app.core.sessions import session_ok
 from app.core.usage import account_scope, limited_caller
 from app.db.session import SessionLocal
@@ -86,6 +87,8 @@ async def chat_stream(
         db.close()
         raise
 
+    locale = request_locale(request, user)
+
     async def event_source():
         scope_token = account_scope.set(x_user_id or "local-demo")
         try:
@@ -98,6 +101,10 @@ async def chat_stream(
             )
             async with aclosing(turn):
                 async for event in turn:
+                    # Errors and notices were written in English; say them in theirs.
+                    for key in ("error", "notice"):
+                        if isinstance(event.data.get(key), str):
+                            event.data[key] = translate(event.data[key], locale)
                     yield event.as_sse()
         except Exception as exc:  # noqa: BLE001
             db.rollback()
@@ -105,7 +112,10 @@ async def chat_stream(
             yield (
                 "data: "
                 + json.dumps(
-                    {"type": "error", "error": "The reply was interrupted. Please try again."}
+                    {
+                        "type": "error",
+                        "error": translate("The reply was interrupted. Please try again.", locale),
+                    }
                 )
                 + "\n\n"
             )
