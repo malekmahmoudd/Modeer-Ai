@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import { ReadingDesk } from "@/components/design/ReadingDesk";
 import { useDesignText } from "@/components/design/text";
@@ -12,6 +12,8 @@ import { AttachButton, AttachmentChips, useAttachments } from "@/components/chat
 import { Composer } from "@/components/chat/Composer";
 import { HANDOFF_KEY } from "@/components/chat/MessageActions";
 import { MessageBubble } from "@/components/chat/MessageBubble";
+import { TalkMode } from "@/components/chat/TalkMode";
+import { TemplatePicker } from "@/components/chat/TemplatePicker";
 import { VoiceButton } from "@/components/chat/VoiceButton";
 import { Icon } from "@/components/ui/Icon";
 import { ErrorNote, Spinner } from "@/components/ui/primitives";
@@ -77,6 +79,8 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const [historyError, setHistoryError] = useState("");
   const creatingConversation = useRef(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  // Hands-free talk (TalkMode): listens, sends, reads the reply aloud.
+  const [talking, setTalking] = useState(false);
   const [renaming, setRenaming] = useState<{ id: string; title: string } | null>(null);
   const [allowance, setAllowance] = useState<Allowance | null>(null);
   const [focusSignal, setFocusSignal] = useState(0);
@@ -323,7 +327,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   });
 
   const submit = useCallback(
-    async (typed: string) => {
+    async (typed: string, spoken = false) => {
       const files = attachments.ready;
       // A file on its own is a message too: "Here's cv.md."
       const message = typed.trim() || (files.length ? t("chat.hereIs", { files: files.map((f) => f.filename).join(", ") }) : "");
@@ -352,10 +356,15 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       setInput("");
       if (currentDraft) writeDraft(currentDraft, "");
       attachments.clear();
-      await send(message, conversationId, false, files.map((f) => f.id), incognito);
+      await send(message, conversationId, false, files.map((f) => f.id), incognito, spoken);
     },
     [streaming, send, conversationId, scrollDown, attachments, incognito, currentDraft, t],
   );
+
+  const lastReply = useMemo(() => {
+    const last = messages[messages.length - 1];
+    return last?.role === "assistant" && last.id !== "streaming" ? { id: last.id, content: last.content } : null;
+  }, [messages]);
 
   // Back online: send what was written while away, once.
   useEffect(() => {
@@ -531,7 +540,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const usedPct = allowance ? Math.max(0, Math.min(100, Math.round((allowance.remaining / Math.max(1, allowance.limit)) * 100))) : null;
 
   return (
-    <div style={{"--reading-size": `${reading.reading_size ?? 16}px`, "--reading-spacing": reading.reading_spacing ?? 1.85, "--reading-width": `${reading.reading_width ?? 720}px`} as CSSProperties} className={`${readingFocus ? "reading-focus" : ""} comic-workspace flex h-[calc(100dvh-var(--nav-h))] flex-col bg-paper-hi ${incognito ? "incognito-workspace" : ""}`}>
+    <div style={{"--reading-size": `${reading.reading_size ?? 16}px`, "--reading-spacing": reading.reading_spacing ?? 1.85, "--reading-width": `${reading.reading_width ?? 720}px`} as CSSProperties} className={`${readingFocus ? "reading-focus" : ""} comic-workspace flex h-[calc(100dvh/var(--text-scale)-var(--nav-h))] flex-col bg-paper-hi ${incognito ? "incognito-workspace" : ""}`}>
       <button className="reading-exit btn btn-sun" onClick={() => setReadingFocus(false)}>{dt("exit")}</button>
       {/* ---------- identity header ---------- */}
       <header className="workspace-identity shrink-0 border-b-2 border-ink bg-paper">
@@ -571,6 +580,15 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
             title={incognito ? t("chat.incognitoEnd") : t("chat.incognitoStart")}
           >
             <Icon name="incognito" size={19} />
+          </button>
+          <button
+            onClick={() => setTalking(!talking)}
+            className={`btn-icon shrink-0 ${talking ? "!bg-sun" : ""}`}
+            aria-label={talking ? t("talk.end") : t("talk.start")}
+            aria-pressed={talking}
+            title={talking ? t("talk.end") : t("talk.start")}
+          >
+            <Icon name="headphones" size={19} />
           </button>
           {convos.length > 0 && (
             <button
@@ -749,6 +767,14 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
             </div>
           )}
 
+          {talking && (
+            <TalkMode
+              streaming={streaming}
+              reply={lastReply}
+              onHeard={(heard) => void submit(heard, true)}
+              onExit={() => setTalking(false)}
+            />
+          )}
           <Composer
             value={input}
             onChange={setInput}
@@ -758,6 +784,17 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
             autoFocus
             focusSignal={focusSignal}
             attach={<AttachButton agentName={shortName} disabled={streaming} onPick={attachments.add} />}
+            tools={
+              <TemplatePicker
+                agentId={agentId}
+                current={input}
+                disabled={streaming}
+                onInsert={(filled) => {
+                  setInput((current) => (current.trim() ? `${current.trimEnd()}\n${filled}` : filled));
+                  setFocusSignal((n) => n + 1);
+                }}
+              />
+            }
             chips={<AttachmentChips files={attachments.files} onRemove={attachments.remove} />}
             hasAttachments={attachments.ready.length > 0}
             waiting={attachments.busy}
@@ -831,6 +868,9 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
               </div>
             </div>
 
+            <Link href="/chats" className="mb-3 inline-flex min-h-10 items-center gap-1.5 text-[13.5px] font-bold underline decoration-pink decoration-2 underline-offset-4">
+              <Icon name="folder" size={15} /> {t("chats.openAll")}
+            </Link>
             {historyError && <p role="alert" className="mb-3 text-pink-deep">{historyError}</p>}
             <ul className="space-y-2">
               {convos.map((c) => {

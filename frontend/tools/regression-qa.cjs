@@ -174,8 +174,86 @@ async function signIn(page) {
   await page.getByRole("button", { name: "Turn on" }).click();
   await page.getByText("Two-step sign-in is on.").first().waitFor({ timeout: 5000 });
   check("two-step turns on", true);
-  check("this device listed", await page.getByText("This device").isVisible());
+  check("this device listed", await page.getByText("This device", { exact: true }).isVisible());
   await shot(page, "en-account");
+
+  // --- settings: text size, contrast, dialect, hidden teammates ----------------------------
+  await page.getByRole("radio", { name: "130%" }).check();
+  await page.waitForTimeout(400);
+  check("text size applies", (await page.evaluate(() => document.documentElement.style.getPropertyValue("--text-scale"))) === "1.3");
+  await page.reload();
+  check("text size survives a reload", (await page.evaluate(() => document.documentElement.style.getPropertyValue("--text-scale"))) === "1.3");
+  await page.getByRole("radio", { name: "100%" }).check();
+  await page.getByLabel("High contrast").check();
+  await page.waitForTimeout(300);
+  check("high contrast applies", await page.evaluate(() => document.documentElement.classList.contains("high-contrast")));
+  await page.getByLabel("High contrast").uncheck();
+  await page.getByRole("radio", { name: "Egyptian" }).check();
+  await page.waitForTimeout(400);
+  check("dialect saved", (await (await page.request.get(`${URL}/api/users/me`)).json()).reply_dialect === "egyptian");
+  await page.getByRole("checkbox", { name: "Tessa", exact: true }).uncheck();
+  await page.waitForTimeout(400);
+  check("hiding saved", ((await (await page.request.get(`${URL}/api/users/me`)).json()).ui_preferences.hidden_agents || []).includes("travel"));
+  await page.goto(`${URL}/team`);
+  const showHidden = page.getByRole("button", { name: /Show hidden teammates/ });
+  await showHidden.waitFor({ timeout: 6000 }).catch(() => undefined);
+  check("hidden teammate left off Team", await showHidden.isVisible());
+  await page.goto(`${URL}/account`);
+  await page.getByRole("checkbox", { name: "Tessa", exact: true }).check();
+  await page.waitForTimeout(400);
+
+  // --- tools: templates, all chats, talk mode, quick note, import, CV, money ---------------
+  await page.goto(`${URL}/agents/career`);
+  await page.getByRole("button", { name: "Templates" }).click();
+  await page.getByRole("button", { name: /Sharpen a CV bullet/ }).click();
+  await page.getByRole("textbox", { name: "role", exact: true }).fill("analyst");
+  await page.getByRole("textbox", { name: "bullet", exact: true }).fill("Made weekly reports");
+  await page.getByRole("button", { name: "Put it in the message box" }).click();
+  check("template fills the message box", (await page.inputValue("#composer")).includes("for a analyst role"));
+  await page.fill("#composer", "");
+  await page.getByRole("button", { name: "Talk hands-free" }).click();
+  check("talk mode opens", await page.getByRole("region", { name: "Talking hands-free" }).isVisible());
+  await page.getByRole("button", { name: "End talking" }).first().click();
+  check("talk mode closes", !(await page.getByRole("region", { name: "Talking hands-free" }).isVisible()));
+  await page.goto(`${URL}/chats`);
+  await page.getByRole("button", { name: /^Pin / }).first().click();
+  await page.waitForTimeout(400);
+  const chats = await (await page.request.get(`${URL}/api/conversations`)).json();
+  check("pinning a chat puts it first", Boolean(chats[0]?.pinned_at));
+  // The quick note and the import each ask the model; wait out the account's
+  // six-a-minute limit (production's) rather than raising it for the test.
+  await page.waitForTimeout(61000);
+  await page.goto(`${URL}/plans`);
+  await page.fill("#capture-text", "Ran 5 km this morning");
+  await page.getByRole("button", { name: "Find what to keep" }).click();
+  await page.waitForFunction(() => /Keep these\?|Nothing to log|[.!]$/.test(document.querySelector('section[aria-labelledby="capture-title"] [role=status], section[aria-labelledby="capture-title"] [role=alert], section[aria-labelledby="capture-title"] .font-bold')?.textContent || ""), null, { timeout: 15000 }).catch(() => undefined);
+  const captureText = (await page.locator('section[aria-labelledby="capture-title"] [role=status], section[aria-labelledby="capture-title"] [role=alert]').allTextContents()).join(" | ") + (await page.getByText("Keep these?").count() ? " Keep these?" : "");
+  check("quick note is read, nothing saved yet", /Keep these\?|Nothing to log/.test(captureText), captureText.slice(0, 80));
+  await page.goto(`${URL}/memory`);
+  await page.getByRole("button", { name: "Import from ChatGPT or Claude" }).click();
+  await page.fill("#import-text", "I work as a data analyst in Cairo and I prefer short answers.");
+  await page.getByRole("button", { name: "Find facts about me" }).click();
+  await page.waitForFunction(() => {
+    const d = document.querySelector("dialog[open]");
+    return d && (/Tick what Leo|No facts about you/.test(d.textContent) || d.querySelector("[role=alert]"));
+  }, null, { timeout: 15000 }).catch(() => undefined);
+  const importText = (await page.locator("dialog[open]").textContent()) || "";
+  check("import previews facts", /Tick what Leo|No facts about you/.test(importText), importText.slice(-80));
+  await page.goto(`${URL}/cv`);
+  await page.getByRole("button", { name: "Start a CV" }).click();
+  await page.getByLabel("Your name").fill("Sara Ali");
+  await page.getByRole("button", { name: "Add a role" }).click();
+  await page.getByLabel(/What you achieved/).fill("Responsible for reports");
+  check("bullet check speaks up", await page.getByText(/start with what you did/).isVisible());
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText("CV saved.").waitFor({ timeout: 5000 });
+  const cvs = await (await page.request.get(`${URL}/api/cv`)).json();
+  const docx = await page.request.get(`${URL}/api/cv/${cvs[0].id}/docx`);
+  check("CV downloads as Word", docx.ok() && (await docx.body()).subarray(0, 2).toString() === "PK");
+  await page.goto(`${URL}/money`);
+  await page.getByLabel("Cash and savings").fill("500000");
+  await page.getByLabel(/Price of 1 g/).fill("4000");
+  check("zakat is worked out", await page.getByText(/Zakat due: EGP/).isVisible());
 
   // --- Arabic: interface, server text, dates, layout ---------------------------------------
   await page.getByRole("button", { name: "Switch the interface to Arabic" }).click();
@@ -197,7 +275,7 @@ async function signIn(page) {
   check("Arabic artwork description", heroAlt.includes("ليو"), heroAlt.slice(0, 30));
   for (const [label, w, h] of [["desktop", 1440, 900], ["mobile", 390, 844]]) {
     await page.setViewportSize({ width: w, height: h });
-    for (const route of ["/", "/team", "/agents/study", "/plans", "/week", "/memory", "/goals", "/account"]) {
+    for (const route of ["/", "/team", "/agents/study", "/plans", "/week", "/memory", "/goals", "/account", "/chats", "/cv", "/money"]) {
       await page.goto(`${URL}${route}`);
       await page.waitForTimeout(700);
       const over = await overflow(page);

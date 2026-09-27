@@ -45,6 +45,43 @@
   --dur: 0.16s;
 
   --nav-h: 62px;
+
+  /* Text size (Account > Accessibility). The app is zoomed as a whole, so
+     every size in px grows with it; full-height boxes divide by it. */
+  --text-scale: 1;
+}
+
+.app-zoom {
+  zoom: var(--text-scale);
+}
+
+/* High contrast: secondary text as dark as the main text, pure paper, deeper
+   pink, and links always underlined. */
+html.high-contrast {
+  --paper: #ffffff;
+  --paper-hi: #ffffff;
+  --paper-lo: #f4f1e8;
+  --ink-soft: #151714;
+  --ink-faint: #262924;
+  --pink-deep: #9a0c40;
+  --sun-pale: #ffe27a;
+}
+html.high-contrast a {
+  text-decoration-line: underline;
+}
+html.high-contrast :focus-visible {
+  outline: 3px solid #000 !important;
+  outline-offset: 2px;
+}
+
+/* Less motion, whatever the device setting says. */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 html,
@@ -905,14 +942,14 @@ html.data-saver .anim-fade { animation: none; }
 }
 
 /* Optional workspace tools retain Sunshine & Ink's reading surfaces. */
-.design-drawer { position:fixed; inset:0 0 0 auto; margin:0; height:100dvh; max-height:100dvh; width:min(620px,100vw); max-width:100vw; padding:0; border:0; border-inline-start:2px solid var(--ink); color:var(--ink); background:var(--paper-hi); overflow:auto; }
+.design-drawer { position:fixed; inset:0 0 0 auto; margin:0; height:calc(100dvh / var(--text-scale)); max-height:calc(100dvh / var(--text-scale)); width:min(620px,100vw); max-width:100vw; padding:0; border:0; border-inline-start:2px solid var(--ink); color:var(--ink); background:var(--paper-hi); overflow:auto; }
 [dir=rtl] .design-drawer { inset:0 auto 0 0; }
 .design-drawer::backdrop { background:#15171466; }
 .design-actions { display:flex; flex-wrap:wrap; gap:8px; margin-block:12px; }
 .design-actions button,.design-actions select { min-height:44px; }
 .reading-transcript { max-width:var(--reading-width,720px)!important; }
 .reading-transcript .assistant-message .prose-ink { font-size:var(--reading-size,16px); line-height:var(--reading-spacing,1.85); }
-.reading-focus { position:fixed; inset:0; z-index:45; height:100dvh!important; }
+.reading-focus { position:fixed; inset:0; z-index:45; height:calc(100dvh / var(--text-scale))!important; }
 .reading-focus .workspace-identity,.reading-focus .workspace-composer,.reading-focus .reply-actions { display:none; }
 .reading-focus .reading-exit { display:block; }
 .reading-exit { display:none; position:absolute; inset-block-start:10px; inset-inline-end:16px; z-index:2; }
@@ -920,7 +957,25 @@ html.data-saver .anim-fade { animation: none; }
 .pocket-preview { white-space:pre-wrap; overflow-wrap:anywhere; border:2px solid var(--ink); border-top:12px solid var(--sun); padding:24px; background:var(--paper-hi); box-shadow:4px 4px 0 var(--ink); }
 .pocket-packing { border-top-color:var(--pink); }
 .pocket-study { border-top-color:var(--navy); }
-@media(max-width:639px) { .design-drawer { inset:auto 0 0!important; width:100%; height:90dvh; border-inline-start:0; border-top:2px solid var(--ink); border-radius:16px 16px 0 0; } }
+@media(max-width:639px) { .design-drawer { inset:auto 0 0!important; width:100%; height:calc(90dvh / var(--text-scale)); border-inline-start:0; border-top:2px solid var(--ink); border-radius:16px 16px 0 0; } }
 
 .reading-focus .reading-toolbar, .reading-focus .user-message button { display:none; }
 body:has(.reading-focus) header.sticky, body:has(.reading-focus) nav[aria-label] { visibility:hidden; }
+
+/* The CV builder prints only the CV (Save as PDF), at its real size. */
+@media print {
+  body:has(.cv-print) * {
+    visibility: hidden;
+  }
+  body:has(.cv-print) .cv-print,
+  body:has(.cv-print) .cv-print * {
+    visibility: visible;
+  }
+  body:has(.cv-print) .cv-print {
+    position: absolute;
+    inset: 0 0 auto 0;
+  }
+  .app-zoom {
+    zoom: 1;
+  }
+}

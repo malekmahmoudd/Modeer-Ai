@@ -20,7 +20,8 @@ export function FrontDesk() {
   } = useApi<UserProfile>("/users/me");
   const t = useDesignText();
   const name = useAgentName();
-  const ids = user?.ui_preferences?.front_desk ?? DEFAULT_DESK;
+  const hidden = user?.ui_preferences?.hidden_agents ?? [];
+  const ids = (user?.ui_preferences?.front_desk ?? DEFAULT_DESK).filter(id => !hidden.includes(id));
   const [draft, setDraft] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -59,7 +60,7 @@ export function FrontDesk() {
       if (!busy) setDraft(null);
     }}>
       <ol className="space-y-2">{draft.map((id, i) => <li key={id} className="sheet flex flex-wrap items-center gap-2 p-2"><strong className="flex-1">{name(agents?.find(a => a.id === id), id)}</strong><button className="btn" disabled={busy || !i} aria-label={`${t("up")}: ${id}`} onClick={() => move(i, -1)}>{t("up")}</button><button className="btn" disabled={busy || i === draft.length - 1} aria-label={`${t("down")}: ${id}`} onClick={() => move(i, 1)}>{t("down")}</button><button className="btn" disabled={busy} onClick={() => setDraft(draft.filter(x => x !== id))}>{t("unpin")}</button></li>)}</ol>
-      <div className="design-actions">{agents?.filter(a => !a.is_assistant && !draft.includes(a.id)).map(a => <button key={a.id} className="btn" disabled={busy} onClick={() => setDraft([...draft, a.id])}>{t("pin")} {name(a)}</button>)}</div>
+      <div className="design-actions">{agents?.filter(a => !a.is_assistant && !draft.includes(a.id) && !hidden.includes(a.id)).map(a => <button key={a.id} className="btn" disabled={busy} onClick={() => setDraft([...draft, a.id])}>{t("pin")} {name(a)}</button>)}</div>
       <div className="design-actions"><button className="btn btn-pink" disabled={busy} onClick={save}>{t("save")}</button><button className="btn" disabled={busy} onClick={() => setDraft([...DEFAULT_DESK])}>{t("reset")}</button></div>{err && <p role="alert">{err}</p>}
     </Drawer>}
   </>;

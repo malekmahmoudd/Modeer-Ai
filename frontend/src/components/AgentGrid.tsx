@@ -1,9 +1,11 @@
 "use client";
 
 import { AgentPanel } from "@/components/AgentPanel";
+import { useState } from "react";
+
 import { useApi } from "@/lib/api";
 import { usePrefs } from "@/lib/i18n";
-import type { Agent } from "@/types";
+import type { Agent, UserProfile } from "@/types";
 
 export function AgentGrid({
   specialistsOnly = true,
@@ -15,7 +17,10 @@ export function AgentGrid({
   featured?: boolean;
 }) {
   const { data, loading, error } = useApi<Agent[]>("/agents");
+  const { data: me } = useApi<UserProfile>("/users/me");
   const { t } = usePrefs();
+  const [showHidden, setShowHidden] = useState(false);
+  const hidden = me?.ui_preferences?.hidden_agents ?? [];
 
   if (loading) {
     return (
@@ -41,16 +46,26 @@ export function AgentGrid({
     );
   }
 
-  const allAgents = (data ?? []).filter((a) => (specialistsOnly ? !a.is_assistant : true));
+  const allAgents = (data ?? [])
+    .filter((a) => (specialistsOnly ? !a.is_assistant : true))
+    .filter((a) => showHidden || !hidden.includes(a.id));
+  const hiddenCount = (data ?? []).filter((a) => hidden.includes(a.id)).length;
   const agents = featured
     ? ["study", "career", "research", "writing"].flatMap((id) => allAgents.filter((a) => a.id === id))
     : allAgents;
 
   return (
-    <div className={featured ? "sunshine-team-grid" : "team-directory grid grid-cols-2 gap-4 lg:grid-cols-3"}>
-      {agents.map((agent, i) => (
-        <AgentPanel key={agent.id} agent={agent} index={i} size={size} featured={featured} />
-      ))}
-    </div>
+    <>
+      <div className={featured ? "sunshine-team-grid" : "team-directory grid grid-cols-2 gap-4 lg:grid-cols-3"}>
+        {agents.map((agent, i) => (
+          <AgentPanel key={agent.id} agent={agent} index={i} size={size} featured={featured} />
+        ))}
+      </div>
+      {!featured && hiddenCount > 0 && (
+        <button type="button" className="btn mt-5" aria-pressed={showHidden} onClick={() => setShowHidden(!showHidden)}>
+          {showHidden ? t("team.hideHidden") : t("team.showHidden", { n: hiddenCount })}
+        </button>
+      )}
+    </>
   );
 }

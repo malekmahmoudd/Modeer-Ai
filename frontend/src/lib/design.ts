@@ -7,6 +7,17 @@ export interface DesignPreferences {
   reading_size?: number;
   reading_spacing?: number;
   reading_width?: number;
+  /** Teammates left off Home, Team and the pickers. */
+  hidden_agents?: string[];
+  text_scale?: number;
+  high_contrast?: boolean;
+  reduce_motion?: boolean;
+  /** Read replies with the server's natural voices instead of the device's. */
+  natural_voice?: boolean;
+  /** The hour (their time) the daily reminder arrives. */
+  push_hour?: number;
+  /** Put what is due in the notification, or only a count. */
+  push_details?: boolean;
 }
 export const DEFAULT_DESK = ["study", "career", "research", "writing"];
 export function savePreferences(patch: DesignPreferences) {

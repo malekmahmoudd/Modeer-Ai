@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { connection } from "next/server";
 
 import { AppShell } from "@/components/AppShell";
+import { A11Y_COOKIE, htmlA11y, readA11y } from "@/lib/a11y";
 import { LOCALE_COOKIE, SAVER_COOKIE, type Locale } from "@/lib/i18n/cookies";
 import "./globals.css";
 
@@ -74,11 +75,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const saverCookie = store.get(SAVER_COOKIE)?.value;
   const dataSaver =
     saverCookie === undefined ? requestHeaders.get("save-data") === "on" : saverCookie === "1";
+  // Text size, contrast and motion, so the first paint already uses them.
+  const a11y = htmlA11y(readA11y(store.get(A11Y_COOKIE)?.value));
   return (
     <html
+      style={a11y.style}
       lang={locale}
       dir={locale === "ar" ? "rtl" : "ltr"}
-      className={`${inter.variable} ${display.variable} ${brush.variable} ${hand.variable} ${arabic.variable}${dataSaver ? " data-saver" : ""}`}
+      className={`${inter.variable} ${display.variable} ${brush.variable} ${hand.variable} ${arabic.variable}${dataSaver ? " data-saver" : ""} ${a11y.className}`.trim()}
     >
       <body className="font-sans">
         <AppShell initialLocale={locale} initialSaver={dataSaver}>

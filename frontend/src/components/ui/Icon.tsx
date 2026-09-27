@@ -28,7 +28,13 @@ type Name =
   | "refresh"
   | "search"
   | "incognito"
-  | "offline";
+  | "offline"
+  | "template"
+  | "pin"
+  | "folder"
+  | "tag"
+  | "headphones"
+  | "download";
 
 /** Icons that point along the reading direction: mirrored in Arabic. */
 const DIRECTIONAL = new Set<Name>(["arrow-right", "chevron-left", "forward"]);
@@ -131,6 +137,27 @@ const PATHS: Record<Name, React.ReactNode> = {
       <circle cx="12" cy="20" r="0.8" />
     </>
   ),
+  template: (
+    <>
+      <path d="M6 3.5h8.5L19 8v12.5H6Z" />
+      <path d="M9 12h1.5M13.5 12H16M9 16h7" />
+    </>
+  ),
+  pin: <path d="M9 3.5h6l-1 6 3.5 3.5h-11L10 9.5l-1-6ZM12 13v7.5" />,
+  folder: <path d="M3.5 6.5h6l2 2h9v11h-17Z" />,
+  tag: (
+    <>
+      <path d="M3.5 12V3.5H12l8.5 8.5-8.5 8.5Z" />
+      <circle cx="8" cy="8" r="1.3" />
+    </>
+  ),
+  headphones: (
+    <>
+      <path d="M4 17v-4a8 8 0 0 1 16 0v4" />
+      <path d="M4 15h3v5H4ZM17 15h3v5h-3Z" />
+    </>
+  ),
+  download: <path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />,
   history: (
     <>
       <path d="M3.5 12a8.5 8.5 0 1 0 2.9-6.4L3.5 8" />

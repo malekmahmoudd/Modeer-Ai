@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AgentBadge } from "@/components/art/AgentPortrait";
 import { DocumentsPanel } from "@/components/memory/DocumentsPanel";
+import { ImportMemories } from "@/components/memory/ImportMemories";
 import { MemoryRow } from "@/components/memory/MemoryRow";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyState, PageHeader, SectionHead, Spinner } from "@/components/ui/primitives";
@@ -158,6 +159,7 @@ export function MemoryManager() {
       <section className="memory-shared">
         <SectionHead title={t("memory.shared")} />
         <p className="-mt-2 mb-5 text-[14px] font-semibold text-ink-soft">{t("memory.sharedHelp")}</p>
+        <ImportMemories onSaved={refetch} />
 
         {loading && <Spinner />}
         {error && (

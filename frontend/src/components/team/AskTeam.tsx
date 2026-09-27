@@ -7,7 +7,7 @@ import { useState } from "react";
 import { AgentBadge } from "@/components/art/AgentPortrait";
 import { Icon } from "@/components/ui/Icon";
 import { ErrorNote, ThinkingDots } from "@/components/ui/primitives";
-import { useAgents } from "@/features/agents/useAgents";
+import { useAgents, useHiddenAgents } from "@/features/agents/useAgents";
 import { apiFetch } from "@/lib/api";
 import { usePrefs } from "@/lib/i18n";
 import { useAgentName } from "@/lib/i18n/agents";
@@ -25,7 +25,8 @@ export function AskTeam() {
   const { t } = usePrefs();
   const { agents, byId } = useAgents();
   const agentName = useAgentName();
-  const specialists = agents.filter((a) => !a.is_assistant);
+  const hidden = useHiddenAgents();
+  const specialists = agents.filter((a) => !a.is_assistant && !hidden.includes(a.id));
   const [question, setQuestion] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
   const [note, setNote] = useState("");

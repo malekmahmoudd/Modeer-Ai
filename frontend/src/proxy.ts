@@ -25,6 +25,8 @@ export function proxy(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self'",
+    // Natural voices are played from the downloaded audio (a blob: URL).
+    "media-src 'self' blob:",
     `connect-src 'self'${development ? " ws:" : ""}`,
     "object-src 'none'",
     "base-uri 'self'",

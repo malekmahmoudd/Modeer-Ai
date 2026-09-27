@@ -7,11 +7,13 @@ import { useEffect, useState } from "react";
 import { Brand } from "@/components/Brand";
 import { SearchPalette } from "@/components/search/SearchPalette";
 import { Icon } from "@/components/ui/Icon";
+import { A11Y_DEFAULT, applyA11y } from "@/lib/a11y";
 import { apiFetch, PUBLIC_PAGES, useApi } from "@/lib/api";
 import { firstName } from "@/lib/format";
 import { PrefsProvider, usePrefs, type Locale } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/i18n/en";
 import { clearDrafts, useOnline, useServiceWorker } from "@/lib/offline";
+import { setPreferNatural } from "@/lib/voice";
 import type { UserProfile } from "@/types";
 
 const NAV: { href: string; label: MessageKey; icon: "home" | "team" | "memory" | "goals" | "calendar" }[] = [
@@ -86,6 +88,18 @@ function Shell({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saved]);
 
+  // Text size, contrast and motion saved on the account follow it to this device.
+  const ui = user?.ui_preferences;
+  useEffect(() => {
+    if (!ui) return;
+    setPreferNatural(ui.natural_voice ?? true);
+    applyA11y({
+      scale: ui.text_scale ?? A11Y_DEFAULT.scale,
+      contrast: ui.high_contrast ?? false,
+      calm: ui.reduce_motion ?? false,
+    });
+  }, [ui]);
+
   // Ctrl/⌘-K opens search anywhere.
   useEffect(() => {
     if (publicPage) return;
@@ -119,7 +133,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   if (publicPage) {
     return (
-      <main>
+      <main className="app-zoom">
         {banners}
         <div className="fixed end-3 top-3 z-50">
           <LanguageToggle signedIn={false} className="bg-paper-hi" />
@@ -134,7 +148,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   const atHome = pathname === "/";
 
   return (
-    <div className={`flex min-h-dvh flex-col bg-paper ${atHome ? "sunshine-shell" : ""}`}>
+    <div className={`app-zoom flex min-h-[calc(100dvh/var(--text-scale))] flex-col bg-paper ${atHome ? "sunshine-shell" : ""}`}>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-2 focus:top-2 focus:z-50 focus:bg-sun focus:px-3 focus:py-2">
         {t("nav.skip")}
       </a>

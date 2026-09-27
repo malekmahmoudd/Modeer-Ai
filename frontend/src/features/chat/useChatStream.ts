@@ -82,6 +82,8 @@ export function useChatStream(agentId: string, opts: Options = {}) {
       attachments: string[] = [],
       // Only read when this turn starts a conversation: see ChatRequest.
       incognito?: { context: boolean } | null,
+      // Hands-free talk: the reply will be read aloud, so it is kept short and plain.
+      spoken = false,
     ) => {
       if (abortRef.current) return;
       setText("");
@@ -111,6 +113,7 @@ export function useChatStream(agentId: string, opts: Options = {}) {
                   message,
                   conversation_id: conversationId,
                   attachments,
+                  ...(spoken ? { spoken: true } : {}),
                   ...(incognito && !conversationId
                     ? { incognito: true, incognito_context: incognito.context }
                     : {}),

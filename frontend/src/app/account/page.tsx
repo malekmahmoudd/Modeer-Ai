@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { AccessibilitySection, RemindersSection, TeammatesSection, VoiceSection } from "@/components/account/PreferenceSections";
 import { DevicesSection, TwoStepSection, UsageSection } from "@/components/account/SecuritySections";
 import { RecoveryCodes } from "@/components/auth/RecoveryCodes";
 import { apiFetch, useApi } from "@/lib/api";
@@ -36,6 +37,11 @@ export default function AccountPage() {
     apiFetch("/users/me", { method: "PATCH", body: JSON.stringify({ locale: next }) }).catch(() => undefined);
   }
   const hasPassword = security?.has_password ?? false;
+  const prefProps = {
+    me, setMe,
+    onNotice: (message: string) => { setError(""); setNotice(message); },
+    onError: (message: string) => { setNotice(""); setError(message); },
+  };
   return <div className="max-w-2xl space-y-7 pb-8">
     <div><p className="eyebrow">{t("account.eyebrow")}</p><h1 className="display mt-2 text-4xl sm:text-5xl">{t("account.title")}</h1>
       <p className="mt-4 text-ink-soft">{t("account.lede")}</p></div>
@@ -86,6 +92,10 @@ export default function AccountPage() {
         <p className="mt-2 text-[14px] text-ink-soft">{t("account.saverHelp")}</p>
       </div>
     </section>
+    <AccessibilitySection {...prefProps} />
+    <VoiceSection {...prefProps} />
+    <RemindersSection {...prefProps} />
+    <TeammatesSection {...prefProps} />
     <section className="border-2 border-ink bg-paper-hi p-5 shadow-pop-xs">
       <h2 className="display text-2xl">{t("account.signingIn")}</h2>
       {freshCodes ? <RecoveryCodes codes={freshCodes} doneLabel={t("common.done")} onDone={() => { setFreshCodes(null); refetchSecurity(); }} /> : <>

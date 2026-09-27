@@ -21,9 +21,14 @@ export function RecentChats() {
 
   return (
     <section className="sunshine-team-section" aria-labelledby="recent-title">
-      <h2 id="recent-title" className="eyebrow mb-3">
-        {t("home.recent")}
-      </h2>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 id="recent-title" className="eyebrow">
+          {t("home.recent")}
+        </h2>
+        <Link href="/chats" className="text-[13px] font-bold underline decoration-pink decoration-2 underline-offset-4">
+          {t("chats.openAll")}
+        </Link>
+      </div>
       <ul className="grid gap-2.5 sm:grid-cols-2">
         {recent.map((c) => (
           <li key={c.id}>

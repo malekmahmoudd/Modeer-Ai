@@ -55,6 +55,9 @@ export interface Conversation {
   last_message_at: string | null;
   incognito?: boolean;
   expires_at?: string | null;
+  pinned_at?: string | null;
+  folder?: string | null;
+  tags?: string[];
 }
 
 /** A message or title that matched a search. */
@@ -227,7 +230,18 @@ export interface UserProfile {
   timezone?: string | null;
   /** Interface language; null follows the browser. */
   locale?: "en" | "ar" | null;
+  /** How Arabic replies and dictation are written; null lets the model choose. */
+  reply_dialect?: Dialect | null;
   created_at: string;
+}
+
+export type Dialect = "msa" | "egyptian" | "gulf" | "levantine";
+
+export interface PromptTemplate {
+  id: string;
+  title: string;
+  body: string;
+  agent_id: string | null;
 }
 
 export interface AuthStatus {

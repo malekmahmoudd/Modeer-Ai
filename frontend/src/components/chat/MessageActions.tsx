@@ -5,9 +5,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { AgentBadge } from "@/components/art/AgentPortrait";
 import { Icon } from "@/components/ui/Icon";
-import { useAgents } from "@/features/agents/useAgents";
+import { useAgents, useHiddenAgents } from "@/features/agents/useAgents";
 import { usePrefs } from "@/lib/i18n";
 import { useAgentName } from "@/lib/i18n/agents";
+import { speak, type Speaking } from "@/lib/voice";
 
 const ARABIC = /[؀-ۿ]/;
 /** Longest excerpt carried to a teammate; the rest is still in this chat. */
@@ -61,45 +62,33 @@ function Action({
   );
 }
 
-/** Reads a reply aloud with the device's own voices: free, and offline. */
+/** Reads a reply aloud: the natural voice when chosen and available, else the
+ *  device's own voices (free, and offline). */
 function ListenButton({ text }: { text: string }) {
   const { t } = usePrefs();
   const [speaking, setSpeaking] = useState(false);
   const [note, setNote] = useState("");
-  const supported = typeof window !== "undefined" && "speechSynthesis" in window;
+  const current = useRef<Speaking | null>(null);
 
-  useEffect(() => () => {
-    if (speaking) window.speechSynthesis.cancel();
-  }, [speaking]);
+  useEffect(() => () => current.current?.stop(), []);
 
-  if (!supported) return null;
-
-  function speak() {
-    const synth = window.speechSynthesis;
+  async function toggle() {
     if (speaking) {
-      synth.cancel();
-      setSpeaking(false);
+      current.current?.stop();
       return;
     }
-    const plain = plainText(text);
-    const lang = ARABIC.test(plain) ? "ar" : "en";
-    const voice = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith(lang));
-    if (!voice && synth.getVoices().length > 0) {
+    setNote("");
+    setSpeaking(true);
+    const reading = await speak(plainText(text));
+    if (!reading) {
+      setSpeaking(false);
       setNote(t("msg.noVoice"));
       return;
     }
-    synth.cancel();
-    // Sentence by sentence: some engines stop after ~15 seconds of one utterance.
-    const sentences = plain.match(/[^.!?؟\n]+[.!?؟]?/g) ?? [plain];
-    sentences.forEach((sentence, i) => {
-      const u = new SpeechSynthesisUtterance(sentence.trim());
-      u.lang = voice?.lang ?? (lang === "ar" ? "ar-EG" : "en-GB");
-      if (voice) u.voice = voice;
-      if (i === sentences.length - 1) u.onend = () => setSpeaking(false);
-      u.onerror = () => setSpeaking(false);
-      synth.speak(u);
-    });
-    setSpeaking(true);
+    current.current = reading;
+    await reading.done;
+    current.current = null;
+    setSpeaking(false);
   }
 
   return (
@@ -108,7 +97,7 @@ function ListenButton({ text }: { text: string }) {
         icon={speaking ? "stop" : "speaker"}
         label={speaking ? t("msg.stopListening") : t("msg.listen")}
         pressed={speaking}
-        onClick={speak}
+        onClick={() => void toggle()}
       />
       {note && (
         <span role="status" className="text-[11.5px] font-semibold text-ink-faint">
@@ -124,6 +113,7 @@ function PassMenu({ fromAgent, text }: { fromAgent: string; text: string }) {
   const router = useRouter();
   const { t } = usePrefs();
   const { agents, byId } = useAgents();
+  const hidden = useHiddenAgents();
   const agentName = useAgentName();
   const [open, setOpen] = useState(false);
   const menu = useRef<HTMLDivElement>(null);
@@ -169,7 +159,7 @@ function PassMenu({ fromAgent, text }: { fromAgent: string; text: string }) {
           className="absolute bottom-full start-0 z-30 mb-1 max-h-72 w-60 overflow-y-auto border-2 border-ink bg-paper-hi p-1 shadow-pop-sm"
         >
           {agents
-            .filter((a) => a.id !== fromAgent)
+            .filter((a) => a.id !== fromAgent && !hidden.includes(a.id))
             .map((a) => (
               <li key={a.id} role="none">
                 <button

@@ -4,27 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/Icon";
 import { Spinner } from "@/components/ui/primitives";
-import { API_BASE, apiFetch } from "@/lib/api";
 import { usePrefs } from "@/lib/i18n";
+import { recordingType, transcribe, voiceStatus } from "@/lib/voice";
 
 const MAX_SECONDS = 60;
-
-// Asked once per page load: whether this server can turn speech into text.
-let available: Promise<boolean> | null = null;
-function voiceAvailable(): Promise<boolean> {
-  available ??= apiFetch<{ transcribe: boolean }>("/voice")
-    .then((v) => v.transcribe)
-    .catch(() => false);
-  return available;
-}
-
-/** The first recording format this browser supports that the server reads. */
-function recordingType(): string | undefined {
-  if (typeof MediaRecorder === "undefined") return undefined;
-  return ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"].find((type) =>
-    MediaRecorder.isTypeSupported(type),
-  );
-}
 
 /**
  * Hold a thought, speak it: records up to a minute, sends it to be written
@@ -52,7 +35,7 @@ export function VoiceButton({
 
   useEffect(() => {
     let live = true;
-    voiceAvailable().then((ok) => live && setShown(ok && typeof navigator !== "undefined" && !!navigator.mediaDevices));
+    voiceStatus().then((v) => live && setShown(v.transcribe && typeof navigator !== "undefined" && !!navigator.mediaDevices));
     return () => {
       live = false;
     };
@@ -111,14 +94,7 @@ export function VoiceButton({
   async function send(audio: Blob) {
     setState("sending");
     try {
-      const form = new FormData();
-      const ext = audio.type.includes("mp4") ? "m4a" : audio.type.includes("ogg") ? "ogg" : "webm";
-      form.append("audio", audio, `voice.${ext}`);
-      form.append("language", locale);
-      const res = await fetch(`${API_BASE}/voice/transcribe`, { method: "POST", body: form });
-      const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(typeof body?.detail === "string" ? body.detail : t("voice.failed"));
-      const text = String(body?.text ?? "").trim();
+      const text = await transcribe(audio, locale, t("voice.failed"));
       if (text) onText(text);
       else onError(t("voice.empty"));
     } catch (e) {

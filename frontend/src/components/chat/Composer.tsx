@@ -19,6 +19,7 @@ export function Composer({
   hasAttachments,
   waiting,
   voice,
+  tools,
   focusSignal = 0,
 }: {
   value: string;
@@ -38,6 +39,8 @@ export function Composer({
   waiting?: boolean;
   /** The microphone button, shown beside send. */
   voice?: React.ReactNode;
+  /** More controls beside the attach button: templates, talk mode. */
+  tools?: React.ReactNode;
   /** Changing this number moves the cursor into the box (after Edit). */
   focusSignal?: number;
 }) {
@@ -76,6 +79,7 @@ export function Composer({
       {chips}
       <div className="flex items-end gap-2">
       {attach}
+      {tools}
       <label htmlFor="composer" className="sr-only">
         {placeholder}
       </label>

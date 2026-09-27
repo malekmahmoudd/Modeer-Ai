@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { AgentBadge } from "@/components/art/AgentPortrait";
+import { QuickCapture } from "@/components/plans/QuickCapture";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyState, ErrorNote, PageHeader, SectionLabel, Spinner } from "@/components/ui/primitives";
 import { useAgents } from "@/features/agents/useAgents";
@@ -57,6 +58,17 @@ export function TrackingManager() {
           <ErrorNote message={err} />
         </div>
       )}
+
+      <QuickCapture
+        onSaved={() => {
+          followups.refetch();
+          checkins.refetch();
+        }}
+      />
+      <nav aria-label={t("tools.label")} className="mb-8 flex flex-wrap gap-2">
+        <Link href="/cv" className="btn">{t("tools.cv")}</Link>
+        <Link href="/money" className="btn">{t("tools.money")}</Link>
+      </nav>
 
       <SectionLabel
         action={
