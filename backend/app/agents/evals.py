@@ -31,6 +31,39 @@ from app.agents.rubric import RUBRIC_DIMENSIONS, review
 from app.llm.base import LLMProvider
 from app.llm.provider import resolve_model
 
+#: A per-minute throttle is waited out; a wait longer than this means the daily
+#: quota is spent, and the remaining cases are skipped rather than failed.
+RATE_LIMIT_RETRIES = 3
+RATE_LIMIT_BACKOFF = 65.0
+MAX_WAIT_SECONDS = 180.0
+
+
+class QuotaSpent(RuntimeError):
+    """The provider is rationing by the day; nothing more will be answered."""
+
+
+def _is_rate_limit(exc: Exception) -> bool:
+    return "usage limit" in str(exc).lower() or "429" in str(exc)
+
+
+async def _complete(provider, **kwargs):
+    """One completion, waiting out per-minute rate limits (never bad answers)."""
+    for attempt in range(RATE_LIMIT_RETRIES + 1):
+        try:
+            return await provider.complete(**kwargs)
+        except Exception as exc:
+            if not _is_rate_limit(exc) or attempt >= RATE_LIMIT_RETRIES:
+                raise
+            wait = getattr(exc, "retry_after", None) or RATE_LIMIT_BACKOFF
+            if wait > MAX_WAIT_SECONDS:
+                raise QuotaSpent(f"provider asked for a {wait:.0f}s wait") from exc
+            print(f"    rate limited, waiting {wait:.0f}s", file=sys.stderr, flush=True)
+            await asyncio.sleep(wait)
+    raise RuntimeError("unreachable")
+
+
+_quota_spent = False
+
 __all__ = ["RUBRIC_DIMENSIONS", "AgentEvalReport", "CaseResult", "load_cases", "run_agent"]
 
 _DIR = Path(__file__).parent
@@ -43,6 +76,8 @@ class CaseResult:
     passed: bool
     checks: list[str]
     output_preview: str
+    #: Not run: the provider's daily quota was spent. Not a failed answer.
+    skipped: bool = False
 
 
 @dataclass(slots=True)
@@ -53,8 +88,13 @@ class AgentEvalReport:
     results: list[CaseResult] = field(default_factory=list)
 
     @property
+    def answered(self) -> int:
+        return sum(1 for r in self.results if not r.skipped)
+
+    @property
     def pass_rate(self) -> float:
-        return round(self.passed / self.total, 3) if self.total else 0.0
+        """Of the cases that got an answer: a spent quota is not a failure."""
+        return round(self.passed / self.answered, 3) if self.answered else 0.0
 
 
 def load_cases(slug: str) -> list[dict]:
@@ -151,7 +191,20 @@ async def run_agent(
     cases = load_cases(slug)
     report = AgentEvalReport(agent_id=slug, total=len(cases), passed=0)
 
+    global _quota_spent
     for i, case in enumerate(cases):
+        if _quota_spent:
+            report.results.append(
+                CaseResult(
+                    id=case["id"],
+                    category=case["category"],
+                    passed=False,
+                    checks=["~ skipped: the provider's daily quota is spent"],
+                    output_preview="",
+                    skipped=True,
+                )
+            )
+            continue
         if i and delay:
             await asyncio.sleep(delay)
         packet = build_context(
@@ -165,7 +218,8 @@ async def run_agent(
         )
         provider_failed = False
         try:
-            result = await provider.complete(
+            result = await _complete(
+                provider,
                 system=packet.system,
                 messages=packet.messages,
                 model=resolve_model(agent.model.model),
@@ -173,6 +227,19 @@ async def run_agent(
                 max_tokens=agent.model.max_tokens,
             )
             text = result.text
+        except QuotaSpent:
+            _quota_spent = True
+            report.results.append(
+                CaseResult(
+                    id=case["id"],
+                    category=case["category"],
+                    passed=False,
+                    checks=["~ skipped: the provider's daily quota is spent"],
+                    output_preview="",
+                    skipped=True,
+                )
+            )
+            continue
         except Exception as exc:  # noqa: BLE001 - record and keep going
             provider_failed = True
             text = f"[provider error: {type(exc).__name__}]"
@@ -247,15 +314,16 @@ def _cli() -> int:
         ]
         print(json.dumps(payload, indent=2))
     else:
-        total_p = total_c = 0
+        total_p = total_c = skipped = 0
         for r in reports:
             total_p += r.passed
-            total_c += r.total
-            print(f"\n{r.agent_id:10s}  {r.passed}/{r.total}  ({r.pass_rate:.0%})")
+            total_c += r.answered
+            skipped += r.total - r.answered
+            print(f"\n{r.agent_id:10s}  {r.passed}/{r.answered}  ({r.pass_rate:.0%})")
             for c in r.results:
-                mark = "PASS" if c.passed else "FAIL"
+                mark = "SKIP" if c.skipped else "PASS" if c.passed else "FAIL"
                 print(f"  [{mark}] {c.id} ({c.category})")
-                if not c.passed:
+                if not c.passed or c.skipped:
                     for chk in c.checks:
                         print(f"         {chk}")
                 if args.show:
@@ -263,6 +331,8 @@ def _cli() -> int:
         print(
             f"\nTOTAL  {total_p}/{total_c}  ({total_p / total_c:.0%})" if total_c else "\nNo cases."
         )
+        if skipped:
+            print(f"SKIPPED  {skipped} (daily quota spent; rerun these agents later)")
     return 0
 
 

@@ -52,6 +52,7 @@ is in your context, set the next session from it: all sets done at the target
 effort → add a little load or reps; missed twice → hold; persistent struggle or
 pain → deload. Quote the logged numbers you are building on. Realistic timelines — no
 transformation promises. The why gets one line under the plan, no more.
+Keep a weekly plan under 300 words.
 
 ## Boundaries
 

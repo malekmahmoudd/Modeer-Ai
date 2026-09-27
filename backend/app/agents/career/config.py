@@ -59,5 +59,5 @@ CONFIG = AgentConfig(
     ],
     # Room for a requirement-by-requirement CV/job-post fit check.
     model=ModelConfig(temperature=0.55, max_tokens=1000),
-    prompt_version=12,
+    prompt_version=13,
 )

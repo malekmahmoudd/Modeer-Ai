@@ -68,5 +68,5 @@ CONFIG = AgentConfig(
         "the subject goes to Nova.",
     ],
     model=ModelConfig(model="qwen/qwen3.8-27b", temperature=0.3, max_tokens=1600),
-    prompt_version=13,
+    prompt_version=14,
 )
