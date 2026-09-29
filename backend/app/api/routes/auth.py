@@ -35,6 +35,7 @@ from app.core.config import settings
 from app.core.usage import BudgetExceeded, charge
 from app.db.base import utcnow
 from app.db.models import RecoveryCode, User
+from app.push import service as push_service
 from app.users.service import get_by_id
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -166,8 +167,9 @@ def _set_session(
     method: str,
     *,
     epoch: int | None = None,
-) -> None:
-    """Sign this device in: a device row, and a cookie that names it."""
+) -> str:
+    """Sign this device in: a device row, and a cookie that names it. Returns
+    the device row's id."""
     session_id = devices.start(db, account, request, method)
     db.commit()
     response.set_cookie(
@@ -182,6 +184,7 @@ def _set_session(
         path="/api",
     )
     response.headers["Cache-Control"] = "no-store"
+    return session_id
 
 
 def _issue_codes(db, account: User) -> list[str]:
@@ -382,6 +385,7 @@ def recover(body: Recover, request: Request, response: Response, db: DbSession):
     # A lost password may be a stolen one: end every other session.
     account.session_epoch = (account.session_epoch or 0) + 1
     issued_epoch = account.session_epoch
+    push_service.end_for_user(db, account.id)  # and every device's reminders
     db.commit()
 
     _set_session(response, account, db, request, "recovery", epoch=issued_epoch)
@@ -426,8 +430,14 @@ def change_password(
     codes = _issue_codes(db, user) if first_password else None
     db.commit()
 
-    # This device stays signed in, as a fresh device row; the others have ended.
-    _set_session(response, user, db, request, "refresh", epoch=issued_epoch)
+    # This device stays signed in, as a fresh device row; the others have ended,
+    # and so have their reminders. This device keeps its own.
+    previous = devices.current_id(request)
+    current = _set_session(response, user, db, request, "refresh", epoch=issued_epoch)
+    if previous:
+        push_service.move_session(db, previous, current)
+    push_service.end_for_user(db, user.id, keep_session=current)
+    db.commit()
     return {"changed": True, "recovery_codes": codes}
 
 

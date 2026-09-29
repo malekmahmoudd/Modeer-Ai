@@ -212,6 +212,7 @@ def test_arabic_cv_runs_right_to_left(client):
     with zipfile.ZipFile(io.BytesIO(client.get(f"/api/cv/{cv['id']}/docx").content)) as z:
         xml = z.read("word/document.xml").decode()
     assert "<w:bidi/>" in xml and "الخبرة" in xml
+    assert "Roadmaps، SQL" in xml  # lists use the Arabic comma
 
 
 # --- importing from another assistant ----------------------------------------------------

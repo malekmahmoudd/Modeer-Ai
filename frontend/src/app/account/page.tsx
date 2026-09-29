@@ -8,6 +8,7 @@ import { RecoveryCodes } from "@/components/auth/RecoveryCodes";
 import { apiFetch, useApi } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 import { usePrefs, type Locale } from "@/lib/i18n";
+import { forgetPushHere } from "@/lib/push";
 import { clearDrafts } from "@/lib/offline";
 import type { AccountSecurity, UserProfile } from "@/types";
 
@@ -19,6 +20,8 @@ export default function AccountPage() {
   const [confirm, setConfirm] = useState("");
   const { data: me, setData: setMe } = useApi<UserProfile>("/users/me");
   const { data: security, refetch: refetchSecurity } = useApi<AccountSecurity>("/auth/account");
+  const { data: authStatus } = useApi<{ required: boolean }>("/auth/status");
+  const authRequired = authStatus?.required ?? false;
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [codesPassword, setCodesPassword] = useState("");
@@ -148,16 +151,21 @@ export default function AccountPage() {
         <DevicesSection onNotice={(message) => { setError(""); setNotice(message); }} />
       </div>
       <p className="my-3 text-ink-soft">{hasPassword ? t("account.devicesPassword") : t("account.devicesKey")}</p>
+      <div className="flex flex-wrap gap-2">
+      {authRequired && <button disabled={!!busy} className="btn" onClick={() => void run("signout", async () => {
+        await apiFetch("/auth/logout", { method: "POST" }); clearDrafts(); await forgetPushHere(); window.location.assign("/login");
+      })}>{t("nav.signOut")}</button>}
       <button disabled={!!busy} className="btn btn-sun" onClick={() => {
         if (!window.confirm(t("account.signOutAllConfirm"))) return;
-        void run("sessions", async () => { await apiFetch("/auth/sign-out-everywhere", {method:"POST"}); clearDrafts(); window.location.assign("/login"); });
+        void run("sessions", async () => { await apiFetch("/auth/sign-out-everywhere", {method:"POST"}); clearDrafts(); await forgetPushHere(); window.location.assign("/login"); });
       }}>{busy === "sessions" ? t("account.signingOut") : t("account.signOutAll")}</button>
+      </div>
     </section>
     <section className="border-2 border-ink bg-paper-hi p-5 shadow-pop-xs">
       <h2 className="display text-2xl">{t("account.delete")}</h2>
       <p className="my-3 text-ink-soft">{t("account.deleteHelp")}</p>
       <form onSubmit={e => { e.preventDefault(); if (confirm !== "DELETE") return; void run("delete", async () => {
-        await apiFetch("/users/me/delete", {method:"POST", body:JSON.stringify({confirm})}); clearDrafts(); window.location.assign("/login?deleted=1");
+        await apiFetch("/users/me/delete", {method:"POST", body:JSON.stringify({confirm})}); clearDrafts(); await forgetPushHere(); window.location.assign("/login?deleted=1");
       }); }}>
         <label htmlFor="delete-confirm" className="block font-bold mb-2">{t("account.typeDelete")}</label>
         <input id="delete-confirm" dir="ltr" value={confirm} onChange={e => setConfirm(e.target.value)} autoComplete="off" className="field w-full" disabled={!!busy} />

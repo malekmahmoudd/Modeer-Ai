@@ -223,6 +223,9 @@ _ARABIC: dict[str, str] = {
         "لديك الحد الأقصى من السير الذاتية. احذف واحدة أولًا."
     ),
     "That isn't something the team keeps track of.": "هذا ليس مما يتابعه الفريق.",
+    "Sign in again to turn on reminders.": "سجّل الدخول مجددًا لتفعيل التذكيرات.",
+    "That note was already saved with different items.": "حُفظت هذه الملاحظة من قبل بعناصر مختلفة.",
+    "Tick at least one item to save.": "حدّد عنصرًا واحدًا على الأقل للحفظ.",
     "That's today's voice limit. You can still type.": "هذا حد الصوت لليوم. ما زال بإمكانك الكتابة.",
     "That recording is too long. Keep it under a minute.": "التسجيل طويل جدًا. اجعله أقل من دقيقة.",
     "That recording is empty.": "التسجيل فارغ.",

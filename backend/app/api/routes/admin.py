@@ -28,6 +28,7 @@ from app.core.alerts import enabled as alerts_enabled
 from app.core.config import settings
 from app.core.observability import health
 from app.db.models import UsageBucket, User
+from app.push import service as push_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -100,6 +101,7 @@ def suspend(account_id: str, user: CurrentUser, db: DbSession) -> dict:
         raise HTTPException(status_code=404, detail="Account not found")
     target.suspended_at = target.suspended_at or datetime.now(UTC).replace(tzinfo=None)
     target.session_epoch = (target.session_epoch or 0) + 1  # sign it out everywhere
+    push_service.end_for_user(db, target.id)  # no reminders to a suspended account
     db.flush()
     return {"id": target.id, "suspended": True}
 

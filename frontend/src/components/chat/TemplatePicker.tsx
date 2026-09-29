@@ -107,7 +107,8 @@ export function TemplatePicker({
         <Icon name="template" size={20} />
       </button>
       {/* In a portal: the picker sits inside the message box's form, and a form
-          inside a form would submit the page instead of filling the box. */}
+          inside a form would submit the page instead of filling the box. The
+          target is inside the app's text-size zoom, like every other drawer. */}
       {open && createPortal(
         <Drawer title={chosen ? chosen.title : t("templates.title")} onClose={close}>
             {chosen ? (
@@ -191,7 +192,7 @@ export function TemplatePicker({
               </>
             )}
         </Drawer>,
-        document.body,
+        document.getElementById("overlay-root") ?? document.body,
       )}
     </>
   );

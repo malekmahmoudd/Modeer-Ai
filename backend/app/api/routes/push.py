@@ -7,7 +7,9 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser, DbSession
+from app.core import sessions as devices
 from app.core.config import settings
+from app.core.usage import BudgetExceeded, charge
 from app.push import service, webpush
 
 router = APIRouter(prefix="/push", tags=["push"])
@@ -47,10 +49,21 @@ def subscribe(body: Subscription, request: Request, user: CurrentUser, db: DbSes
             body.keys.p256dh,
             body.keys.auth,
             request.headers.get("user-agent"),
+            devices.current_id(request),
         )
+    except PermissionError as exc:
+        raise HTTPException(409, str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     return {"subscribed": True}
+
+
+@router.post("/device")
+def this_device(body: Endpoint, request: Request, user: CurrentUser, db: DbSession) -> dict:
+    """Whether this browser gets this account's reminders now. The browser's
+    own subscription is not enough: it may belong to a sign-in that ended or
+    to someone else who used this browser."""
+    return {"on": service.claim_for_device(db, user, body.endpoint, devices.current_id(request))}
 
 
 @router.post("/unsubscribe")
@@ -61,6 +74,12 @@ def unsubscribe(body: Endpoint, user: CurrentUser, db: DbSession) -> dict:
 @router.post("/test")
 async def test(user: CurrentUser, db: DbSession) -> dict:
     """A reminder right now, to see what it looks like."""
+    try:
+        charge(user.id, "push_test", 1, 3, 60)
+    except BudgetExceeded as exc:
+        raise HTTPException(
+            429, str(exc), headers={"Retry-After": str(int(exc.retry_after))}
+        ) from exc
     ar = (user.locale or "en") == "ar"
     delivered = await service.send(
         db,

@@ -601,6 +601,7 @@ export const en = {
   "prefs.teammatesHelp": "Untick a teammate you don't use to hide them from Home, the Team page and the pickers. They keep what they know; tick them again to bring them back.",
   "team.showHidden": "Show hidden teammates ({n})",
   "team.hideHidden": "Hide them again",
+  "talk.savedDraft": "Your speech is in the message box. Send it when you are ready.",
   "talk.title": "Talking hands-free",
   "talk.start": "Talk hands-free",
   "talk.end": "End talking",
@@ -698,6 +699,7 @@ export const en = {
   "cv.skills": "Skills",
   "cv.languages": "Languages",
   "cv.saved": "CV saved.",
+  "cv.recovered": "Recovered unsaved edits from this browser. Save to keep them on your account.",
   "cv.allSaved": "All saved",
   "cv.saveFirst": "Save first",
   "cv.word": "Word file",
@@ -763,7 +765,6 @@ export const en = {
   "import.fileRead": "Read {name}: only your own messages are used, most personal first.",
   "import.privacy": "The file stays on this device. Only the text in the box is sent, once, to find the facts; the assistant's replies are left out.",
   "import.find": "Find facts about me",
-  "import.tooBig": "That file is too big to read here.",
   "import.none": "No facts about you were found in that text.",
   "import.confirm": "Tick what Leo and the team should know.",
   "import.sensitive": "Sensitive: left unticked. Tick it only if you're sure.",
@@ -771,6 +772,12 @@ export const en = {
   "import.truncated": "That was long, so only the first part was read. Import the rest separately.",
   "import.save_one": "Save {n} fact",
   "import.save_other": "Save {n} facts",
+  "import.error.tooBig": "That file is over 50 MB, too big to read here. Paste your assistant's memory list instead.",
+  "import.error.malformed": "That export can't be read; it may be cut off or damaged. Nothing was sent. Export it again, or paste plain text instead.",
+  "import.error.unrecognised": "That isn't a ChatGPT or Claude export. Nothing was sent. Pick conversations.json, or paste plain text.",
+  "import.error.noUserMessages": "That export has no messages written by you, so there's nothing to read. Nothing was sent.",
+  "import.error.empty": "Paste something or pick a file first.",
+  "prefs.remindersAgain": "Reminders are off for your account on this device. After an update or a sign-out they need turning on once more: tick the box below if you want them.",
 } as const;
 
 export type MessageKey = keyof typeof en;

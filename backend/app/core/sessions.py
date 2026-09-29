@@ -111,6 +111,9 @@ def revoke(db: Session, user: User, session_id: str) -> bool:
     if row is None or row.user_id != user.id or row.revoked_at is not None:
         return False
     row.revoked_at = _now()
+    from app.push.service import end_for_session  # reminders end with the device
+
+    end_for_session(db, row.id)
     db.flush()
     return True
 
@@ -121,6 +124,9 @@ def revoke_all(db: Session, user: User) -> None:
         .where(UserSession.user_id == user.id, UserSession.revoked_at.is_(None))
         .values(revoked_at=_now())
     )
+    from app.push.service import end_for_user  # reminders end on every device
+
+    end_for_user(db, user.id)
 
 
 def sweep(db: Session) -> int:

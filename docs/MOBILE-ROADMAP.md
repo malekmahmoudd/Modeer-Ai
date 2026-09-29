@@ -1,5 +1,94 @@
 # Fareeq iOS and Android roadmap
 
+
+## Current delivery plan — 29 September 2026
+
+This section supersedes the scope, sequence, estimates and visual direction in
+this document's September 13 planning baseline. The sections below remain
+background reference, not proof of current platform requirements or deployment.
+No native app or native authentication endpoints have been built yet.
+
+### Baseline and design
+
+- Preserve the existing web Home screen. The approved desktop and phone Chat
+  concepts use expressive Comic Studio framing: cream reading surfaces, yellow
+  and pink accents, ink borders, specialist portraits and restrained halftone.
+  These are approved visual concepts, not implemented screens. Keep answer text
+  quiet and readable, and adapt layout for Arabic/RTL and platform text size.
+- Keep the existing FastAPI backend and free-tier model constraints. Start with
+  one shared React Native/Expo client as a provisional choice, validated by the
+  device prototype below. Reuse assets, domain types and pure utilities; web
+  DOM/CSS and browser audio/push code are not native components.
+- The web now includes Plans/Quick Note, reminders, voice, CVs, money tools,
+  templates, chat organization, memory import and the design additions. Do not
+  silently expand the first native release to full web parity.
+- Establish a reviewed commit before mobile branches start. Current uncommitted
+  changes, including migration 0013 and the latest fixes, are part of the
+  candidate baseline; local migration is not production deployment.
+
+### First milestone: one reliable conversation on both phones
+
+| Work | Deliverable | Acceptance gate |
+|---|---|---|
+| Native authentication contract | Dedicated token/session flow with short-lived access, revocable rotating refresh credentials, secure device storage, and stable error codes | Sign in, relaunch, expire, revoke remotely, sign out, switch accounts, and delete account on physical iOS and Android; no account A draft/cache in account B |
+| Durable send identity | Account-scoped request key + payload fingerprint + transactional operation record; duplicate requests reuse the operation | Lost response, simultaneous retry, and backend restart do not duplicate a turn or charge; changed payload under the same key is rejected |
+| Reconnect/status contract | Authenticated operation lookup with conversation/message IDs and explicit accepted/running/completed/interrupted/failed states | Airplane mode, backgrounding, force-close and return reconcile the original turn; no automatic resend; partial replies remain identifiable |
+| Bounded history | Cursor-based conversation and message endpoints with stable ordering | First page is bounded; older pages load without duplicate/missing messages during new activity |
+| Comic Chat device slice | Sign-in → specialist → conversation, composer, streaming, back navigation and account controls | Keyboard/safe areas, long answers, large text, English/Arabic, VoiceOver/TalkBack and reduced motion work on both platforms |
+
+Keep browser cookie/Origin protections intact; do not make the native client
+impersonate the web Origin or simply disable CSRF checks. Token-family replay,
+logout/revocation, refresh races and deletion must be tested server-side.
+Store credentials separately from transcripts and never log either.
+
+Expo documents encrypted key-value storage and streamed fetch, making them
+candidates for this prototype, not proof of Fareeq compatibility. SecureStore is
+for small secrets, not chat history; explicitly test its reinstall/backup and
+credential-invalidation behavior. Sources checked on 29 September 2026:
+[SecureStore](https://docs.expo.dev/versions/latest/sdk/securestore/) and
+[Expo fetch](https://docs.expo.dev/versions/latest/sdk/expo/#expofetch-api).
+Pin the compatible framework versions when the prototype starts.
+
+### After the device slice passes
+
+1. Add team selection, history, memory controls, Plans/Quick Note and account
+   privacy/export/deletion to the first native release, with bounded,
+   account-isolated caching. Offline writes stay disabled for this milestone;
+   preserve unsent drafts and ask before retrying a send.
+2. Prototype real microphone capture/read-aloud and native push separately.
+   Native device tokens need their own transport behind the existing
+   session-bound notification policy; Web Push endpoints are not that adapter.
+   Include these features only once cancellation, backgrounding, permissions,
+   lock-screen privacy and logout have passed on both phones.
+3. Schedule CV/money tools, templates, import, comparison and Pocket Cards as
+   follow-up scope after their phone journeys are designed. Keep them available
+   on web; do not describe deferred features as shipped on native.
+4. Prepare store accounts, signing, deletion/support URLs, screenshots, AI data
+   consent/reporting and privacy declarations from the actual shipped flows.
+   Recheck current Apple/Google requirements and owner costs then; the old fee,
+   SDK and testing statements below are historical, not current approval advice.
+
+### Evidence and remaining gates
+
+The latest web fixes isolate drafts by account and purge them on authentication
+loss, prevent starting Talk mode while a reply/upload is pending, retain speech
+as an editable draft if sending becomes unavailable, and read long answers with
+the device voice instead of truncating natural speech at 1,500 characters.
+These changes do not implement the native contracts above.
+Previously saved browser drafts without an account owner are discarded on the
+first verified sign-in; their ownership cannot be safely inferred. Drafts saved
+after this update survive reloads for the same account and clear on sign-out.
+
+Firefox/WebKit, real-device push/logout and a real microphone remain open
+compatibility gates. Prior Chrome/mock tests do not replace them. A privacy or
+reconnect failure blocks expanding the device slice into a full mobile build.
+Do not assign a release date until the prototype's results and available team
+capacity are known.
+
+---
+
+## Historical planning baseline (13 September; updates through 15 September)
+
 **Agent-name update — 2026-09-15:** Leo is the team leader; Nova (Study), Harvey (Career), Clara (Research), Alex (Writing), Tessa (Travel), Nate (Shopping), Emma (Finance), Maddie (Fitness), and Nora (Email) are the specialists. Fareeq is the product name. See [current naming and compatibility](AGENT-NAMES.md). Historical screenshots, decks and quality artifacts retain the names used when recorded; the earlier live evaluations predate the renamed prompts.
 
 **Dependency update — 2026-09-15:** local production HTTPS journeys, PostgreSQL

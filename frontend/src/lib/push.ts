@@ -31,10 +31,36 @@ function keyBytes(base64url: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-/** Whether this browser already receives reminders. */
-export async function pushOn(): Promise<boolean> {
+/**
+ * Whether this browser gets reminders for the account signed in now. The
+ * browser's own subscription is not enough: it may be left from a sign-in that
+ * ended or from someone else who used this browser, so the server decides.
+ */
+export async function pushOn(): Promise<{ on: boolean; leftover: boolean }> {
+  // Inspect subscriptions only after permission exists. Some browser engines
+  // cannot resolve the push service before then. Never prompt on page load.
+  if (!pushSupported() || Notification.permission !== "granted") return { on: false, leftover: false };
   const reg = await registration();
-  return Boolean(await reg?.pushManager.getSubscription());
+  const sub = await reg?.pushManager.getSubscription();
+  if (!sub) return { on: false, leftover: false };
+  const { on } = await apiFetch<{ on: boolean }>("/push/device", {
+    method: "POST",
+    body: JSON.stringify({ endpoint: sub.endpoint }),
+  });
+  // `leftover`: the browser still listens, but not for this account on this
+  // sign-in (turned off by an update, a sign-out, or someone else's).
+  return { on, leftover: !on };
+}
+
+/** On signing out: this browser stops listening for reminders at all. The
+ *  server has already dropped them; this removes the browser's side too. */
+export async function forgetPushHere(): Promise<void> {
+  try {
+    const reg = pushSupported() ? await navigator.serviceWorker.getRegistration("/") : undefined;
+    await (await reg?.pushManager.getSubscription())?.unsubscribe();
+  } catch {
+    /* nothing to forget, or the browser refused: the server side is what counts */
+  }
 }
 
 export type PushResult = "on" | "denied" | "unsupported" | "unavailable";

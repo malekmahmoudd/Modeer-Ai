@@ -3,6 +3,30 @@
 _Last updated: 2026-09-27 · phase: production readiness, invite-only or open signup_
 
 
+## Review fixes for the twelve features — 2026-09-28
+
+Migration **0013**. 563 backend tests; frontend unit tests (`npm test`, 14);
+browser checks `tools/review-fixes-qa.cjs` 57/57 and `tools/regression-qa.cjs`
+65/65, mock model, isolated data.
+
+1. Talk mode cancels its turn when the chat, teammate or privacy mode changes;
+   late microphone grants and transcripts are discarded.
+2. Reminders belong to a signed-in device and end with it (see OPERATIONS).
+3. Imports: malformed or assistant-only exports are refused, never sent raw;
+   files over 50 MB are refused before reading.
+4. CV copy stops when saving the edits fails; the edits stay.
+5. Quick notes save in one transaction with an idempotency key (`POST
+   /api/capture/save`); a retry after a lost response saves nothing twice.
+6. CV text drops characters XML cannot hold, on save and on export (older CVs
+   too).
+7. Read aloud and talk mode can be stopped at any stage; no device-voice
+   fallback after a stop.
+8. The template drawer renders inside the text-size zoom; drawers, the header
+   and buttons fit a phone at 150%.
+9. The daily reminder lists every plan step due today (at most four lines,
+   then "+N more").
+10. Notification links open only pages of this app.
+
 ## Twelve features — 2026-09-27
 
 Migration **0012**. 545 backend tests; browser regression 65/65 (English and

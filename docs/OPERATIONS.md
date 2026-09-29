@@ -272,6 +272,13 @@ stale image migrates to its own head and reports success.
   reminders on again. `PUSH_ENABLED=false` hides the feature. `FRONTEND_URL` (an
   https URL) is sent to push services as the contact; without it a placeholder
   address is used.
+- **Tied to a sign-in (migration 0013).** Each subscription records the
+  device session that made it. Logout, removing a device, sign out everywhere,
+  account recovery, suspension and a password change (other devices) delete
+  it; every send checks again that the session is live. An expired session
+  pauses delivery until the same account signs in on that browser. Migration
+  0013 deletes every existing subscription, because older rows cannot be tied
+  to a device: people switch reminders on again once.
 - Only the push services of Google, Mozilla, Apple and Microsoft are accepted
   as destinations, so a subscription cannot make the server call an arbitrary
   address. A browser that has gone away (404/410) is removed automatically.

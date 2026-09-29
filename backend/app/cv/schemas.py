@@ -2,16 +2,45 @@
 
 from __future__ import annotations
 
+import re
+
 from pydantic import BaseModel, Field, field_validator
 
 Short = Field(default="", max_length=120)
+
+#: Characters XML 1.0 cannot hold at all (most C0 controls, lone surrogates,
+#: U+FFFE/U+FFFF). A CV containing one would make a Word file no program opens.
+#: Tab, line feed and carriage return are allowed.
+XML_INVALID = re.compile("[^\t\n\r\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]")
+
+
+def xml_safe(text: str) -> str:
+    return XML_INVALID.sub("", text)
+
+
+def _strip_invalid(value):
+    if isinstance(value, str):
+        return xml_safe(value)
+    if isinstance(value, list):
+        return [xml_safe(v) if isinstance(v, str) else v for v in value]
+    return value
+
+
+class _Clean(BaseModel):
+    """Removes characters XML cannot hold from every text field, before the
+    length and list checks run."""
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def _xml(cls, value):
+        return _strip_invalid(value)
 
 
 def _clean(items: list[str]) -> list[str]:
     return [item.strip() for item in items if item and item.strip()]
 
 
-class Role(BaseModel):
+class Role(_Clean):
     title: str = Short
     organisation: str = Short
     place: str = Short
@@ -28,7 +57,7 @@ class Role(BaseModel):
         return value
 
 
-class Study(BaseModel):
+class Study(_Clean):
     qualification: str = Short
     institution: str = Short
     start: str = Field(default="", max_length=30)
@@ -36,7 +65,7 @@ class Study(BaseModel):
     note: str = Field(default="", max_length=300)
 
 
-class CvData(BaseModel):
+class CvData(_Clean):
     name: str = Short
     headline: str = Short
     email: str = Short
@@ -58,7 +87,7 @@ class CvData(BaseModel):
         return value
 
 
-class CvIn(BaseModel):
+class CvIn(_Clean):
     title: str = Field(min_length=1, max_length=120)
     target_role: str | None = Field(default=None, max_length=120)
     data: CvData = Field(default_factory=CvData)
@@ -71,6 +100,6 @@ class CvIn(BaseModel):
         return value.strip()
 
 
-class CvCopy(BaseModel):
+class CvCopy(_Clean):
     title: str = Field(min_length=1, max_length=120)
     target_role: str | None = Field(default=None, max_length=120)

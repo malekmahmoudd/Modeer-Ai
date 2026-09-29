@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
+export { draftKey, readDraft, writeDraft, clearDrafts } from "@/lib/drafts";
+
 /** Whether the browser thinks it has a connection. */
 export function useOnline(): boolean {
   return useSyncExternalStore(
@@ -62,42 +64,4 @@ export function useServiceWorker() {
 
   const reload = useCallback(() => waiting?.postMessage("skip-waiting"), [waiting]);
   return { updateReady: waiting !== null, reload };
-}
-
-// --- drafts ------------------------------------------------------------------------------
-// What someone was typing survives a reload, a crash or a dropped connection.
-// Kept in this browser only; an unreadable store simply means no draft.
-
-const DRAFT_PREFIX = "fareeq.draft.";
-
-export function draftKey(agentId: string, conversationId: string | null): string {
-  return `${DRAFT_PREFIX}${agentId}.${conversationId ?? "new"}`;
-}
-
-export function readDraft(key: string): string {
-  try {
-    return window.localStorage.getItem(key) ?? "";
-  } catch {
-    return "";
-  }
-}
-
-export function writeDraft(key: string, text: string): void {
-  try {
-    if (text.trim()) window.localStorage.setItem(key, text);
-    else window.localStorage.removeItem(key);
-  } catch {
-    /* storage full or blocked: the draft just isn't kept */
-  }
-}
-
-/** Forget every saved draft (on sign-out, so the next person can't read them). */
-export function clearDrafts(): void {
-  try {
-    for (const key of Object.keys(window.localStorage)) {
-      if (key.startsWith(DRAFT_PREFIX)) window.localStorage.removeItem(key);
-    }
-  } catch {
-    /* nothing to clear */
-  }
 }

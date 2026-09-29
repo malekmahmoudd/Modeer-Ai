@@ -1,0 +1,66 @@
+# Temporary staging only. Production fareeq.io is not configured by this file.
+# Free services may sleep; no paid resources are provisioned here.
+services:
+  - type: web
+    name: fareeq-staging-api-20260929
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: codex/staging-readiness
+    autoDeployTrigger: "off"
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    dockerCommand: python -m tools.render_staging
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fareeq-staging-db-20260929
+          property: connectionString
+      - key: FAREEQ_STAGING
+        value: "true"
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: AUTH_REQUIRED
+        value: "true"
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: STAGING_ACCESS_KEY
+        generateValue: true
+      - key: SIGNUP_ENABLED
+        value: "false"
+      - key: LLM_PROVIDER
+        value: groq
+      - key: LLM_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        value: https://fareeq-staging-20260929.onrender.com
+      - key: PORT
+        value: "8000"
+      - key: ORT_DISABLE_TELEMETRY
+        value: "1"
+  - type: web
+    name: fareeq-staging-20260929
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: codex/staging-readiness
+    autoDeployTrigger: "off"
+    dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
+    healthCheckPath: /login
+    envVars:
+      - key: BACKEND_URL
+        value: https://fareeq-staging-api-20260929.onrender.com
+      - key: PORT
+        value: "3000"
+databases:
+  - name: fareeq-staging-db-20260929
+    databaseName: fareeq_staging
+    user: fareeq_staging
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: "16"
+    ipAllowList: []

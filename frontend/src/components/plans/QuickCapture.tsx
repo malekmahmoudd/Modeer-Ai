@@ -5,7 +5,8 @@ import { useState } from "react";
 import { VoiceButton } from "@/components/chat/VoiceButton";
 import { Spinner } from "@/components/ui/primitives";
 import { useAgents } from "@/features/agents/useAgents";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
+import { keyFor, settle } from "@/lib/captureKeys";
 import { calendarDay } from "@/lib/format";
 import { usePrefs } from "@/lib/i18n";
 import { useAgentName } from "@/lib/i18n/agents";
@@ -31,6 +32,10 @@ export function QuickCapture({ onSaved }: { onSaved: () => void }) {
   const [notice, setNotice] = useState("");
   const [found, setFound] = useState<Proposal | null>(null);
   const [ticked, setTicked] = useState<Set<string>>(new Set());
+  // Set once a save may have reached the server: the ticks are locked until it
+  // is confirmed, so the retry sends the same items. Their key is kept by
+  // lib/captureKeys, so it also survives Find again, Cancel and a reload.
+  const [pending, setPending] = useState(false);
 
   async function read() {
     setBusy("reading");
@@ -39,6 +44,7 @@ export function QuickCapture({ onSaved }: { onSaved: () => void }) {
     try {
       const result = await apiFetch<Proposal>("/capture", { method: "POST", body: JSON.stringify({ text }) });
       setFound(result);
+      setPending(false);
       setTicked(new Set([...result.checkins.map((_, i) => `c${i}`), ...result.followups.map((_, i) => `f${i}`)]));
       if (!result.checkins.length && !result.followups.length) setNotice(t("capture.nothing"));
     } catch (e) {
@@ -50,33 +56,41 @@ export function QuickCapture({ onSaved }: { onSaved: () => void }) {
 
   async function save() {
     if (!found) return;
+    const items = {
+      checkins: found.checkins.filter((_, i) => ticked.has(`c${i}`)),
+      followups: found.followups.filter((_, i) => ticked.has(`f${i}`)),
+    };
     setBusy("saving");
     setError("");
-    let saved = 0;
+    setPending(true);
     try {
-      for (const [i, c] of found.checkins.entries()) {
-        if (!ticked.has(`c${i}`)) continue;
-        await apiFetch("/checkins", { method: "POST", body: JSON.stringify(c) });
-        saved += 1;
-      }
-      for (const [i, f] of found.followups.entries()) {
-        if (!ticked.has(`f${i}`)) continue;
-        await apiFetch("/followups", { method: "POST", body: JSON.stringify(f) });
-        saved += 1;
-      }
+      const result = await apiFetch<{ checkins: unknown[]; followups: unknown[] }>("/capture/save", {
+        method: "POST",
+        body: JSON.stringify({ key: keyFor(items), ...items }),
+      });
+      settle(items);
       setFound(null);
+      setPending(false);
       setText("");
-      setNotice(tn("capture.saved", saved));
+      setNotice(tn("capture.saved", result.checkins.length + result.followups.length));
       onSaved();
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("common.failed"));
-      onSaved();
+      // Refused (a validation error): nothing was saved, so the key is done
+      // with and the ticks can change. A lost connection or a server error may
+      // have saved it: the key stays, so sending these items again, now or
+      // after Find again or a reload, cannot save them twice.
+      if (e instanceof ApiError && e.status >= 400 && e.status < 500) {
+        settle(items);
+        setPending(false);
+      }
+      setError(e instanceof Error && e.message ? e.message : t("common.failed"));
     } finally {
       setBusy("");
     }
   }
 
   function toggle(key: string) {
+    if (pending) return;
     const next = new Set(ticked);
     if (next.has(key)) next.delete(key);
     else next.add(key);
@@ -124,7 +138,7 @@ export function QuickCapture({ onSaved }: { onSaved: () => void }) {
             {found.checkins.map((c, i) => (
               <li key={`c${i}`}>
                 <label className="flex min-h-10 items-center gap-3">
-                  <input type="checkbox" className="h-5 w-5 accent-pink" checked={ticked.has(`c${i}`)} onChange={() => toggle(`c${i}`)} />
+                  <input type="checkbox" className="h-5 w-5 accent-pink" disabled={pending} checked={ticked.has(`c${i}`)} onChange={() => toggle(`c${i}`)} />
                   <span dir="auto"><strong>{t("capture.logged")}</strong> {c.text} <span className="text-ink-faint">· {agentName(byId(c.agent_id), c.agent_id)}</span></span>
                 </label>
               </li>
@@ -132,7 +146,7 @@ export function QuickCapture({ onSaved }: { onSaved: () => void }) {
             {found.followups.map((f, i) => (
               <li key={`f${i}`}>
                 <label className="flex min-h-10 items-center gap-3">
-                  <input type="checkbox" className="h-5 w-5 accent-pink" checked={ticked.has(`f${i}`)} onChange={() => toggle(`f${i}`)} />
+                  <input type="checkbox" className="h-5 w-5 accent-pink" disabled={pending} checked={ticked.has(`f${i}`)} onChange={() => toggle(`f${i}`)} />
                   <span dir="auto"><strong>{calendarDay(f.due_on)}</strong> {f.title} <span className="text-ink-faint">· {agentName(byId(f.agent_id), f.agent_id)}</span></span>
                 </label>
               </li>
@@ -141,9 +155,9 @@ export function QuickCapture({ onSaved }: { onSaved: () => void }) {
           {found.held_back > 0 && <p className="mt-2 text-[13px] text-ink-soft">{t("capture.heldBack")}</p>}
           <div className="mt-3 flex flex-wrap gap-2">
             <button className="btn btn-pink" disabled={!!busy || ticked.size === 0} onClick={() => void save()}>
-              {busy === "saving" ? t("common.saving") : t("capture.save")}
+              {busy === "saving" ? t("common.saving") : pending ? t("common.tryAgain") : t("capture.save")}
             </button>
-            <button className="btn" disabled={!!busy} onClick={() => setFound(null)}>{t("common.cancel")}</button>
+            <button className="btn" disabled={!!busy} onClick={() => { setFound(null); setPending(false); }}>{t("common.cancel")}</button>
           </div>
         </div>
       )}

@@ -8,7 +8,8 @@ import { Spinner } from "@/components/ui/primitives";
 import { apiFetch } from "@/lib/api";
 import { categoryLabel } from "@/lib/format";
 import { usePrefs } from "@/lib/i18n";
-import { importText } from "@/lib/importChats";
+import { readFile as readImportFile, readPasted, type ImportResult } from "@/lib/importChats";
+import type { MessageKey } from "@/lib/i18n/en";
 
 interface Found {
   category: string;
@@ -28,6 +29,8 @@ export function ImportMemories({ onSaved }: { onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
+  // Text taken from a file is already only the person's own messages.
+  const [fromFile, setFromFile] = useState(false);
   const [busy, setBusy] = useState<"" | "reading" | "saving">("");
   const [error, setError] = useState("");
   const [found, setFound] = useState<Found[] | null>(null);
@@ -37,28 +40,43 @@ export function ImportMemories({ onSaved }: { onSaved: () => void }) {
   function reset() {
     setText("");
     setFileName("");
+    setFromFile(false);
     setFound(null);
     setError("");
     setTicked(new Set());
   }
 
-  async function readFile(file: File) {
+  function refuse(result: ImportResult) {
+    if (!result.ok) setError(t(`import.error.${result.reason}` as MessageKey));
+  }
+
+  async function pickFile(file: File) {
     setError("");
-    if (file.size > 60 * 1024 * 1024) {
-      setError(t("import.tooBig"));
+    setFileName("");
+    const result = await readImportFile(file);
+    if (!result.ok) {
+      refuse(result);
       return;
     }
     setFileName(file.name);
-    setText(importText(await file.text()));
+    setFromFile(true);
+    setText(result.text);
   }
 
   async function find() {
-    setBusy("reading");
     setError("");
+    // A pasted export is read like a file; one that can't be read is refused
+    // here and nothing is sent.
+    const prepared = fromFile ? ({ ok: true, text: text.trim(), messages: 0 } as const) : readPasted(text);
+    if (!prepared.ok) {
+      refuse(prepared);
+      return;
+    }
+    setBusy("reading");
     try {
       const result = await apiFetch<{ facts: Found[]; truncated: boolean }>("/memory/import/preview", {
         method: "POST",
-        body: JSON.stringify({ text: importText(text) }),
+        body: JSON.stringify({ text: prepared.text }),
       });
       setFound(result.facts);
       setTruncated(result.truncated);
@@ -111,10 +129,10 @@ export function ImportMemories({ onSaved }: { onSaved: () => void }) {
                 </ul>
               </details>
               <label htmlFor="import-text" className="block font-bold">{t("import.paste")}</label>
-              <textarea id="import-text" dir="auto" rows={8} className="field mt-1 w-full" value={text} onChange={(e) => { setText(e.target.value); setFileName(""); }} />
+              <textarea id="import-text" dir="auto" rows={8} className="field mt-1 w-full" value={text} onChange={(e) => { setText(e.target.value); setFileName(""); setFromFile(false); }} />
               <label className="mt-3 block font-bold">
                 {t("import.file")}
-                <input type="file" accept=".json,.txt,.md" className="mt-1 block w-full text-[14px]" onChange={(e) => { const file = e.target.files?.[0]; if (file) void readFile(file); }} />
+                <input type="file" accept=".json,.txt,.md" className="mt-1 block w-full text-[14px]" onChange={(e) => { const file = e.target.files?.[0]; if (file) void pickFile(file); e.target.value = ""; }} />
               </label>
               {fileName && <p className="mt-2 text-[13px] font-semibold text-ink-soft">{t("import.fileRead", { name: fileName })}</p>}
               <p className="mt-3 text-[13px] text-ink-soft">{t("import.privacy")}</p>

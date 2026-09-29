@@ -13,7 +13,7 @@
  * Bump VERSION when this file's behaviour changes; old caches are deleted on
  * activation, and open pages are offered a reload.
  */
-const VERSION = "fareeq-v2";
+const VERSION = "fareeq-v3";
 const PAGES = `${VERSION}-pages`;
 const STATIC = `${VERSION}-static`;
 const OFFLINE_FALLBACK = "/";
@@ -117,14 +117,35 @@ self.addEventListener("push", (event) => {
   );
 });
 
+/** Where a notification may take the person: a page of this app, or the home
+ *  page. Anything else (another site, "//host", "/\\host", javascript:, a
+ *  non-string) falls back to the home page. */
+function notificationTarget(value, origin) {
+  if (typeof value !== "string" || !value.startsWith("/")) return `${origin}/`;
+  let url;
+  try {
+    url = new URL(value, origin);
+  } catch {
+    return `${origin}/`;
+  }
+  return url.origin === origin ? url.href : `${origin}/`;
+}
+
+function sameOrigin(href, origin) {
+  try {
+    return new URL(href).origin === origin;
+  } catch {
+    return false;
+  }
+}
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const path = event.notification.data?.url || "/";
-  // Only pages of this app, never a link from the payload to somewhere else.
-  const target = new URL(path.startsWith("/") ? path : "/", self.location.origin).href;
+  const origin = self.location.origin;
+  const target = notificationTarget(event.notification.data?.url, origin);
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
-      const open = windows.find((w) => w.url.startsWith(self.location.origin));
+      const open = windows.find((w) => sameOrigin(w.url, origin));
       if (open) return open.navigate(target).then((w) => (w || open).focus());
       return self.clients.openWindow(target);
     }),

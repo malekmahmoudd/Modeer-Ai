@@ -28,6 +28,7 @@ from app.main import app  # noqa: E402
 from app.users.service import get_or_create_demo_user  # noqa: E402
 
 _WIPE_TABLES = [
+    "capture_receipts",
     "push_sent",
     "push_subscriptions",
     "server_keys",

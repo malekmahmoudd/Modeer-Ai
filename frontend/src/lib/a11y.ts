@@ -36,7 +36,9 @@ export function writeA11y(a: A11y): string {
 /** The attributes the <html> element carries for these settings. */
 export function htmlA11y(a: A11y): { className: string; style: Record<string, string> } {
   return {
-    className: [a.contrast ? "high-contrast" : "", a.calm ? "reduce-motion" : ""].filter(Boolean).join(" "),
+    className: [a.contrast ? "high-contrast" : "", a.calm ? "reduce-motion" : "", a.scale > 1 ? "text-large" : ""]
+      .filter(Boolean)
+      .join(" "),
     style: a.scale !== 1 ? { "--text-scale": String(a.scale) } : {},
   };
 }
@@ -46,6 +48,8 @@ export function applyA11y(a: A11y) {
   const root = document.documentElement;
   root.classList.toggle("high-contrast", a.contrast);
   root.classList.toggle("reduce-motion", a.calm);
+  // Larger text: a few layout allowances (globals.css), so 100% stays as designed.
+  root.classList.toggle("text-large", a.scale > 1);
   if (a.scale !== 1) root.style.setProperty("--text-scale", String(a.scale));
   else root.style.removeProperty("--text-scale");
   document.cookie = `${A11Y_COOKIE}=${writeA11y(a)}; path=/; max-age=31536000; samesite=lax`;

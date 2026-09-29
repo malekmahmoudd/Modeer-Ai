@@ -12,6 +12,8 @@ import { apiFetch, PUBLIC_PAGES, useApi } from "@/lib/api";
 import { firstName } from "@/lib/format";
 import { PrefsProvider, usePrefs, type Locale } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/i18n/en";
+import { forgetPushHere } from "@/lib/push";
+import { ACCOUNT_KEY } from "@/lib/drafts";
 import { clearDrafts, useOnline, useServiceWorker } from "@/lib/offline";
 import { setPreferNatural } from "@/lib/voice";
 import type { UserProfile } from "@/types";
@@ -99,6 +101,17 @@ function Shell({ children }: { children: React.ReactNode }) {
       calm: ui.reduce_motion ?? false,
     });
   }, [ui]);
+
+  // Another tab changed accounts or lost its session: discard this page's
+  // in-memory private UI before it can send under the new cookie.
+  useEffect(() => {
+    if (publicPage) return;
+    const changed = (event: StorageEvent) => {
+      if (event.key === ACCOUNT_KEY && event.oldValue !== event.newValue) window.location.reload();
+    };
+    window.addEventListener("storage", changed);
+    return () => window.removeEventListener("storage", changed);
+  }, [publicPage]);
 
   // Ctrl/⌘-K opens search anywhere.
   useEffect(() => {
@@ -191,8 +204,10 @@ function Shell({ children }: { children: React.ReactNode }) {
               <Icon name="search" size={20} />
             </button>
             <LanguageToggle signedIn />
-            {!atHome && <Link href="/account" className="grid min-h-11 place-items-center px-2 text-sm font-bold underline decoration-pink decoration-2 underline-offset-4">{t("nav.account")}</Link>}
-            {!atHome && auth?.required && <button className="text-xs underline" onClick={async () => { await apiFetch("/auth/logout", { method: "POST" }); clearDrafts(); window.location.assign("/login"); }}>{t("nav.signOut")}</button>}
+            {/* With larger text on a phone these two make the row too wide: the
+                avatar leads to Account, and Account has Sign out (globals.css). */}
+            {!atHome && <Link href="/account" className="shell-extra grid min-h-11 place-items-center px-2 text-sm font-bold underline decoration-pink decoration-2 underline-offset-4">{t("nav.account")}</Link>}
+            {!atHome && auth?.required && <button className="shell-extra text-xs underline" onClick={async () => { await apiFetch("/auth/logout", { method: "POST" }); clearDrafts(); await forgetPushHere(); window.location.assign("/login"); }}>{t("nav.signOut")}</button>}
             {name && (
               <Link href="/account" aria-label={t("nav.yourAccount")} className="flex min-h-11 items-center gap-2">
                 <span className="hidden text-[13px] font-semibold text-ink-soft sm:inline">{name}</span>
@@ -221,6 +236,10 @@ function Shell({ children }: { children: React.ReactNode }) {
       </main>
 
       {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
+
+      {/* Drawers opened from inside a form (the message box) render here: out
+          of the form, but still inside the text-size zoom. */}
+      <div id="overlay-root" />
 
       {/* ---------- mobile tab bar ---------- */}
       <nav

@@ -78,6 +78,7 @@ class User(UUIDMixin, TimestampMixin, Base):
     push_sent: Mapped[list[PushSent]] = relationship(cascade="all, delete-orphan")
     prompt_templates: Mapped[list[PromptTemplate]] = relationship(cascade="all, delete-orphan")
     cvs: Mapped[list[CvDocument]] = relationship(cascade="all, delete-orphan")
+    capture_receipts: Mapped[list[CaptureReceipt]] = relationship(cascade="all, delete-orphan")
     conversations: Mapped[list[Conversation]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
@@ -132,6 +133,11 @@ class PushSubscription(UUIDMixin, TimestampMixin, Base):
     auth: Mapped[str] = mapped_column(String(64))
     user_agent: Mapped[str | None] = mapped_column(String(200), nullable=True)
     last_sent_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    #: The signed-in device that turned reminders on. Signing that device out
+    #: (here, remotely or everywhere) ends its reminders too; see app.push.service.
+    session_id: Mapped[str | None] = mapped_column(
+        ForeignKey("user_sessions.id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
 
 class PushSent(UUIDMixin, TimestampMixin, Base):
@@ -163,6 +169,25 @@ class PromptTemplate(UUIDMixin, TimestampMixin, Base):
     title: Mapped[str] = mapped_column(String(80))
     body: Mapped[str] = mapped_column(Text)
     agent_id: Mapped[str | None] = mapped_column(String(48), nullable=True)
+
+
+class CaptureReceipt(UUIDMixin, TimestampMixin, Base):
+    """A saved quick note, by the key the browser chose for it. Saving the same
+    note again (a retry after a lost response) returns what was saved the first
+    time instead of saving it twice.
+
+    ``result`` holds only the ids of the items saved, and ``fingerprint`` is a
+    hash salted with the random key: no text from the note is kept here, so
+    deleting a check-in or follow-up deletes its words. Receipts are swept
+    after a day (app.tracking.service.sweep_capture_receipts)."""
+
+    __tablename__ = "capture_receipts"
+    __table_args__ = (UniqueConstraint("user_id", "key", name="uq_capture_receipt_key"),)
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    key: Mapped[str] = mapped_column(String(64))
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    result: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
 class CvDocument(UUIDMixin, TimestampMixin, Base):

@@ -17,11 +17,12 @@ from __future__ import annotations
 import re
 from datetime import UTC, date, datetime, timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.core.text import as_data
-from app.db.models import CheckIn, FollowUp, Goal, Plan, PlanStep
+from app.db.base import utcnow
+from app.db.models import CaptureReceipt, CheckIn, FollowUp, Goal, Plan, PlanStep
 from app.tracking import plans as plan_service
 
 UPCOMING_DAYS = 30
@@ -601,3 +602,16 @@ def to_ics(events: list[tuple[str, date, str]], *, name: str) -> str:
         ]
     lines.append("END:VCALENDAR")
     return "\r\n".join(_fold(line) for line in lines) + "\r\n"
+
+
+#: How long a quick note's receipt is kept: long enough for any retry of a
+#: save whose answer was lost, and no longer.
+CAPTURE_RECEIPT_KEEP = timedelta(days=1)
+
+
+def sweep_capture_receipts(db: Session, *, now: datetime | None = None) -> int:
+    """Forget quick-note receipts older than a day (ids and a salted
+    fingerprint only; the notes' text is never in them)."""
+    cutoff = (now or utcnow()) - CAPTURE_RECEIPT_KEEP
+    result = db.execute(delete(CaptureReceipt).where(CaptureReceipt.created_at < cutoff))
+    return result.rowcount or 0

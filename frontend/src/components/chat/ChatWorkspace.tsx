@@ -46,9 +46,10 @@ function discardIncognito(conversationId: string) {
 export function ChatWorkspace({ agentId }: { agentId: string }) {
   const router = useRouter();
   const dt = useDesignText();
+  const [accountId, setAccountId] = useState<string | null>(null);
   const [reading, setReading] = useState<DesignPreferences>({});
   const [readingFocus, setReadingFocus] = useState(false);
-  useEffect(() => { let active = true; apiFetch<UserProfile>("/users/me").then(u => { if(active) { const p=u.ui_preferences; setReading({reading_size:p?.reading_size,reading_spacing:p?.reading_spacing,reading_width:p?.reading_width}); } }).catch(() => undefined); return () => {active=false;}; }, []);
+  useEffect(() => { let active = true; apiFetch<UserProfile>("/users/me").then(u => { if(active) { setAccountId(u.id); const p=u.ui_preferences; setReading({reading_size:p?.reading_size,reading_spacing:p?.reading_spacing,reading_width:p?.reading_width}); } }).catch(() => undefined); return () => {active=false;}; }, []);
   useEffect(() => { if(!readingFocus) return; const key=(e:KeyboardEvent) => {if(e.key === "Escape") setReadingFocus(false);}; document.addEventListener("keydown",key); return () => document.removeEventListener("keydown",key); },[readingFocus]);
   const params = useSearchParams();
   const { t, tn, locale } = usePrefs();
@@ -81,6 +82,9 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   // Hands-free talk (TalkMode): listens, sends, reads the reply aloud.
   const [talking, setTalking] = useState(false);
+  // The chat the latest reply started or continued (state, for talk mode's
+  // render-time check below).
+  const [startedConversation, setStartedConversation] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<{ id: string; title: string } | null>(null);
   const [allowance, setAllowance] = useState<Allowance | null>(null);
   const [focusSignal, setFocusSignal] = useState(0);
@@ -204,13 +208,16 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   }, [conversationId, scrollDown]);
 
   // --- drafts: what was being typed survives a reload or a lost connection ------------
-  const currentDraft = incognito ? null : draftKey(agentId, conversationId);
+  const currentDraft = incognito || !accountId ? null : draftKey(accountId, agentId, conversationId);
   const draftFor = useRef<string | null>(null);
   useEffect(() => {
     if (!currentDraft || draftFor.current === currentDraft) return;
     draftFor.current = currentDraft;
     const saved = readDraft(currentDraft);
-    if (saved) setInput(saved);
+    // Preserve handoffs and typing entered before account verification finishes.
+    if (!input && saved) setInput(saved);
+    // Read the composer at the moment this draft becomes available.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentDraft]);
   useEffect(() => {
     if (currentDraft && draftFor.current === currentDraft) writeDraft(currentDraft, input);
@@ -229,8 +236,8 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     }
     if (!draft) return;
     incomingDraft.current = true;
-    draftFor.current = draftKey(agentId, null);
-    writeDraft(draftFor.current, draft);
+    draftFor.current = accountId ? draftKey(accountId, agentId, null) : null;
+    if (draftFor.current) writeDraft(draftFor.current, draft);
     setConversationId(null);
     setMessages([]);
     setInput(draft);
@@ -242,6 +249,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
   const { send, stop, streaming, replyComplete, streamingText } = useChatStream(agentId, {
     onStart: (cid) => {
       liveConversation.current = cid;
+      setStartedConversation(cid);
       if (incognito) incognitoConversation.current = cid;
       setConversationId(cid);
       // A retry replaces the unfinished reply after the latest message; the
@@ -360,6 +368,26 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
     },
     [streaming, send, conversationId, scrollDown, attachments, incognito, currentDraft, t],
   );
+
+  // What talk mode's speech is for: this teammate, this chat, this privacy
+  // mode. Worked out while rendering, so talk mode never sees the new chat
+  // under the old name. A reply starting a new chat names it, but that is the
+  // chat the speech was for, so it does not count as a change.
+  const [talkPlace, setTalkPlace] = useState({ agentId, conversationId, incognito: Boolean(incognito), n: 0 });
+  if (
+    talkPlace.agentId !== agentId ||
+    talkPlace.conversationId !== conversationId ||
+    talkPlace.incognito !== Boolean(incognito)
+  ) {
+    const namedByReply =
+      talkPlace.conversationId === null &&
+      conversationId !== null &&
+      conversationId === startedConversation &&
+      talkPlace.agentId === agentId &&
+      talkPlace.incognito === Boolean(incognito);
+    setTalkPlace({ agentId, conversationId, incognito: Boolean(incognito), n: talkPlace.n + (namedByReply ? 0 : 1) });
+    if (!namedByReply) setTalking(false);
+  }
 
   const lastReply = useMemo(() => {
     const last = messages[messages.length - 1];
@@ -544,7 +572,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
       <button className="reading-exit btn btn-sun" onClick={() => setReadingFocus(false)}>{dt("exit")}</button>
       {/* ---------- identity header ---------- */}
       <header className="workspace-identity shrink-0 border-b-2 border-ink bg-paper">
-        <div className="mx-auto flex w-full max-w-page items-center gap-3 px-3 py-2.5 sm:px-7">
+        <div className="mx-auto flex w-full max-w-page flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 sm:px-7">
           <button
             onClick={() => router.push("/team")}
             className="btn-icon !h-11 !w-11 shrink-0"
@@ -582,6 +610,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
             <Icon name="incognito" size={19} />
           </button>
           <button
+            disabled={!talking && (streaming || attachments.busy)}
             onClick={() => setTalking(!talking)}
             className={`btn-icon shrink-0 ${talking ? "!bg-sun" : ""}`}
             aria-label={talking ? t("talk.end") : t("talk.start")}
@@ -771,7 +800,17 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
             <TalkMode
               streaming={streaming}
               reply={lastReply}
-              onHeard={(heard) => void submit(heard, true)}
+              context={String(talkPlace.n)}
+              onHeard={(heard) => {
+                if (streaming || attachments.busy || input.trim() || attachments.files.length) {
+                  setInput((current) => current.trim() ? `${current}\n${heard}` : heard);
+                  setTalking(false);
+                  setFocusSignal((n) => n + 1);
+                  setAnnouncement(t("talk.savedDraft"));
+                  return;
+                }
+                void submit(heard, true);
+              }}
               onExit={() => setTalking(false)}
             />
           )}
@@ -943,7 +982,7 @@ export function ChatWorkspace({ agentId }: { agentId: string }) {
                       try {
                         await apiFetch(`/conversations/${c.id}`, {method:"DELETE"});
                         await refetchConvos();
-                        writeDraft(draftKey(agentId, c.id), "");
+                        if (accountId) writeDraft(draftKey(accountId, agentId, c.id), "");
                         if (conversationId === c.id) { liveConversation.current = null; setConversationId(null); setMessages([]); setSavedFacts([]); setTeamNotes([]); }
                       } catch (e) { setHistoryError(e instanceof Error ? e.message : t("chat.deleteError")); }
                       finally { setDeletingId(null); }

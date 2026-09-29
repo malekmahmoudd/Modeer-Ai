@@ -102,7 +102,9 @@ tick items and press Save; health details are never offered.
 **Importing from another assistant.** The file you pick stays on your device:
 your browser reads your own messages from it (never the assistant's replies) and
 sends at most about 18,000 characters, once, to the model provider to find facts
-about you. Only the facts you tick are saved, as if you had added them yourself.
+about you. A file that is not a readable ChatGPT or Claude export, or has no
+messages written by you, is refused and nothing is sent. Only the facts you
+tick are saved, as if you had added them yourself.
 
 **Reminders.** If you switch on reminders for a device, Fareeq AI stores the
 address your browser gave it for notifications, the keys to encrypt them, and
@@ -112,6 +114,13 @@ many things). The message travels through your browser maker's push service
 (Google, Mozilla, Apple or Microsoft) encrypted, so they cannot read it, though
 they see that a message was sent. Switching reminders off, or the browser
 dropping them, deletes the address.
+
+Reminders belong to the signed-in device that turned them on. Signing that
+device out, removing it under Your devices, signing out everywhere, recovering
+your account or changing your password (on your other devices) ends them, and
+the address is deleted. If the sign-in only expires, they pause, and start
+again when you sign back in to the same account in that browser; someone else
+signing in there never receives them.
 
 **CVs and templates.** CVs you build and prompt templates you save are stored
 with your account, included in your export and deleted with it. A Word file is

@@ -47,6 +47,7 @@ export function RemindersSection(props: Props) {
   const save = usePreferenceSaver(props);
   const prefs = props.me?.ui_preferences;
   const [on, setOn] = useState<boolean | null>(null);
+  const [leftover, setLeftover] = useState(false);
   const [busy, setBusy] = useState(false);
   // False while the server renders and during hydration; the browser's answer after.
   const supported = useSyncExternalStore(noSubscribe, pushSupported, () => false);
@@ -55,7 +56,11 @@ export function RemindersSection(props: Props) {
     if (!supported) return;
     let live = true;
     pushOn()
-      .then((value) => live && setOn(value))
+      .then((state) => {
+        if (!live) return;
+        setOn(state.on);
+        setLeftover(state.leftover);
+      })
       .catch(() => live && setOn(false));
     return () => {
       live = false;
@@ -69,6 +74,7 @@ export function RemindersSection(props: Props) {
         const result = await enablePush();
         if (result === "on") {
           setOn(true);
+          setLeftover(false);
           props.onNotice(t("prefs.remindersEnabled"));
         } else {
           props.onError(
@@ -95,6 +101,7 @@ export function RemindersSection(props: Props) {
     <section className={SECTION}>
       <h2 className="display text-2xl">{t("prefs.reminders")}</h2>
       <p className="my-3 text-ink-soft">{t("prefs.remindersHelp")}</p>
+      {leftover && !on && <p role="status" className="mb-3 border-2 border-ink bg-sun-pale p-3 font-semibold">{t("prefs.remindersAgain")}</p>}
       {!supported ? (
         <p className="font-semibold">{t("prefs.remindersUnsupported")}</p>
       ) : (

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { t } from "@/lib/i18n";
+import { activateAccount, clearDrafts } from "@/lib/drafts";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
@@ -44,6 +45,7 @@ export async function apiFetch<T>(
       ...(init.headers || {}),
     },
   });
+  if (res.status === 401) clearDrafts();
   if (res.status === 401 && typeof window !== "undefined" && !PUBLIC_PAGES.includes(window.location.pathname)) {
     window.location.assign("/login");
   }
@@ -58,7 +60,9 @@ export async function apiFetch<T>(
     throw new ApiError(res.status, detail);
   }
   if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  const data = await res.json();
+  if (path === "/users/me" && typeof data?.id === "string") activateAccount(data.id);
+  return data as T;
 }
 
 /** What the upload endpoint accepts. Checked here first, so a phone does not
@@ -143,6 +147,7 @@ export function uploadDocument(
         } catch {
           /* not JSON */
         }
+        if (xhr.status === 401) clearDrafts();
         if (xhr.status === 401 && !PUBLIC_PAGES.includes(window.location.pathname)) {
           window.location.assign("/login");
         }

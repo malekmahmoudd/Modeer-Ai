@@ -7,6 +7,8 @@ for putting things right by hand.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import date
 from typing import Annotated
 
@@ -14,6 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.agents.registry import get_agent, require_agent
 from app.api.deps import CurrentUser, DbSession
@@ -23,7 +26,7 @@ from app.core.clock import today_for
 from app.core.config import settings
 from app.core.lang import request_locale
 from app.core.usage import allowance, limited_caller
-from app.db.models import CheckIn, Conversation, Goal, Message, Plan
+from app.db.models import CaptureReceipt, CheckIn, Conversation, FollowUp, Goal, Message, Plan
 from app.llm.provider import get_llm_provider, resolve_model
 from app.memory.llm_extraction import _details, analyze_turn
 from app.memory.sensitivity import looks_sensitive
@@ -289,6 +292,15 @@ class Capture(BaseModel):
     text: str = Field(min_length=3, max_length=2000)
 
 
+class CaptureSave(BaseModel):
+    """The ticked items of one quick note, saved together or not at all.
+    ``key`` is chosen by the browser for this note and sent again on a retry."""
+
+    key: str = Field(min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+    checkins: list[CheckInCreate] = Field(default_factory=list, max_length=20)
+    followups: list[FollowUpCreate] = Field(default_factory=list, max_length=20)
+
+
 @router.post("/checkins", status_code=201)
 def create_checkin(data: CheckInCreate, user: CurrentUser, db: DbSession):
     """Log something done, by hand or after confirming a voice capture. Food,
@@ -350,6 +362,123 @@ async def capture(
         ],
         "held_back": sum(1 for c in analysis.checkins if not c.stored)
         + sum(1 for e in analysis.events if not e.stored),
+    }
+
+
+def _capture_result(db, user_id: str, ids: dict) -> dict:
+    """The items a quick note saved, as they are now: one deleted since is
+    left out, and its text is not kept anywhere to bring back."""
+    checkins = {
+        c.id: c
+        for c in db.scalars(
+            select(CheckIn).where(
+                CheckIn.user_id == user_id, CheckIn.id.in_(ids.get("checkins", []))
+            )
+        )
+    }
+    followups = {
+        f.id: f
+        for f in db.scalars(
+            select(FollowUp).where(
+                FollowUp.user_id == user_id, FollowUp.id.in_(ids.get("followups", []))
+            )
+        )
+    }
+    return {
+        "checkins": [_checkin(checkins[i]) for i in ids.get("checkins", []) if i in checkins],
+        "followups": [_followup(followups[i]) for i in ids.get("followups", []) if i in followups],
+    }
+
+
+def _receipt(db, user_id: str, key: str) -> CaptureReceipt | None:
+    return db.scalar(
+        select(CaptureReceipt).where(CaptureReceipt.user_id == user_id, CaptureReceipt.key == key)
+    )
+
+
+@router.post("/capture/save")
+def save_capture(data: CaptureSave, user: CurrentUser, db: DbSession):
+    """Save a quick note's ticked items in one transaction, once.
+
+    A retry with the same key (the first response was lost, or the person
+    pressed Save again) returns what the first save stored instead of adding
+    the items again. The same key with different items is refused.
+
+    The receipt keeps only the saved items' ids and a fingerprint salted with
+    the random key, never their text, and is swept after a day
+    (``service.sweep_capture_receipts``).
+    """
+    fingerprint = hashlib.sha256(
+        (
+            data.key + json.dumps(data.model_dump(mode="json", exclude={"key"}), sort_keys=True)
+        ).encode()
+    ).hexdigest()
+    done = _receipt(db, user.id, data.key)
+    if done is not None:
+        if done.fingerprint != fingerprint:
+            raise HTTPException(409, "That note was already saved with different items.")
+        return _capture_result(db, user.id, done.result)
+    if not data.checkins and not data.followups:
+        raise HTTPException(422, "Tick at least one item to save.")
+    # Check everything before writing anything, so a bad item saves nothing.
+    for item in [*data.checkins, *data.followups]:
+        _known_agent(item.agent_id)
+    for c in data.checkins:
+        if looks_sensitive(c.text):
+            raise HTTPException(422, "That isn't something the team keeps track of.")
+    for f in data.followups:
+        if f.ends_on and f.ends_on < f.due_on:
+            raise HTTPException(status_code=422, detail="The end date is before the start date.")
+    today = today_for(user)
+    try:
+        with db.begin_nested():
+            checkins = [
+                service.add_checkin(
+                    db,
+                    user.id,
+                    agent_id=c.agent_id,
+                    text=c.text.strip(),
+                    amount=c.amount,
+                    unit=c.unit,
+                    details=_details(c.details) if c.details else None,
+                    logged_on=c.logged_on or today,
+                )
+                for c in data.checkins
+            ]
+            followups = [
+                service.add_followup(
+                    db,
+                    user.id,
+                    agent_id=f.agent_id,
+                    title=f.title.strip(),
+                    due_on=f.due_on,
+                    ends_on=f.ends_on,
+                )[0]
+                for f in data.followups
+            ]
+            db.flush()
+            db.add(
+                CaptureReceipt(
+                    user_id=user.id,
+                    key=data.key,
+                    fingerprint=fingerprint,
+                    result={
+                        "checkins": [c.id for c in checkins],
+                        "followups": [f.id for f in followups],
+                    },
+                )
+            )
+            db.flush()
+    except IntegrityError:
+        # The same key saved by a request that raced this one: use its result.
+        db.rollback()
+        done = _receipt(db, user.id, data.key)
+        if done is None or done.fingerprint != fingerprint:
+            raise HTTPException(409, "That note was already saved with different items.") from None
+        return _capture_result(db, user.id, done.result)
+    return {
+        "checkins": [_checkin(c) for c in checkins],
+        "followups": [_followup(f) for f in followups],
     }
 
 

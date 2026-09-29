@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { ACCOUNT_KEY, draftKey, readDraft, writeDraft } from "@/lib/drafts";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyState, ErrorNote, PageHeader, Spinner } from "@/components/ui/primitives";
 import { API_BASE, apiFetch, useApi } from "@/lib/api";
@@ -67,6 +68,7 @@ function toData(d: Draft): CvData {
  *  a print layout for PDF. */
 export function CvBuilder() {
   const { t } = usePrefs();
+  const { data: account, error: accountError, refetch: reloadAccount } = useApi<{ id: string }>("/users/me");
   const { data: cvs, loading, setData: setCvs } = useApi<Cv[]>("/cv");
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -76,16 +78,47 @@ export function CvBuilder() {
   const [notice, setNotice] = useState("");
 
   const current = cvs?.find((c) => c.id === currentId) ?? cvs?.[0] ?? null;
+  const storageKey = account && current ? draftKey(account.id, "cv", current.id) : null;
   // Load the chosen version into the form when the choice changes.
   const [loadedId, setLoadedId] = useState<string | null>(null);
-  if (current && current.id !== loadedId) {
-    setLoadedId(current.id);
+  if (current && storageKey && storageKey !== loadedId) {
+    setLoadedId(storageKey);
     setCurrentId(current.id);
-    setDraft(toDraft(current));
-    setDirty(false);
+    let restored: Draft | null = null;
+    try {
+      const value = JSON.parse(readDraft(storageKey) || "null");
+      const base = toDraft(current);
+      if (value && Object.keys(base).every((key) =>
+        Array.isArray(base[key as keyof Draft]) ? Array.isArray(value[key]) : typeof value[key] === "string")) {
+        restored = value;
+      }
+    } catch { /* Ignore an unreadable local draft. */ }
+    setDraft(restored ?? toDraft(current));
+    setDirty(!!restored);
+    if (restored) setNotice(t("cv.recovered"));
   }
 
+  // Counts edits, so a save that finishes after more typing does not mark
+  // the newer text as saved.
+  const edits = useRef(0);
+  const working = useRef(false);
+
+  // Warn on reload/close as a fallback when browser storage is unavailable.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      // Never let a discard prompt obstruct sign-out or another tab's account switch.
+      try { if (localStorage.getItem(ACCOUNT_KEY) !== account?.id) return; } catch { /* Warn if storage is blocked. */ }
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty, account?.id]);
+
   async function run(label: string, work: () => Promise<void>) {
+    if (working.current) return; // one action at a time
+    working.current = true;
     setBusy(label);
     setError("");
     setNotice("");
@@ -94,32 +127,46 @@ export function CvBuilder() {
     } catch (e) {
       setError(e instanceof Error ? e.message : t("common.failed"));
     } finally {
+      working.current = false;
       setBusy("");
     }
   }
 
   function edit(patch: Partial<Draft>) {
     if (!draft) return;
-    setDraft({ ...draft, ...patch });
+    edits.current += 1;
+    const next = { ...draft, ...patch };
+    if (storageKey) writeDraft(storageKey, JSON.stringify(next));
+    setDraft(next);
     setDirty(true);
+  }
+
+  /** Saves the form; throws if the server refuses, leaving the edits in place. */
+  async function persist(): Promise<Cv> {
+    if (!draft || !current) throw new Error(t("common.failed"));
+    const version = edits.current;
+    const saved = await apiFetch<Cv>(`/cv/${current.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ title: draft.title || t("cv.untitled"), target_role: draft.target_role || null, data: toData(draft) }),
+    });
+    setCvs((list) => (list ?? []).map((c) => (c.id === saved.id ? saved : c)));
+    if (edits.current === version) {
+      setDirty(false);
+      if (storageKey) writeDraft(storageKey, "");
+    }
+    return saved;
   }
 
   const save = () =>
     run("save", async () => {
-      if (!draft || !current) return;
-      const saved = await apiFetch<Cv>(`/cv/${current.id}`, {
-        method: "PUT",
-        body: JSON.stringify({ title: draft.title || t("cv.untitled"), target_role: draft.target_role || null, data: toData(draft) }),
-      });
-      setCvs((cvs ?? []).map((c) => (c.id === saved.id ? saved : c)));
-      setDirty(false);
+      await persist();
       setNotice(t("cv.saved"));
     });
 
   const create = () =>
     run("create", async () => {
       const made = await apiFetch<Cv>("/cv", { method: "POST", body: JSON.stringify({ title: t("cv.firstTitle") }) });
-      setCvs([made, ...(cvs ?? [])]);
+      setCvs((list) => [made, ...(list ?? [])]);
       setCurrentId(made.id);
       setDraft(toDraft(made));
       setDirty(false);
@@ -130,12 +177,14 @@ export function CvBuilder() {
       if (!current) return;
       const role = window.prompt(t("cv.copyPrompt"));
       if (!role?.trim()) return;
-      if (dirty) await save();
+      // The copy starts from what is saved, so unsaved edits are saved first.
+      // If that fails, persist() throws: no copy is made and the edits stay.
+      if (dirty) await persist();
       const made = await apiFetch<Cv>(`/cv/${current.id}/copy`, {
         method: "POST",
         body: JSON.stringify({ title: role.trim(), target_role: role.trim() }),
       });
-      setCvs([made, ...(cvs ?? [])]);
+      setCvs((list) => [made, ...(list ?? [])]);
       setCurrentId(made.id);
       setDraft(toDraft(made));
       setDirty(false);
@@ -146,6 +195,7 @@ export function CvBuilder() {
     run("delete", async () => {
       if (!current || !window.confirm(t("cv.deleteConfirm", { title: current.title }))) return;
       await apiFetch(`/cv/${current.id}`, { method: "DELETE" });
+      if (storageKey) writeDraft(storageKey, "");
       const rest = (cvs ?? []).filter((c) => c.id !== current.id);
       setCvs(rest);
       setCurrentId(rest[0]?.id ?? null);
@@ -153,7 +203,8 @@ export function CvBuilder() {
       setDirty(false);
     });
 
-  if (loading && !cvs) return <Spinner />;
+  if (!account && accountError) return <div><ErrorNote message={accountError} /><button className="btn mt-3" onClick={() => void reloadAccount()}>{t("common.tryAgain")}</button></div>;
+  if (!account || (loading && !cvs)) return <Spinner />;
 
   return (
     <div className="anim-fade">
@@ -179,6 +230,7 @@ export function CvBuilder() {
                 {t("cv.version")}
                 <select className="field mt-1 w-full" value={current.id} onChange={(e) => {
                   if (dirty && !window.confirm(t("cv.discard"))) return;
+                  if (storageKey) writeDraft(storageKey, "");
                   setCurrentId(e.target.value);
                   const next = cvs?.find((c) => c.id === e.target.value);
                   if (next) setDraft(toDraft(next));

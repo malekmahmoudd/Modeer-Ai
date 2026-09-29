@@ -8,7 +8,7 @@ import re
 import zipfile
 from xml.sax.saxutils import escape
 
-from app.cv.schemas import CvData
+from app.cv.schemas import CvData, xml_safe
 
 _ARABIC = re.compile(r"[؀-ۿ]")
 
@@ -74,7 +74,7 @@ def _para(
         rpr.append("<w:rtl/>")
     return (
         f"<w:p><w:pPr>{''.join(ppr)}</w:pPr><w:r><w:rPr>{''.join(rpr)}</w:rPr>"
-        f'<w:t xml:space="preserve">{escape(text)}</w:t></w:r></w:p>'
+        f'<w:t xml:space="preserve">{escape(xml_safe(text))}</w:t></w:r></w:p>'
     )
 
 
@@ -86,6 +86,7 @@ def render(cv: CvData) -> bytes:
     """The .docx bytes for one CV. Arabic text runs right to left."""
     rtl = bool(_ARABIC.search(cv.name + cv.headline + cv.summary))
     words = HEADINGS["ar" if rtl else "en"]
+    comma = "، " if rtl else ", "  # the Arabic comma in an Arabic CV
 
     def heading(key: str) -> str:
         return _para(words[key], size=24, bold=True, rtl=rtl, space_before=240, colour="1F3A5F")
@@ -127,9 +128,9 @@ def render(cv: CvData) -> bytes:
             )
             body.append(_para(study.note, rtl=rtl))
     if cv.skills:
-        body += [heading("skills"), _para(", ".join(cv.skills), rtl=rtl)]
+        body += [heading("skills"), _para(comma.join(cv.skills), rtl=rtl)]
     if cv.languages:
-        body += [heading("languages"), _para(", ".join(cv.languages), rtl=rtl)]
+        body += [heading("languages"), _para(comma.join(cv.languages), rtl=rtl)]
 
     document = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'

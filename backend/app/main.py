@@ -37,10 +37,14 @@ INCOGNITO_SWEEP_SECONDS = 3600
 def sweep_incognito() -> int:
     """Delete every incognito chat past its 24 hours. Also done per account
     whenever someone lists their chats; this catches people who never return.
-    Device records that ended over 30 days ago go in the same pass."""
+    Device records that ended over 30 days ago, and quick-note receipts older
+    than a day, go in the same pass."""
+    from app.tracking.service import sweep_capture_receipts
+
     with SessionLocal() as db:
         removed = purge_incognito(db)
         devices.sweep(db)
+        sweep_capture_receipts(db)
         db.commit()
     return removed
 

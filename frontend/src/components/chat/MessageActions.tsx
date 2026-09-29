@@ -8,9 +8,8 @@ import { Icon } from "@/components/ui/Icon";
 import { useAgents, useHiddenAgents } from "@/features/agents/useAgents";
 import { usePrefs } from "@/lib/i18n";
 import { useAgentName } from "@/lib/i18n/agents";
-import { speak, type Speaking } from "@/lib/voice";
+import { isAbort, speak } from "@/lib/voice";
 
-const ARABIC = /[؀-ۿ]/;
 /** Longest excerpt carried to a teammate; the rest is still in this chat. */
 const PASS_LIMIT = 1500;
 export const HANDOFF_KEY = "fareeq.handoff";
@@ -68,27 +67,33 @@ function ListenButton({ text }: { text: string }) {
   const { t } = usePrefs();
   const [speaking, setSpeaking] = useState(false);
   const [note, setNote] = useState("");
-  const current = useRef<Speaking | null>(null);
+  // One controller per press: Stop, a second press or leaving the page aborts
+  // it, whether the voice is still being fetched, starting or playing.
+  const current = useRef<AbortController | null>(null);
 
-  useEffect(() => () => current.current?.stop(), []);
+  useEffect(() => () => current.current?.abort(), []);
 
   async function toggle() {
-    if (speaking) {
-      current.current?.stop();
+    if (current.current) {
+      current.current.abort();
       return;
     }
+    const controller = new AbortController();
+    current.current = controller;
     setNote("");
     setSpeaking(true);
-    const reading = await speak(plainText(text));
-    if (!reading) {
-      setSpeaking(false);
-      setNote(t("msg.noVoice"));
-      return;
+    try {
+      const reading = await speak(plainText(text), controller.signal);
+      if (reading) await reading.done;
+      else setNote(t("msg.noVoice"));
+    } catch (e) {
+      if (!isAbort(e)) setNote(t("msg.noVoice"));
+    } finally {
+      if (current.current === controller) {
+        current.current = null;
+        setSpeaking(false);
+      }
     }
-    current.current = reading;
-    await reading.done;
-    current.current = null;
-    setSpeaking(false);
   }
 
   return (

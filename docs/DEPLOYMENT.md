@@ -147,7 +147,8 @@ attributes; that cannot run code.
 to any response that has none — the API, static files. The leading `?` means it
 never replaces the page's policy. Caddy also sends HSTS, `nosniff`,
 `X-Frame-Options`, `Referrer-Policy`, `Cross-Origin-Opener-Policy: same-origin`
-and a `Permissions-Policy` that turns off camera, microphone, location, payment
+and a `Permissions-Policy` that permits same-origin microphone access (`microphone=(self)`) for voice
+features and turns off camera, location, payment
 and USB; the frontend no longer sends `X-Powered-By`.
 
 Everything the app loads is same-origin: scripts, stylesheets, fonts (`next/font`
