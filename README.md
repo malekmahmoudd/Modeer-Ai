@@ -1,5 +1,7 @@
 # Fareeq — Personal AI Team (MVP)
 
+> Reinstalling macOS? Start with [the restore guide](RESTORE-AFTER-REINSTALL.md). The latest release work is on `codex/staging-readiness`.
+
 A personal AI assistant, **Leo**, plus a user-chosen team of nine specialist
 AI agents that share your personal context.
 
